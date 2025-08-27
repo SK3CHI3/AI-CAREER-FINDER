@@ -1,6 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Sparkles, TrendingUp, Users } from "lucide-react";
-import heroImage from "@/assets/hero-illustration.jpg";
+import { ArrowRight, Sparkles } from "lucide-react";
 
 const Hero = () => {
   return (
@@ -67,8 +66,8 @@ const Hero = () => {
           <div className="relative">
             <div className="relative z-10">
               <img 
-                src={heroImage} 
-                alt="AI Career Guidance for Kenyan Students"
+                src="/lovable-uploads/c00fe86d-d3ca-480b-b1a5-640143d35dba.png"
+                alt="AI Career Guidance Platform - Mobile App Interface with Career Icons"
                 className="w-full h-auto rounded-2xl shadow-elevated"
               />
             </div>
