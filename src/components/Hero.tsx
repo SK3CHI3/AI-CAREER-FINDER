@@ -1,9 +1,14 @@
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Sparkles } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
 
 const Hero = () => {
+  const { user } = useAuth();
+  const navigate = useNavigate();
+
   return (
-    <section className="min-h-screen bg-gradient-hero flex items-center pt-16">
+    <section className="min-h-screen flex items-center pt-16">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
         <div className="grid lg:grid-cols-2 gap-12 items-center">
           {/* Left Content */}
@@ -17,7 +22,7 @@ const Hero = () => {
             
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold leading-tight">
               Discover Your{" "}
-              <span className="bg-gradient-primary bg-clip-text text-transparent">
+              <span className="bg-gradient-text bg-clip-text text-transparent">
                 Perfect Career
               </span>{" "}
               Path with AI
@@ -29,15 +34,22 @@ const Hero = () => {
             </p>
             
             <div className="flex flex-col sm:flex-row gap-4">
-              <Button 
+              <Button
                 size="lg"
                 className="bg-gradient-primary hover:opacity-90 text-primary-foreground shadow-glow px-8 py-6 text-lg"
+                onClick={() => {
+                  if (user) {
+                    navigate('/student');
+                  } else {
+                    document.getElementById('guest-chat')?.scrollIntoView({ behavior: 'smooth' });
+                  }
+                }}
               >
-                Start Free Assessment
+                {user ? 'Go to Dashboard' : 'Start Free Assessment'}
                 <ArrowRight className="w-5 h-5 ml-2" />
               </Button>
-              <Button 
-                variant="outline" 
+              <Button
+                variant="outline"
                 size="lg"
                 className="border-card-border hover:bg-surface px-8 py-6 text-lg"
               >

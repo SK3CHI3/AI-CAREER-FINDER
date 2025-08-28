@@ -1,9 +1,13 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Menu, X, Bot, TrendingUp, Users, BookOpen } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
 
 const Navigation = () => {
   const [isOpen, setIsOpen] = useState(false);
+  const { user } = useAuth();
+  const navigate = useNavigate();
 
   return (
     <nav className="fixed top-0 w-full z-50 bg-background/80 backdrop-blur-md border-b border-card-border">
@@ -15,7 +19,7 @@ const Navigation = () => {
               <div className="w-8 h-8 bg-gradient-primary rounded-lg flex items-center justify-center">
                 <Bot className="w-5 h-5 text-primary-foreground" />
               </div>
-              <span className="text-xl font-bold bg-gradient-primary bg-clip-text text-transparent">
+              <span className="text-xl font-bold bg-gradient-text bg-clip-text text-transparent">
                 CareerPath AI
               </span>
             </div>
@@ -41,12 +45,30 @@ const Navigation = () => {
 
           {/* Desktop CTA */}
           <div className="hidden md:flex items-center space-x-4">
-            <Button variant="ghost" className="text-foreground-muted hover:text-foreground">
-              Sign In
-            </Button>
-            <Button className="bg-gradient-primary hover:opacity-90 text-primary-foreground shadow-glow">
-              Start Free Assessment
-            </Button>
+            {user ? (
+              <Button
+                className="bg-gradient-primary hover:opacity-90 text-primary-foreground shadow-glow"
+                onClick={() => navigate('/student')}
+              >
+                Dashboard
+              </Button>
+            ) : (
+              <>
+                <Button
+                  variant="ghost"
+                  className="text-foreground-muted hover:text-foreground"
+                  onClick={() => navigate('/auth')}
+                >
+                  Sign In
+                </Button>
+                <Button
+                  className="bg-gradient-primary hover:opacity-90 text-primary-foreground shadow-glow"
+                  onClick={() => navigate('/auth')}
+                >
+                  Start Free Assessment
+                </Button>
+              </>
+            )}
           </div>
 
           {/* Mobile menu button */}
@@ -95,12 +117,39 @@ const Navigation = () => {
                 Contact
               </a>
               <div className="pt-4 border-t border-card-border">
-                <Button variant="ghost" className="w-full justify-start text-foreground-muted mb-2">
-                  Sign In
-                </Button>
-                <Button className="w-full bg-gradient-primary text-primary-foreground">
-                  Start Free Assessment
-                </Button>
+                {user ? (
+                  <Button
+                    className="w-full bg-gradient-primary text-primary-foreground"
+                    onClick={() => {
+                      navigate('/student');
+                      setIsOpen(false);
+                    }}
+                  >
+                    Dashboard
+                  </Button>
+                ) : (
+                  <>
+                    <Button
+                      variant="ghost"
+                      className="w-full justify-start text-foreground-muted mb-2"
+                      onClick={() => {
+                        navigate('/auth');
+                        setIsOpen(false);
+                      }}
+                    >
+                      Sign In
+                    </Button>
+                    <Button
+                      className="w-full bg-gradient-primary text-primary-foreground"
+                      onClick={() => {
+                        navigate('/auth');
+                        setIsOpen(false);
+                      }}
+                    >
+                      Start Free Assessment
+                    </Button>
+                  </>
+                )}
               </div>
             </div>
           </div>

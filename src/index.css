@@ -47,10 +47,13 @@
     --ring: 228 94% 67%;
     
     /* Gradients */
-    --gradient-primary: linear-gradient(135deg, hsl(228 94% 67%) 0%, hsl(270 95% 75%) 50%, hsl(142 69% 58%) 100%);
+    --gradient-primary: linear-gradient(135deg, hsl(210 100% 56%) 0%, hsl(195 100% 50%) 35%, hsl(142 69% 58%) 100%);
     --gradient-surface: linear-gradient(135deg, hsl(240 8% 12%) 0%, hsl(240 6% 16%) 50%, hsl(228 94% 67% / 0.05) 100%);
     --gradient-hero: linear-gradient(135deg, hsl(240 10% 4%) 0%, hsl(228 94% 67% / 0.08) 25%, hsl(270 95% 75% / 0.05) 50%, hsl(142 69% 58% / 0.03) 75%, hsl(240 8% 12%) 100%);
-    
+    --gradient-page-subtle: linear-gradient(135deg, hsl(240 10% 4%) 0%, hsl(228 94% 67% / 0.06) 20%, hsl(142 69% 58% / 0.04) 40%, hsl(228 94% 67% / 0.05) 60%, hsl(142 69% 58% / 0.03) 80%, hsl(240 8% 12%) 100%);
+    --gradient-homepage: linear-gradient(135deg, hsl(240 10% 4%) 0%, hsl(142 69% 58% / 0.20) 20%, hsl(228 94% 67% / 0.25) 40%, hsl(142 69% 58% / 0.18) 60%, hsl(228 94% 67% / 0.15) 80%, hsl(240 8% 12%) 100%);
+    --gradient-text: linear-gradient(135deg, hsl(210 100% 65%) 0%, hsl(142 69% 65%) 100%);
+
     /* Shadows */
     --shadow-glow: 0 0 50px hsl(228 94% 67% / 0.3);
     --shadow-card: 0 8px 32px hsl(240 10% 4% / 0.6);
@@ -88,6 +91,8 @@
     --popover-foreground: 240 10% 4%;
     --gradient-surface: linear-gradient(135deg, hsl(0 0% 100%) 0%, hsl(240 20% 99%) 50%, hsl(228 94% 67% / 0.02) 100%);
     --gradient-hero: linear-gradient(135deg, hsl(0 0% 100%) 0%, hsl(228 94% 67% / 0.03) 25%, hsl(270 95% 75% / 0.02) 50%, hsl(142 69% 58% / 0.02) 75%, hsl(240 20% 99%) 100%);
+    --gradient-page-subtle: linear-gradient(135deg, hsl(0 0% 100%) 0%, hsl(228 94% 67% / 0.03) 20%, hsl(142 69% 58% / 0.02) 40%, hsl(228 94% 67% / 0.02) 60%, hsl(142 69% 58% / 0.01) 80%, hsl(240 20% 99%) 100%);
+    --gradient-homepage: linear-gradient(135deg, hsl(0 0% 100%) 0%, hsl(142 69% 58% / 0.12) 20%, hsl(228 94% 67% / 0.15) 40%, hsl(142 69% 58% / 0.10) 60%, hsl(228 94% 67% / 0.08) 80%, hsl(240 20% 99%) 100%);
     --shadow-card: 0 8px 32px hsl(240 10% 4% / 0.1);
     --shadow-elevated: 0 20px 60px hsl(240 10% 4% / 0.15);
   }

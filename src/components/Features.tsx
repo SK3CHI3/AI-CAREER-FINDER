@@ -42,12 +42,12 @@ const features = [
 
 const Features = () => {
   return (
-    <section id="features" className="py-20 bg-background-light">
+    <section id="features" className="py-20">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-16">
           <h2 className="text-3xl sm:text-4xl font-bold mb-6">
             Intelligent Career Guidance{" "}
-            <span className="bg-gradient-primary bg-clip-text text-transparent">
+            <span className="bg-gradient-text bg-clip-text text-transparent">
               Built for Kenya
             </span>
           </h2>
