@@ -354,38 +354,38 @@ Remember: YOU MUST ALWAYS BE CURIOUS TO KNOW THEM. Make this the most engaging c
   };
 
   return (
-    <div className="max-w-4xl mx-auto p-6">
-      <div className="text-center mb-8">
-        <h2 className="text-2xl sm:text-3xl font-bold mb-4">
+    <div className="max-w-4xl mx-auto px-3 sm:px-6 py-4 sm:py-6">
+      <div className="text-center mb-4 sm:mb-8">
+        <h2 className="text-xl sm:text-2xl md:text-3xl font-bold mb-2 sm:mb-4">
           Quick Career Assessment{" "}
           <span className="bg-gradient-text bg-clip-text text-transparent">
             with AI
           </span>
         </h2>
-        <p className="text-foreground-muted max-w-2xl mx-auto">
+        <p className="text-sm sm:text-base text-foreground-muted max-w-2xl mx-auto">
           Get instant career guidance based on your interests and goals. No signup required!
         </p>
       </div>
       
       <Card className="bg-gradient-surface border-card-border shadow-elevated">
         {/* Chat Header */}
-        <CardHeader className="border-b border-card-border">
-          <div className="flex items-center justify-between">
+        <CardHeader className="border-b border-card-border p-3 sm:p-6">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0">
             <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 bg-gradient-primary rounded-full flex items-center justify-center">
-                <Bot className="w-5 h-5 text-primary-foreground" />
+              <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-primary rounded-full flex items-center justify-center">
+                <Bot className="w-4 h-4 sm:w-5 sm:h-5 text-primary-foreground" />
               </div>
               <div>
-                <CardTitle className="text-lg">Career Assessment AI</CardTitle>
-                <CardDescription>Quick assessment • No signup required</CardDescription>
+                <CardTitle className="text-base sm:text-lg">Career Assessment AI</CardTitle>
+                <CardDescription className="text-xs sm:text-sm">Quick assessment • No signup required</CardDescription>
               </div>
             </div>
-            <div className="flex items-center space-x-2">
-              <Badge variant="secondary" className="bg-green-100 text-green-700">
-                <div className="w-2 h-2 bg-green-500 rounded-full mr-1"></div>
-                Live Assessment
+            <div className="flex items-center space-x-2 w-full sm:w-auto justify-end">
+              <Badge variant="secondary" className="bg-green-100 text-green-700 text-xs">
+                <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-green-500 rounded-full mr-1"></div>
+                Live
               </Badge>
-              <Button size="sm" variant="outline" onClick={testConnection}>
+              <Button size="sm" variant="outline" onClick={testConnection} className="text-xs sm:text-sm px-2 py-1">
                 Test AI
               </Button>
             </div>
@@ -394,29 +394,29 @@ Remember: YOU MUST ALWAYS BE CURIOUS TO KNOW THEM. Make this the most engaging c
         
         {/* Chat Messages */}
         <CardContent className="p-0">
-          <ScrollArea ref={scrollAreaRef} className="h-[500px] p-6 overflow-y-auto">
-            <div className="space-y-6">
+          <ScrollArea ref={scrollAreaRef} className="h-[60vh] sm:h-[500px] p-3 sm:p-6 overflow-y-auto">
+            <div className="space-y-4 sm:space-y-6">
               {conversation.map((msg) => (
                 <div key={msg.id} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                  <div className={`flex max-w-[85%] ${msg.role === 'user' ? 'flex-row-reverse' : 'flex-row'} space-x-3`}>
-                    <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
+                  <div className={`flex max-w-[90%] sm:max-w-[85%] ${msg.role === 'user' ? 'flex-row-reverse' : 'flex-row'} space-x-2 sm:space-x-3`}>
+                    <div className={`w-6 h-6 sm:w-8 sm:h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
                       msg.role === 'user' 
-                        ? 'bg-primary text-primary-foreground ml-3' 
-                        : 'bg-gradient-primary text-primary-foreground mr-3'
+                        ? 'bg-primary text-primary-foreground ml-2 sm:ml-3' 
+                        : 'bg-gradient-primary text-primary-foreground mr-2 sm:mr-3'
                     }`}>
                       {msg.role === 'user' ? (
-                        <User className="w-4 h-4" />
+                        <User className="w-3 h-3 sm:w-4 sm:h-4" />
                       ) : (
-                        <Bot className="w-4 h-4" />
+                        <Bot className="w-3 h-3 sm:w-4 sm:h-4" />
                       )}
                     </div>
-                    <div className={`p-4 rounded-2xl ${
+                    <div className={`p-3 sm:p-4 rounded-2xl ${
                       msg.role === 'user'
                         ? 'bg-primary text-primary-foreground'
                         : 'bg-background border border-card-border'
                     }`}>
-                      <p className="text-sm leading-relaxed whitespace-pre-wrap">{msg.content}</p>
-                      <p className="text-xs opacity-70 mt-2">
+                      <p className="text-xs sm:text-sm leading-relaxed whitespace-pre-wrap">{msg.content}</p>
+                      <p className="text-[10px] sm:text-xs opacity-70 mt-1 sm:mt-2">
                         {msg.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                       </p>
                     </div>
@@ -426,14 +426,14 @@ Remember: YOU MUST ALWAYS BE CURIOUS TO KNOW THEM. Make this the most engaging c
               
               {isLoading && (
                 <div className="flex justify-start">
-                  <div className="flex space-x-3">
-                    <div className="w-8 h-8 rounded-full bg-gradient-primary text-primary-foreground flex items-center justify-center">
-                      <Bot className="w-4 h-4" />
+                  <div className="flex space-x-2 sm:space-x-3">
+                    <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-gradient-primary text-primary-foreground flex items-center justify-center">
+                      <Bot className="w-3 h-3 sm:w-4 sm:h-4" />
                     </div>
-                    <div className="bg-background border border-card-border p-4 rounded-2xl">
+                    <div className="bg-background border border-card-border p-2 sm:p-4 rounded-2xl">
                       <div className="flex items-center space-x-2">
-                        <Loader2 className="w-4 h-4 animate-spin" />
-                        <span className="text-sm text-foreground-muted">AI is analyzing...</span>
+                        <Loader2 className="w-3 h-3 sm:w-4 sm:h-4 animate-spin" />
+                        <span className="text-xs sm:text-sm text-foreground-muted">AI is analyzing...</span>
                       </div>
                     </div>
                   </div>
