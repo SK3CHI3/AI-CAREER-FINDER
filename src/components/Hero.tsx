@@ -41,7 +41,7 @@ const Hero = () => {
                   if (user) {
                     navigate('/student');
                   } else {
-                    document.getElementById('guest-chat')?.scrollIntoView({ behavior: 'smooth' });
+                    navigate('/auth');
                   }
                 }}
               >
