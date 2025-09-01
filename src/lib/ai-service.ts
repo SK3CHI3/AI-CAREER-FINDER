@@ -1,24 +1,20 @@
 import { supabase } from './supabase'
+import type { AIConversation, ChatMessage, UserProfile } from '../types/database'
 
 const OPENROUTER_API_KEY = import.meta.env.VITE_OPENROUTER_API_KEY || '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'
 const MODEL_NAME = 'deepseek/deepseek-r1:free'
 
-export interface ChatMessage {
-  id: string
-  role: 'user' | 'assistant' | 'system'
-  content: string
-  timestamp: Date
-}
+export type { ChatMessage } from '../types/database'
 
 export interface UserContext {
   name?: string
-  schoolLevel?: 'primary' | 'secondary' | 'tertiary'
+  schoolLevel?: UserProfile['school_level']
   currentGrade?: string
   subjects?: string[]
   interests?: string[]
   careerGoals?: string
-  assessmentResults?: any
-  previousRecommendations?: any[]
+  assessmentResults?: UserProfile['assessment_results']
+  previousRecommendations?: UserProfile['previous_recommendations']
 }
 
 class AICareerService {

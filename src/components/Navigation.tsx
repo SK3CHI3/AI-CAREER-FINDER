@@ -28,18 +28,18 @@ const Navigation = () => {
           {/* Desktop Navigation */}
           <div className="hidden md:block">
             <div className="ml-10 flex items-baseline space-x-8">
-              <a href="#features" className="text-foreground-muted hover:text-foreground transition-colors">
+              <button onClick={() => navigate('/')} className="text-foreground-muted hover:text-foreground transition-colors">
                 Features
-              </a>
-              <a href="#careers" className="text-foreground-muted hover:text-foreground transition-colors">
+              </button>
+              <button onClick={() => navigate('/')} className="text-foreground-muted hover:text-foreground transition-colors">
                 Career Paths
-              </a>
-              <a href="#about" className="text-foreground-muted hover:text-foreground transition-colors">
+              </button>
+              <button onClick={() => navigate('/')} className="text-foreground-muted hover:text-foreground transition-colors">
                 About
-              </a>
-              <a href="#contact" className="text-foreground-muted hover:text-foreground transition-colors">
+              </button>
+              <button onClick={() => navigate('/')} className="text-foreground-muted hover:text-foreground transition-colors">
                 Contact
-              </a>
+              </button>
             </div>
           </div>
 

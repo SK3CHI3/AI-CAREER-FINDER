@@ -20,7 +20,21 @@ const GuestAIChat = () => {
   const [assessmentComplete, setAssessmentComplete] = useState(false);
   const [showReport, setShowReport] = useState(false);
   const [connectionTest, setConnectionTest] = useState<string>('');
+  const scrollAreaRef = useRef<HTMLDivElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  // Function to scroll chat area to bottom
+  const scrollToBottom = () => {
+    if (scrollAreaRef.current) {
+      const scrollArea = scrollAreaRef.current;
+      scrollArea.scrollTop = scrollArea.scrollHeight;
+    }
+  };
+
+  // Auto-scroll chat area when new messages arrive
+  useEffect(() => {
+    scrollToBottom();
+  }, [conversation]);
 
   // Function to clean markdown formatting from AI responses
   const cleanMarkdownFormatting = (text: string): string => {
@@ -31,11 +45,6 @@ const GuestAIChat = () => {
       .replace(/`{1,3}(.*?)`{1,3}/g, '$1') // Remove code blocks
       .trim();
   };
-
-  // Auto-scroll to bottom
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [conversation]);
 
   // Initialize with welcome message
   useEffect(() => {
@@ -385,7 +394,7 @@ Remember: YOU MUST ALWAYS BE CURIOUS TO KNOW THEM. Make this the most engaging c
         
         {/* Chat Messages */}
         <CardContent className="p-0">
-          <ScrollArea className="h-96 p-6">
+          <ScrollArea ref={scrollAreaRef} className="h-[500px] p-6 overflow-y-auto">
             <div className="space-y-6">
               {conversation.map((msg) => (
                 <div key={msg.id} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>

@@ -202,7 +202,7 @@ export const ProfileSetup: React.FC<ProfileSetupProps> = ({ onComplete }) => {
                 <BookOpen className="w-5 h-5 text-primary" />
                 <Label className="text-lg font-semibold">CBE Education Level</Label>
               </div>
-              <Select onValueChange={(value) => setValue('schoolLevel', value as any)}>
+              <Select onValueChange={(value: 'primary' | 'secondary' | 'tertiary') => setValue('schoolLevel', value)}>
                 <SelectTrigger>
                   <SelectValue placeholder="Select your current education level" />
                 </SelectTrigger>

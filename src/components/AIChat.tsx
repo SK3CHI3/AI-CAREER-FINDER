@@ -93,7 +93,7 @@ What subjects do you enjoy most in your current studies? 🎯`,
       console.error('Failed to initialize chat:', error);
       setError('Failed to initialize chat. Please refresh the page.');
     }
-  };
+  }
 
   const handleSend = async () => {
     if (!message.trim() || isLoading || !user) return;

@@ -14,7 +14,7 @@ const Index = () => {
         <Hero />
         <Features />
         <CareerPaths />
-        <div id="guest-chat">
+        <div className="guest-chat-section">
           <GuestAIChat />
         </div>
       </main>

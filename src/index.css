@@ -107,10 +107,6 @@
     @apply bg-background text-foreground font-sans antialiased;
   }
   
-  html {
-    scroll-behavior: smooth;
-  }
-  
   /* Custom scrollbar */
   ::-webkit-scrollbar {
     width: 6px;
