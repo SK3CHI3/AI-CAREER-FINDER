@@ -945,42 +945,69 @@ const StudentDashboard = () => {
           <TabsContent value="careers" className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {careerData.map((career, index) => (
-                <Card key={index} className="bg-card border-card-border hover:shadow-card transition-all duration-300 cursor-pointer" onClick={() => handleCareerDetailClick(career)}>
-                  <CardHeader>
-                    <div className="flex items-center justify-between">
+                <Card key={index} className="bg-card border-card-border hover:shadow-lg transition-all duration-300 cursor-pointer group" onClick={() => handleCareerDetailClick(career)}>
+                  <CardHeader className="pb-4">
+                    <div className="flex items-start justify-between mb-4">
                       <div className="flex items-center gap-3">
-                        <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-100 to-purple-100 flex items-center justify-center">
-                          <Briefcase className="w-6 h-6 text-blue-600" />
+                        <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-blue-100 to-purple-100 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                          <Briefcase className="w-7 h-7 text-blue-600" />
                         </div>
-                        <div>
-                          <CardTitle className="text-lg">{career.name}</CardTitle>
-                          <CardDescription>{career.value}% Match</CardDescription>
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <div className="w-16 h-2 bg-muted rounded-full overflow-hidden">
+                        <div className="flex-1">
+                          <CardTitle className="text-xl font-bold mb-1">{career.name}</CardTitle>
+                          <div className="flex items-center gap-2">
+                            <Badge variant="secondary" className="text-xs">
+                              {career.value}% Match
+                            </Badge>
+                            <div className="w-20 h-2 bg-muted rounded-full overflow-hidden">
                           <div
                             className="h-full bg-gradient-to-r from-blue-500 to-purple-500 rounded-full transition-all duration-500"
                             style={{ width: `${career.value}%` }}
                           />
                         </div>
-                        <span className="text-xs text-foreground-muted mt-1">{career.value}%</span>
+                          </div>
+                        </div>
                       </div>
                     </div>
                   </CardHeader>
-                  <CardContent>
-                    <p className="text-sm text-foreground-muted mb-4">
-                      {career.description || "Based on your CBE pathway and interests, this career shows strong alignment with your profile."}
+                  
+                  <CardContent className="space-y-4">
+                    <p className="text-sm text-foreground-muted leading-relaxed">
+                      {career.description || "A promising career path that aligns with your CBE pathway and interests, offering strong growth potential in Kenya's evolving job market."}
                     </p>
-                    <div className="flex items-center justify-between text-xs text-foreground-muted mb-4">
-                      <span>💰 {career.salaryRange || 'KES 50K - 120K'}</span>
-                      <span>📈 {career.growth || 'High Growth'}</span>
+                    
+                    {/* Key Information Grid */}
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="p-3 rounded-lg bg-green-50 border border-green-200">
+                        <div className="flex items-center gap-2 mb-1">
+                          <DollarSign className="w-4 h-4 text-green-600" />
+                          <span className="text-xs font-medium text-green-800">Salary Range</span>
                     </div>
-                    <div className="text-xs text-foreground-muted mb-4">
-                      🎓 {career.education || "Bachelor's Required"}
+                        <p className="text-sm font-semibold text-green-700">{career.salaryRange || 'KSh 60K - 200K'}</p>
                     </div>
-                    <Button variant="outline" className="w-full">
-                      Learn More <ArrowRight className="w-4 h-4 ml-1" />
+                      
+                      <div className="p-3 rounded-lg bg-blue-50 border border-blue-200">
+                        <div className="flex items-center gap-2 mb-1">
+                          <TrendingUp className="w-4 h-4 text-blue-600" />
+                          <span className="text-xs font-medium text-blue-800">Growth</span>
+                        </div>
+                        <p className="text-sm font-semibold text-blue-700">{career.growth || 'High Growth'}</p>
+                      </div>
+                    </div>
+                    
+                    {/* Education Requirement */}
+                    <div className="p-3 rounded-lg bg-purple-50 border border-purple-200">
+                      <div className="flex items-center gap-2 mb-1">
+                        <GraduationCap className="w-4 h-4 text-purple-600" />
+                        <span className="text-xs font-medium text-purple-800">Education</span>
+                      </div>
+                      <p className="text-sm text-purple-700">{career.education || "Bachelor's Degree Required"}</p>
+                    </div>
+                    
+                    {/* Action Button */}
+                    <Button variant="outline" className="w-full group-hover:bg-primary group-hover:text-primary-foreground transition-colors duration-200">
+                      <Target className="w-4 h-4 mr-2" />
+                      Get Detailed Insights
+                      <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform duration-200" />
                     </Button>
                   </CardContent>
                 </Card>
@@ -1129,6 +1156,16 @@ const StudentDashboard = () => {
             setSelectedCareer(null)
           }}
           career={selectedCareer}
+          studentProfile={{
+            name: profile?.full_name,
+            schoolLevel: profile?.school_level,
+            currentGrade: profile?.current_grade,
+            cbeSubjects: profile?.cbe_subjects || profile?.subjects,
+            careerInterests: profile?.career_interests || profile?.interests,
+            strongSubjects: [], // This will be populated from grades data
+            weakSubjects: [], // This will be populated from grades data
+            overallAverage: 0 // This will be populated from grades data
+          }}
         />
       )}
 

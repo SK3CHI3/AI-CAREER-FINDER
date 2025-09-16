@@ -18,6 +18,16 @@ interface CareerDetailModalProps {
     growth?: string
     education?: string
   }
+  studentProfile?: {
+    name?: string
+    schoolLevel?: string
+    currentGrade?: string
+    cbeSubjects?: string[]
+    careerInterests?: string[]
+    strongSubjects?: string[]
+    weakSubjects?: string[]
+    overallAverage?: number
+  }
 }
 
 interface CareerDetails {
@@ -37,7 +47,7 @@ interface CareerDetails {
   resources: string[]
 }
 
-const CareerDetailModal: React.FC<CareerDetailModalProps> = ({ isOpen, onClose, career }) => {
+const CareerDetailModal: React.FC<CareerDetailModalProps> = ({ isOpen, onClose, career, studentProfile }) => {
   const [details, setDetails] = useState<CareerDetails | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -53,32 +63,47 @@ const CareerDetailModal: React.FC<CareerDetailModalProps> = ({ isOpen, onClose, 
     setError(null)
 
     try {
-      const prompt = `Generate detailed career information for "${career.name}" in the Kenyan context. Return a JSON object with the following structure:
+      // Enhanced prompt with student details
+      const studentInfo = studentProfile ? `
+STUDENT PROFILE:
+- Name: ${studentProfile.name || 'Student'}
+- School Level: ${studentProfile.schoolLevel || 'Not specified'}
+- Current Grade: ${studentProfile.currentGrade || 'Not specified'}
+- CBE Subjects: ${studentProfile.cbeSubjects?.join(', ') || 'Not specified'}
+- Career Interests: ${studentProfile.careerInterests?.join(', ') || 'Not specified'}
+- Strong Subjects: ${studentProfile.strongSubjects?.join(', ') || 'Not identified'}
+- Weak Subjects: ${studentProfile.weakSubjects?.join(', ') || 'Not identified'}
+- Overall Average: ${studentProfile.overallAverage ? `${studentProfile.overallAverage.toFixed(1)}%` : 'Not available'}
+` : ''
+
+      const prompt = `Provide detailed career insights for "${career.name}" in Kenya for this specific student. Return ONLY a JSON object:
+
+${studentInfo}
+CAREER: ${career.name} (${career.value}% match)
 
 {
-  "title": "Career Title",
-  "description": "Detailed description of what this career involves",
-  "marketValue": "Current market demand and opportunities in Kenya",
-  "salaryRange": "Salary range in KES (e.g., KSh 50,000-150,000)",
-  "requirements": ["List of specific requirements"],
-  "nextSteps": ["Actionable steps to pursue this career"],
-  "growthProspect": "Growth potential and future outlook",
-  "educationPath": "Educational requirements and pathways",
-  "skillsNeeded": ["Key skills required"],
-  "jobMarket": "Current job market situation in Kenya",
-  "whyRecommended": "Why this career is recommended for the student",
-  "relatedCareers": ["List of related career options"],
-  "timeline": "Typical timeline to enter this career",
-  "resources": ["Useful resources, websites, or organizations"]
+  "title": "${career.name}",
+  "description": "Detailed description of what this career involves in Kenya and why it's suitable for this student",
+  "marketValue": "Current job market demand and opportunities in Kenya, including specific sectors and companies",
+  "salaryRange": "Realistic KSh salary range for entry-level to senior positions",
+  "requirements": ["Specific educational requirements", "Key skills needed", "Experience requirements"],
+  "nextSteps": ["Immediate actionable steps for this student", "Short-term goals", "Long-term career path"],
+  "growthProspect": "Growth outlook in Kenya, including Vision 2030 alignment and emerging opportunities",
+  "educationPath": "Specific educational pathway including universities, courses, and certifications in Kenya",
+  "skillsNeeded": ["Technical skills", "Soft skills", "Industry-specific skills"],
+  "jobMarket": "Current market status, competition level, and hiring trends in Kenya",
+  "whyRecommended": "Specific reasons why this career fits this student based on their profile and academic performance",
+  "relatedCareers": ["Alternative career paths", "Specialized roles", "Career progression options"],
+  "timeline": "Realistic timeline to enter this career from their current position",
+  "resources": ["Specific Kenyan universities", "Professional associations", "Online courses", "Mentorship programs", "Industry contacts"]
 }
 
 Focus on:
-- Kenyan job market and opportunities
-- CBE curriculum alignment
-- Realistic salary expectations
-- Specific universities and institutions
-- Practical steps the student can take now
-- Free or affordable resources
+- Kenyan context and opportunities
+- Specific advice based on student's academic performance
+- Subjects they should focus on to succeed
+- Practical steps they can take now
+- Realistic expectations and timelines
 - Vision 2030 alignment`
 
       const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
@@ -93,11 +118,14 @@ Focus on:
           model: 'deepseek/deepseek-r1:free',
           messages: [{ role: 'user', content: prompt }],
           temperature: 0.7,
-          max_tokens: 2000
+          max_tokens: 1000
         })
       })
 
-      if (!response.ok) throw new Error('Failed to get career details')
+      if (!response.ok) {
+        console.error('API Error:', response.status, response.statusText)
+        throw new Error(`API Error: ${response.status}`)
+      }
 
       const data = await response.json()
       const aiResponse = data.choices[0]?.message?.content || ''
@@ -107,31 +135,66 @@ Focus on:
         if (jsonMatch) {
           const parsed = JSON.parse(jsonMatch[0])
           setDetails(parsed)
-        } else {
-          throw new Error('Could not parse AI response')
+          return
         }
       } catch (parseError) {
-        // Fallback details
-        setDetails({
-          title: career.name,
-          description: career.description || 'A promising career path for your profile',
-          marketValue: 'Growing demand in Kenya',
-          salaryRange: career.salaryRange || 'KSh 50,000-150,000',
-          requirements: ['Relevant degree or certification', 'Practical experience', 'Key skills'],
-          nextSteps: ['Complete your education', 'Gain practical experience', 'Build your network'],
-          growthProspect: career.growth || 'Good growth potential',
-          educationPath: career.education || 'University degree recommended',
-          skillsNeeded: ['Technical skills', 'Communication', 'Problem solving'],
-          jobMarket: 'Competitive but growing market',
-          whyRecommended: 'Matches your interests and skills',
-          relatedCareers: ['Similar roles', 'Alternative paths'],
-          timeline: '2-4 years to entry level',
-          resources: ['Professional associations', 'Online courses', 'Mentorship programs']
-        })
+        console.error('JSON Parse Error:', parseError)
       }
+
+      // Fallback to static details if AI fails
+      setDetails({
+        title: career.name,
+        description: career.description || `A ${career.name} is a promising career path that aligns with your interests and academic background. This role offers good growth potential in Kenya's evolving job market.`,
+        marketValue: 'Growing demand in Kenya with increasing opportunities in both public and private sectors',
+        salaryRange: career.salaryRange || 'KSh 60,000 - 200,000',
+        requirements: [
+          'Relevant degree or professional certification',
+          'Strong communication and analytical skills',
+          'Practical experience through internships or projects',
+          'Continuous learning and skill development'
+        ],
+        nextSteps: [
+          'Complete your current education with focus on relevant subjects',
+          'Seek internships or volunteer opportunities in related fields',
+          'Build a strong professional network',
+          'Consider additional certifications or short courses',
+          'Create a portfolio showcasing your skills and projects'
+        ],
+        growthProspect: career.growth || 'Strong growth potential with expanding opportunities',
+        educationPath: career.education || 'Bachelor\'s degree in relevant field recommended',
+        skillsNeeded: ['Critical thinking', 'Communication', 'Problem solving', 'Technical skills', 'Teamwork'],
+        jobMarket: 'Competitive but growing market with opportunities in various sectors',
+        whyRecommended: `This career matches your ${career.value}% compatibility score and aligns with your interests and academic strengths.`,
+        relatedCareers: ['Similar roles in related fields', 'Alternative career paths', 'Specialized positions'],
+        timeline: '2-4 years to entry level, with advancement opportunities',
+        resources: [
+          'Professional associations and networks',
+          'Online courses and certifications',
+          'Mentorship programs',
+          'Industry conferences and workshops'
+        ]
+      })
     } catch (error) {
       console.error('Error generating career details:', error)
-      setError('Failed to load career details. Please try again.')
+      setError('Unable to load detailed information. Showing basic details instead.')
+      
+      // Even if AI fails, show basic details
+      setDetails({
+        title: career.name,
+        description: career.description || `A ${career.name} is a career path that matches your profile with a ${career.value}% compatibility score.`,
+        marketValue: 'Growing opportunities in Kenya',
+        salaryRange: career.salaryRange || 'KSh 50,000 - 150,000',
+        requirements: ['Relevant education', 'Practical skills', 'Experience'],
+        nextSteps: ['Complete education', 'Gain experience', 'Build network'],
+        growthProspect: career.growth || 'Good potential',
+        educationPath: career.education || 'Degree recommended',
+        skillsNeeded: ['Communication', 'Problem solving', 'Technical skills'],
+        jobMarket: 'Competitive market',
+        whyRecommended: `Matches your profile with ${career.value}% compatibility`,
+        relatedCareers: ['Similar roles'],
+        timeline: '2-4 years',
+        resources: ['Professional networks', 'Online courses']
+      })
     } finally {
       setIsLoading(false)
     }
