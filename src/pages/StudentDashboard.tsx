@@ -35,7 +35,8 @@ import {
   TrendingDown,
   Activity,
   BookMarked,
-  Lightbulb
+  Lightbulb,
+  DollarSign
 } from 'lucide-react'
 import AIChat from '@/components/AIChat'
 import { ReportGenerator } from '@/lib/report-generator'
