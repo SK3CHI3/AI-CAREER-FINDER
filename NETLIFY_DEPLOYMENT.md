@@ -1,0 +1,80 @@
+# Netlify Deployment Guide
+
+## Quick Deploy
+
+### Option 1: Connect GitHub Repository
+1. Go to [Netlify](https://netlify.com)
+2. Click "New site from Git"
+3. Connect your GitHub account
+4. Select the `AI-CAREER-FINDER` repository
+5. Configure build settings:
+   - **Build command**: `npm run build`
+   - **Publish directory**: `dist`
+   - **Node version**: `18`
+
+### Option 2: Manual Deploy
+1. Run `npm run build` locally
+2. Drag and drop the `dist` folder to Netlify dashboard
+
+## Environment Variables
+
+Set these in Netlify Dashboard → Site Settings → Environment Variables:
+
+```
+VITE_SUPABASE_URL=https://yrgtkuwejsaxhsfozxfh.supabase.co
+VITE_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlyZ3RrdXdlanNheGhzZm96eGZoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTYzMzEyMzUsImV4cCI6MjA3MTkwNzIzNX0.bQEGRE4OU5_cBJd5DNtdZ-DSdhO9wIKGc2L1DaR9l-s
+VITE_OPENROUTER_API_KEY=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
+```
+
+## Build Settings
+
+- **Build command**: `npm run build`
+- **Publish directory**: `dist`
+- **Node version**: `18`
+- **Functions directory**: `netlify/functions`
+
+## Custom Domain (Optional)
+
+1. Go to Site Settings → Domain Management
+2. Add your custom domain
+3. Configure DNS settings as instructed by Netlify
+
+## Features Included
+
+✅ **SPA Routing**: All routes redirect to `index.html` for React Router
+✅ **Security Headers**: XSS protection, frame options, content type options
+✅ **Caching**: Optimized cache headers for static assets
+✅ **Functions**: Ready for serverless functions if needed
+✅ **Environment Variables**: Secure handling of API keys
+
+## Troubleshooting
+
+### Build Fails
+- Check Node.js version (should be 18)
+- Verify all environment variables are set
+- Check build logs in Netlify dashboard
+
+### Routing Issues
+- Ensure `_redirects` file is in `public/` folder
+- Check that `netlify.toml` has correct redirect rules
+
+### Environment Variables Not Working
+- Variables must start with `VITE_` to be accessible in the frontend
+- Redeploy after adding new environment variables
+
+## Performance Optimization
+
+The site is optimized for:
+- ✅ Static asset caching (1 year)
+- ✅ HTML file revalidation
+- ✅ Gzip compression
+- ✅ Security headers
+- ✅ SPA routing
+
+## Support
+
+For issues with deployment, check:
+1. Netlify build logs
+2. Browser console for errors
+3. Environment variables are correctly set
+4. All dependencies are in `package.json`

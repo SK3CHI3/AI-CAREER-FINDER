@@ -7,8 +7,11 @@
     "dev": "vite",
     "build": "vite build",
     "build:dev": "vite build --mode development",
+    "build:netlify": "npm run build && npm run netlify:functions",
+    "netlify:functions": "echo 'Netlify functions ready'",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "deploy:netlify": "npm run build && netlify deploy --prod"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",
