@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge'
 import { Loader2, CheckCircle, XCircle, CreditCard, Smartphone, Shield, Lock } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
 import { supabase } from '@/lib/supabase'
+import 'intasend-inlinejs-sdk'
 
 // Declare IntaSend types for TypeScript
 declare global {
@@ -25,53 +26,75 @@ const PaymentWall: React.FC<PaymentWallProps> = ({ onPaymentSuccess }) => {
   const [error, setError] = useState<string | null>(null)
   const [isIntaSendLoaded, setIsIntaSendLoaded] = useState(false)
 
-  // Load IntaSend SDK
+  // Initialize IntaSend SDK
   useEffect(() => {
-    const loadIntaSend = async () => {
-      try {
-        // Load IntaSend script
-        const script = document.createElement('script')
-        script.src = 'https://unpkg.com/[email protected]/build/intasend-inline.js'
-        script.async = true
-        script.onload = () => {
+    console.log('🔄 Initializing IntaSend SDK...')
+    
+    // Check if IntaSend is available
+    if (window.IntaSend) {
+      console.log('✅ IntaSend SDK available, initializing...')
+      setIsIntaSendLoaded(true)
+      initializeIntaSend()
+    } else {
+      // Wait a bit for the SDK to load from the import
+      const checkIntaSend = () => {
+        if (window.IntaSend) {
+          console.log('✅ IntaSend SDK loaded, initializing...')
           setIsIntaSendLoaded(true)
           initializeIntaSend()
+        } else {
+          console.log('⏳ Waiting for IntaSend SDK to load...')
+          setTimeout(checkIntaSend, 100)
         }
-        script.onerror = () => {
+      }
+      
+      // Start checking after a short delay
+      setTimeout(checkIntaSend, 100)
+      
+      // Set a timeout fallback
+      setTimeout(() => {
+        if (!window.IntaSend) {
+          console.error('❌ IntaSend SDK failed to load')
           setError('Failed to load payment system. Please refresh the page.')
         }
-        document.head.appendChild(script)
-      } catch (err) {
-        console.error('Error loading IntaSend:', err)
-        setError('Failed to initialize payment system.')
-      }
+      }, 5000) // 5 second timeout
     }
-
-    loadIntaSend()
   }, [])
 
   const initializeIntaSend = () => {
-    if (!window.IntaSend) return
+    console.log('🔧 Initializing IntaSend...')
+    if (!window.IntaSend) {
+      console.error('❌ IntaSend not available on window object')
+      return
+    }
 
     try {
+      const apiKey = import.meta.env.VITE_INTASEND_PUBLIC_KEY || 'test_pk_123456789'
+      const isLive = import.meta.env.VITE_INTASEND_LIVE === 'true'
+      
+      console.log('🔑 IntaSend API Key:', apiKey ? `${apiKey.substring(0, 10)}...` : 'NOT SET')
+      console.log('🌍 Live mode:', isLive)
+      
       new window.IntaSend({
-        publicAPIKey: import.meta.env.VITE_INTASEND_PUBLIC_KEY || 'test_pk_123456789',
-        live: import.meta.env.VITE_INTASEND_LIVE === 'true' // Set to true for production
+        publicAPIKey: apiKey,
+        live: isLive
       })
       .on("COMPLETE", (results: any) => {
-        console.log("Payment completed:", results)
+        console.log("✅ Payment completed:", results)
         handlePaymentSuccess(results)
       })
       .on("FAILED", (results: any) => {
-        console.log("Payment failed:", results)
+        console.log("❌ Payment failed:", results)
         handlePaymentFailure(results)
       })
       .on("IN-PROGRESS", (results: any) => {
-        console.log("Payment in progress:", results)
+        console.log("⏳ Payment in progress:", results)
         setPaymentStatus('processing')
       })
+      
+      console.log('✅ IntaSend initialized successfully')
     } catch (err) {
-      console.error('Error initializing IntaSend:', err)
+      console.error('❌ Error initializing IntaSend:', err)
       setError('Failed to initialize payment system.')
     }
   }
@@ -129,9 +152,19 @@ const PaymentWall: React.FC<PaymentWallProps> = ({ onPaymentSuccess }) => {
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100">
         <Card className="w-full max-w-md">
           <CardContent className="pt-6">
-            <div className="flex items-center justify-center space-x-2">
-              <Loader2 className="w-6 h-6 animate-spin" />
-              <span>Loading payment system...</span>
+            <div className="text-center space-y-4">
+              <div className="flex items-center justify-center space-x-2">
+                <Loader2 className="w-6 h-6 animate-spin" />
+                <span>Loading payment system...</span>
+              </div>
+              <p className="text-sm text-gray-500">
+                This should only take a few seconds. If it takes longer, please refresh the page.
+              </p>
+              {error && (
+                <Alert variant="destructive" className="mt-4">
+                  <AlertDescription>{error}</AlertDescription>
+                </Alert>
+              )}
             </div>
           </CardContent>
         </Card>

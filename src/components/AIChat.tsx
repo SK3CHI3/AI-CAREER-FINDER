@@ -48,7 +48,7 @@ const AIChat = () => {
       const { data: studentProfile } = await supabase
         .from('profiles')
         .select('*')
-        .eq('user_id', user?.id)
+        .eq('id', user?.id)
         .single();
 
       const context: UserContext = {

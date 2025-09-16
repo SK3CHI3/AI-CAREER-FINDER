@@ -147,7 +147,7 @@ export const ProfileSetup: React.FC<ProfileSetupProps> = ({ onComplete }) => {
       const { data: existingProfile } = await supabase
         .from('profiles')
         .select('id')
-        .eq('user_id', user.id)
+        .eq('id', user.id)
         .single()
 
       const profileData = {
@@ -164,7 +164,7 @@ export const ProfileSetup: React.FC<ProfileSetupProps> = ({ onComplete }) => {
         const { error } = await supabase
           .from('profiles')
           .update(profileData)
-          .eq('user_id', user.id)
+          .eq('id', user.id)
 
         if (error) throw error
       } else {
