@@ -1,6 +1,6 @@
 [build]
-  # Build command
-  command = "npm run build"
+  # Install dependencies and build
+  command = "npm install && npm run build"
   
   # Directory to publish
   publish = "dist"
@@ -11,6 +11,8 @@
 [build.environment]
   # Node.js version
   NODE_VERSION = "18"
+  # Ensure npm is available
+  NPM_FLAGS = "--version"
 
 # Redirect rules for SPA (Single Page Application)
 [[redirects]]
