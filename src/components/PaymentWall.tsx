@@ -75,22 +75,33 @@ const PaymentWall: React.FC<PaymentWallProps> = ({ onPaymentSuccess }) => {
       console.log('🔑 IntaSend API Key:', apiKey ? `${apiKey.substring(0, 10)}...` : 'NOT SET')
       console.log('🌍 Live mode:', isLive)
       
-      new window.IntaSend({
+      // Store the IntaSend instance for later use
+      const intaSendInstance = new window.IntaSend({
         publicAPIKey: apiKey,
         live: isLive
       })
-      .on("COMPLETE", (results: any) => {
-        console.log("✅ Payment completed:", results)
-        handlePaymentSuccess(results)
-      })
-      .on("FAILED", (results: any) => {
-        console.log("❌ Payment failed:", results)
-        handlePaymentFailure(results)
-      })
-      .on("IN-PROGRESS", (results: any) => {
-        console.log("⏳ Payment in progress:", results)
-        setPaymentStatus('processing')
-      })
+      
+      // Set up event listeners
+      intaSendInstance
+        .on("COMPLETE", (results: any) => {
+          console.log("✅ Payment completed:", results)
+          handlePaymentSuccess(results)
+        })
+        .on("FAILED", (results: any) => {
+          console.log("❌ Payment failed:", results)
+          handlePaymentFailure(results)
+        })
+        .on("IN-PROGRESS", (results: any) => {
+          console.log("⏳ Payment in progress:", results)
+          setPaymentStatus('processing')
+        })
+        .on("ERROR", (error: any) => {
+          console.error("❌ IntaSend error:", error)
+          handlePaymentFailure({ message: error.message || 'Payment system error' })
+        })
+      
+      // Store instance globally for button clicks
+      ;(window as any).intaSendInstance = intaSendInstance
       
       console.log('✅ IntaSend initialized successfully')
     } catch (err) {
@@ -301,6 +312,18 @@ const PaymentWall: React.FC<PaymentWallProps> = ({ onPaymentSuccess }) => {
                 data-card_tarrif="BUSINESS-PAYS"
                 data-mobile_tarrif="BUSINESS-PAYS"
                 disabled={isLoading || paymentStatus === 'processing'}
+                onClick={(e) => {
+                  e.preventDefault()
+                  console.log('🖱️ Payment button clicked')
+                  if (window.IntaSend && (window as any).intaSendInstance) {
+                    console.log('💳 Triggering IntaSend payment...')
+                    // The IntaSend SDK should automatically handle the button click
+                    // due to the 'intaSendPayButton' class
+                  } else {
+                    console.error('❌ IntaSend not available for payment')
+                    setError('Payment system not ready. Please refresh the page.')
+                  }
+                }}
               >
                 {isLoading || paymentStatus === 'processing' ? (
                   <>
@@ -319,6 +342,13 @@ const PaymentWall: React.FC<PaymentWallProps> = ({ onPaymentSuccess }) => {
             <p className="text-xs text-gray-500 text-center">
               Secure payment powered by IntaSend. We accept M-Pesa, Visa, Mastercard, and more.
             </p>
+            {import.meta.env.VITE_INTASEND_PUBLIC_KEY === 'your_intasend_public_key_here' && (
+              <Alert className="mt-4 border-yellow-200 bg-yellow-50">
+                <AlertDescription className="text-yellow-800">
+                  <strong>Test Mode:</strong> Please add your IntaSend API key to .env.local to enable real payments.
+                </AlertDescription>
+              </Alert>
+            )}
           </div>
         </CardContent>
       </Card>
