@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
+import PaymentGate from "@/components/PaymentGate";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import StudentDashboard from "./pages/StudentDashboard";
@@ -27,7 +28,9 @@ const App = () => (
               path="/student"
               element={
                 <ProtectedRoute requiredRole="student">
-                  <StudentDashboard />
+                  <PaymentGate>
+                    <StudentDashboard />
+                  </PaymentGate>
                 </ProtectedRoute>
               }
             />

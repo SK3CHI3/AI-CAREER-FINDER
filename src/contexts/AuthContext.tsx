@@ -17,6 +17,12 @@ interface Profile {
   career_interests?: string[]
   interests?: string[]
   career_goals?: string
+  payment_status?: 'pending' | 'completed' | 'failed' | 'refunded'
+  payment_reference?: string
+  payment_date?: string
+  payment_amount?: number
+  payment_currency?: string
+  intasend_transaction_id?: string
   created_at: string
   updated_at: string
 }
