@@ -151,7 +151,6 @@ export const ProfileSetup: React.FC<ProfileSetupProps> = ({ onComplete }) => {
         .single()
 
       const profileData = {
-        user_id: user.id,
         school_level: data.schoolLevel,
         current_grade: data.currentGrade || null,
         cbe_subjects: selectedSubjects,
