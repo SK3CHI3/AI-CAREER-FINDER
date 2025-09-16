@@ -344,7 +344,7 @@ Keep tone professional, clear, and actionable.`;
       };
       setConversation(prev => [...prev, assistantMessage]);
 
-      setShowReport(true);
+    setShowReport(true);
     } catch (e) {
       setError('Could not generate summary. Please try again.');
     } finally {
@@ -519,7 +519,7 @@ Keep tone professional, clear, and actionable.`;
                 {isGeneratingReport ? (
                   <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                 ) : (
-                  <Download className="w-4 h-4 mr-2" />
+                <Download className="w-4 h-4 mr-2" />
                 )}
                 {isGeneratingReport ? 'Preparing…' : 'Generate My Career Report'}
               </Button>

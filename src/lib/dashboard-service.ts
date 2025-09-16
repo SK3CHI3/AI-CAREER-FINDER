@@ -1,5 +1,6 @@
 // Dashboard Data Service - Dynamic Data Management
 import { supabase } from './supabase'
+import { aiCacheService } from './ai-cache-service'
 
 export interface UserActivity {
   id: string
@@ -156,40 +157,81 @@ class DashboardService {
     return data
   }
 
-  // Career Recommendations
+  // Career Recommendations - Now uses caching
   async getCareerRecommendations(userId: string): Promise<CareerRecommendation[]> {
-    const { data, error } = await supabase
-      .from('career_recommendations')
-      .select('*')
-      .eq('user_id', userId)
-      .gt('expires_at', new Date().toISOString())
-      .order('match_percentage', { ascending: false })
+    try {
+      // First try to get from cache
+      const cachedRecommendations = await aiCacheService.getCachedCareerRecommendations(userId)
+      
+      if (cachedRecommendations && cachedRecommendations.length > 0) {
+        console.log(`Using cached career recommendations for user ${userId}`)
+        return cachedRecommendations.map(rec => ({
+          id: rec.id || '',
+          user_id: rec.user_id,
+          career_name: rec.career_name,
+          match_percentage: rec.match_percentage,
+          description: rec.description || '',
+          salary_range: rec.salary_range || '',
+          growth_prospect: rec.growth || '',
+          education_required: rec.education || '',
+          skills_required: [],
+          created_at: rec.created_at || new Date().toISOString(),
+          expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString() // 24 hours from now
+        }))
+      }
 
-    if (error) throw error
-    return data || []
+      // If no cache, try to get from old table as fallback
+      console.log(`No cached career recommendations found for user ${userId}, checking old table`)
+      const { data, error } = await supabase
+        .from('career_recommendations')
+        .select('*')
+        .eq('user_id', userId)
+        .gt('expires_at', new Date().toISOString())
+        .order('match_percentage', { ascending: false })
+
+      if (error) {
+        console.error('Error fetching career recommendations:', error)
+        return []
+      }
+
+      return data || []
+    } catch (error) {
+      console.error('Error in getCareerRecommendations:', error)
+      return []
+    }
   }
 
   async saveCareerRecommendations(userId: string, recommendations: Omit<CareerRecommendation, 'id' | 'user_id' | 'created_at' | 'expires_at'>[]): Promise<CareerRecommendation[]> {
-    // Clear existing recommendations
-    await supabase
-      .from('career_recommendations')
-      .delete()
-      .eq('user_id', userId)
+    try {
+      // Save to cache first (primary storage)
+      await aiCacheService.saveCareerRecommendations(userId, recommendations)
+      
+      // Also save to old table for backward compatibility
+      await supabase
+        .from('career_recommendations')
+        .delete()
+        .eq('user_id', userId)
 
-    // Insert new recommendations
-    const recommendationsWithUserId = recommendations.map(rec => ({
-      ...rec,
-      user_id: userId,
-      expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString() // 30 days from now
-    }))
+      const recommendationsWithUserId = recommendations.map(rec => ({
+        ...rec,
+        user_id: userId,
+        expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString() // 30 days from now
+      }))
 
-    const { data, error } = await supabase
-      .from('career_recommendations')
-      .insert(recommendationsWithUserId)
-      .select()
+      const { data, error } = await supabase
+        .from('career_recommendations')
+        .insert(recommendationsWithUserId)
+        .select()
 
-    if (error) throw error
-    return data || []
+      if (error) {
+        console.error('Error saving to old career_recommendations table:', error)
+      }
+
+      return data || []
+    } catch (error) {
+      console.error('Error saving career recommendations:', error)
+      return []
+    }
   }
 
   // Career Paths

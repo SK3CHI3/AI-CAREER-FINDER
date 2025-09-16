@@ -74,7 +74,11 @@ interface AcademicTerm {
   is_active: boolean
 }
 
-const GradesManager = () => {
+interface GradesManagerProps {
+  onGradesUpdated?: () => void
+}
+
+const GradesManager = ({ onGradesUpdated }: GradesManagerProps) => {
   const { user } = useAuth()
   const [grades, setGrades] = useState<StudentGrade[]>([])
   const [subjects, setSubjects] = useState<CbeSubject[]>([])
@@ -218,6 +222,11 @@ const GradesManager = () => {
 
       // Reload grades
       await loadGradesData()
+      
+      // Notify parent component that grades were updated
+      if (onGradesUpdated) {
+        onGradesUpdated()
+      }
       
       // Reset form
       form.reset()

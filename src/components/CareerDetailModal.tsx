@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Loader2, ExternalLink, GraduationCap, DollarSign, TrendingUp, Clock, MapPin, Users, BookOpen, Target } from 'lucide-react'
+import { aiCacheService } from '@/lib/ai-cache-service'
 import { aiCareerService } from '@/lib/ai-service'
 
 interface CareerDetailModalProps {
@@ -59,10 +60,32 @@ const CareerDetailModal: React.FC<CareerDetailModalProps> = ({ isOpen, onClose, 
   }, [isOpen, career])
 
   const generateCareerDetails = async () => {
+    console.log('🚀 Starting career details generation for:', career.name)
     setIsLoading(true)
     setError(null)
 
     try {
+      // First check if we have cached details
+      if (studentProfile?.id) {
+        const cachedDetails = await aiCacheService.getCachedCareerDetails(studentProfile.id, career.name)
+        if (cachedDetails) {
+          console.log('✅ Using cached career details')
+          setDetails(cachedDetails)
+          setIsLoading(false)
+          return
+        }
+      }
+
+      // Get API key from environment variables
+      const apiKey = import.meta.env.VITE_OPENROUTER_API_KEY
+      const baseUrl = 'https://openrouter.ai/api/v1'
+      const modelName = 'deepseek/deepseek-r1:free'
+      
+      if (!apiKey) {
+        console.error('❌ No API key found')
+        throw new Error('API key not configured')
+      }
+
       // Enhanced prompt with student details
       const studentInfo = studentProfile ? `
 STUDENT PROFILE:
@@ -76,72 +99,91 @@ STUDENT PROFILE:
 - Overall Average: ${studentProfile.overallAverage ? `${studentProfile.overallAverage.toFixed(1)}%` : 'Not available'}
 ` : ''
 
-      const prompt = `Provide detailed career insights for "${career.name}" in Kenya for this specific student. Return ONLY a JSON object:
+      const prompt = `Provide detailed career insights for "${career.name}" in Kenya. Return ONLY a JSON object:
 
 ${studentInfo}
 CAREER: ${career.name} (${career.value}% match)
 
 {
   "title": "${career.name}",
-  "description": "Detailed description of what this career involves in Kenya and why it's suitable for this student",
-  "marketValue": "Current job market demand and opportunities in Kenya, including specific sectors and companies",
-  "salaryRange": "Realistic KSh salary range for entry-level to senior positions",
-  "requirements": ["Specific educational requirements", "Key skills needed", "Experience requirements"],
-  "nextSteps": ["Immediate actionable steps for this student", "Short-term goals", "Long-term career path"],
-  "growthProspect": "Growth outlook in Kenya, including Vision 2030 alignment and emerging opportunities",
-  "educationPath": "Specific educational pathway including universities, courses, and certifications in Kenya",
-  "skillsNeeded": ["Technical skills", "Soft skills", "Industry-specific skills"],
-  "jobMarket": "Current market status, competition level, and hiring trends in Kenya",
-  "whyRecommended": "Specific reasons why this career fits this student based on their profile and academic performance",
-  "relatedCareers": ["Alternative career paths", "Specialized roles", "Career progression options"],
-  "timeline": "Realistic timeline to enter this career from their current position",
-  "resources": ["Specific Kenyan universities", "Professional associations", "Online courses", "Mentorship programs", "Industry contacts"]
+  "description": "What this career involves in Kenya",
+  "marketValue": "Job market demand in Kenya",
+  "salaryRange": "KSh range for this role",
+  "requirements": ["Key requirements"],
+  "nextSteps": ["Steps to pursue this career"],
+  "growthProspect": "Growth outlook",
+  "educationPath": "Education needed",
+  "skillsNeeded": ["Important skills"],
+  "jobMarket": "Current market status",
+  "whyRecommended": "Why this career fits",
+  "relatedCareers": ["Similar careers"],
+  "timeline": "Time to enter this career",
+  "resources": ["Helpful resources"]
 }
 
-Focus on:
-- Kenyan context and opportunities
-- Specific advice based on student's academic performance
-- Subjects they should focus on to succeed
-- Practical steps they can take now
-- Realistic expectations and timelines
-- Vision 2030 alignment`
+Keep it concise and Kenya-focused.`
 
-      const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+      console.log('📤 Sending API request...')
+      const response = await fetch(`${baseUrl}/chat/completions`, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${import.meta.env.VITE_OPENROUTER_API_KEY}`,
+          'Authorization': `Bearer ${apiKey}`,
           'Content-Type': 'application/json',
           'HTTP-Referer': window.location.origin,
-          'X-Title': 'AI Career Finder'
+          'X-Title': 'CareerPath AI - Kenya CBE Career Guidance'
         },
         body: JSON.stringify({
-          model: 'deepseek/deepseek-r1:free',
+          model: modelName,
           messages: [{ role: 'user', content: prompt }],
           temperature: 0.7,
-          max_tokens: 1000
+          max_tokens: 1000,
+          top_p: 0.9
         })
       })
 
+      console.log('📥 API Response status:', response.status)
+
       if (!response.ok) {
-        console.error('API Error:', response.status, response.statusText)
-        throw new Error(`API Error: ${response.status}`)
+        const errorText = await response.text().catch(() => 'Unknown error')
+        console.error('❌ OpenRouter API Error:', {
+          status: response.status,
+          statusText: response.statusText,
+          error: errorText
+        });
+        throw new Error(`AI service error: ${response.status} - ${response.statusText}`)
       }
 
       const data = await response.json()
-      const aiResponse = data.choices[0]?.message?.content || ''
+      console.log('📊 API Response data:', data)
+      
+      if (!data.choices || !data.choices[0] || !data.choices[0].message) {
+        throw new Error('Invalid response format from AI service')
+      }
+
+      const aiResponse = data.choices[0].message.content
+      console.log('🤖 AI Response:', aiResponse)
 
       try {
         const jsonMatch = aiResponse.match(/\{[\s\S]*\}/)
         if (jsonMatch) {
           const parsed = JSON.parse(jsonMatch[0])
+          console.log('✅ Parsed AI response successfully:', parsed)
           setDetails(parsed)
+          
+          // Save to cache
+          if (studentProfile?.id) {
+            await aiCacheService.saveCareerDetails(studentProfile.id, career.name, parsed)
+          }
           return
+        } else {
+          console.warn('⚠️ No JSON found in AI response')
         }
       } catch (parseError) {
-        console.error('JSON Parse Error:', parseError)
+        console.error('❌ JSON Parse Error:', parseError)
       }
 
       // Fallback to static details if AI fails
+      console.log('🔄 Using fallback details')
       setDetails({
         title: career.name,
         description: career.description || `A ${career.name} is a promising career path that aligns with your interests and academic background. This role offers good growth potential in Kenya's evolving job market.`,
@@ -175,10 +217,11 @@ Focus on:
         ]
       })
     } catch (error) {
-      console.error('Error generating career details:', error)
-      setError('Unable to load detailed information. Showing basic details instead.')
+      console.error('❌ Error generating career details:', error)
+      setError(`Unable to load detailed information: ${error instanceof Error ? error.message : 'Unknown error'}`)
       
       // Even if AI fails, show basic details
+      console.log('🔄 Using basic fallback details')
       setDetails({
         title: career.name,
         description: career.description || `A ${career.name} is a career path that matches your profile with a ${career.value}% compatibility score.`,
@@ -196,6 +239,7 @@ Focus on:
         resources: ['Professional networks', 'Online courses']
       })
     } finally {
+      console.log('✅ Career details generation completed')
       setIsLoading(false)
     }
   }

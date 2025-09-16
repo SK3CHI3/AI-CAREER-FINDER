@@ -49,6 +49,7 @@ import { supabase } from '@/lib/supabase'
 import { aiCareerService } from '@/lib/ai-service'
 import { dashboardService, UserStat, UserActivity, CareerRecommendation } from '@/lib/dashboard-service'
 import { useActivityTracking } from '@/hooks/useActivityTracking'
+import { aiCacheService } from '@/lib/ai-cache-service'
 
 // Default career data - will be replaced with AI recommendations
 interface CareerDataItem {
@@ -437,12 +438,6 @@ const StudentDashboard = () => {
 
       // If no existing recommendations, generate new ones with AI including grades data
       console.log('🤖 Generating new career recommendations with AI (including grades data)');
-    const timeoutPromise = new Promise((_, reject) =>
-      setTimeout(() => {
-        console.log('⏰ AI request timeout after 15 seconds');
-        reject(new Error('AI request timeout'));
-      }, 15000)
-    );
 
       // Get academic performance data
       const academicPerformance = await dashboardService.calculateAcademicPerformance(user.id);
@@ -464,11 +459,8 @@ const StudentDashboard = () => {
         }
       }
 
-      // Race between AI call and timeout
-      const recommendations = await Promise.race([
-        aiCareerService.generateCareerRecommendations(userContext),
-        timeoutPromise
-      ]) as any[];
+      // Generate AI recommendations without timeout
+      const recommendations = await aiCareerService.generateCareerRecommendations(userContext) as any[];
 
       if (recommendations && recommendations.length > 0) {
         // Save recommendations to database
@@ -577,6 +569,17 @@ const StudentDashboard = () => {
     setSelectedCareer(career)
     setIsCareerModalOpen(true)
     trackButtonClick('View Career Details', 'Career Card')
+  }
+
+  // Function to invalidate cache when grades are updated
+  const handleGradesUpdated = async () => {
+    if (user?.id && profile) {
+      console.log('🔄 Grades updated, invalidating AI caches')
+      await aiCacheService.invalidateAllCaches(user.id, 'grades_updated')
+      
+      // Reload career recommendations with fresh data
+      await loadCareerRecommendations(profile)
+    }
   }
 
   const CustomTooltip = ({ active, payload }: any) => {
@@ -884,7 +887,10 @@ const StudentDashboard = () => {
                   <p className="text-sm text-foreground-muted mb-4">Complete our comprehensive career assessment to get personalized recommendations.</p>
                   <Button 
                     className="w-full bg-blue-600 hover:bg-blue-700"
-                    onClick={() => trackButtonClick('Start Assessment', 'Action Cards')}
+                    onClick={() => {
+                      trackButtonClick('Start Assessment', 'Action Cards')
+                      setActiveTab('chat')
+                    }}
                   >
                     Start Assessment <ArrowRight className="w-4 h-4 ml-1" />
                   </Button>
@@ -907,7 +913,10 @@ const StudentDashboard = () => {
                   <p className="text-sm text-foreground-muted mb-4">Learn about Senior Secondary pathways and university requirements.</p>
                   <Button 
                     className="w-full bg-green-600 hover:bg-green-700"
-                    onClick={() => trackButtonClick('Explore Paths', 'Action Cards')}
+                    onClick={() => {
+                      trackButtonClick('Explore Paths', 'Action Cards')
+                      setActiveTab('careers')
+                    }}
                   >
                     Explore Paths <ArrowRight className="w-4 h-4 ml-1" />
                   </Button>
@@ -1141,7 +1150,7 @@ const StudentDashboard = () => {
                 <CardDescription>Record and track your academic grades to get better career recommendations</CardDescription>
               </CardHeader>
               <CardContent>
-                <GradesManager />
+                <GradesManager onGradesUpdated={handleGradesUpdated} />
               </CardContent>
             </Card>
           </TabsContent>

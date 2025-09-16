@@ -1,7 +1,7 @@
 import { supabase } from './supabase'
 import type { AIConversation, ChatMessage, UserProfile } from '../types/database'
 
-const OPENROUTER_API_KEY = import.meta.env.VITE_OPENROUTER_API_KEY || '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'
+const OPENROUTER_API_KEY = import.meta.env.VITE_OPENROUTER_API_KEY
 const MODEL_NAME = 'deepseek/deepseek-r1:free'
 
 export type { ChatMessage } from '../types/database'

@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { ExternalLink, Clock, Users, Star, Loader2, BookOpen, Award, Globe } from 'lucide-react'
+import { aiCacheService } from '@/lib/ai-cache-service'
 import { useAuth } from '@/contexts/AuthContext'
 
 interface CourseRecommendation {
@@ -38,8 +39,23 @@ const CourseRecommendations: React.FC<CourseRecommendationsProps> = ({
   const { user } = useAuth()
 
   useEffect(() => {
-    generateCourseRecommendations()
-  }, [careerInterests, cbeSubjects, strongSubjects])
+    // First check for cached courses
+    const loadCachedCourses = async () => {
+      if (user?.id) {
+        const cachedCourses = await aiCacheService.getCachedCourseRecommendations(user.id)
+        if (cachedCourses && cachedCourses.length > 0) {
+          console.log('✅ Using cached course recommendations')
+          setCourses(cachedCourses)
+          setIsLoading(false)
+          return
+        }
+      }
+      // If no cache, generate new recommendations
+      generateCourseRecommendations()
+    }
+    
+    loadCachedCourses()
+  }, [careerInterests, cbeSubjects, strongSubjects, user?.id])
 
   const generateCourseRecommendations = async () => {
     setIsLoading(true)
@@ -108,6 +124,11 @@ Focus on:
           const parsed = JSON.parse(jsonMatch[0])
           if (Array.isArray(parsed) && parsed.length > 0) {
             setCourses(parsed)
+            
+            // Save to cache
+            if (user?.id) {
+              await aiCacheService.saveCourseRecommendations(user.id, parsed)
+            }
           } else {
             throw new Error('Invalid course data format')
           }
