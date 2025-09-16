@@ -61,6 +61,17 @@ const PaymentWall: React.FC<PaymentWallProps> = ({ onPaymentSuccess }) => {
     }
   }, [])
 
+  // Re-initialize IntaSend when component becomes visible to ensure button binding
+  useEffect(() => {
+    if (isIntaSendLoaded && window.IntaSend) {
+      console.log('🔄 Re-initializing IntaSend for button binding...')
+      // Small delay to ensure DOM is ready
+      setTimeout(() => {
+        initializeIntaSend()
+      }, 100)
+    }
+  }, [isIntaSendLoaded])
+
   const initializeIntaSend = () => {
     console.log('🔧 Initializing IntaSend...')
     if (!window.IntaSend) {
@@ -72,38 +83,35 @@ const PaymentWall: React.FC<PaymentWallProps> = ({ onPaymentSuccess }) => {
       const apiKey = import.meta.env.VITE_INTASEND_PUBLIC_KEY || 'test_pk_123456789'
       const isLive = import.meta.env.VITE_INTASEND_LIVE === 'true'
       
+      console.log('🔍 Environment check:')
+      console.log('  - VITE_INTASEND_PUBLIC_KEY:', import.meta.env.VITE_INTASEND_PUBLIC_KEY)
+      console.log('  - VITE_INTASEND_LIVE:', import.meta.env.VITE_INTASEND_LIVE)
       console.log('🔑 IntaSend API Key:', apiKey ? `${apiKey.substring(0, 10)}...` : 'NOT SET')
       console.log('🌍 Live mode:', isLive)
       
-      // Store the IntaSend instance for later use
-      const intaSendInstance = new window.IntaSend({
+      // Initialize IntaSend - this automatically binds to buttons with 'intaSendPayButton' class
+      new window.IntaSend({
         publicAPIKey: apiKey,
         live: isLive
       })
+      .on("COMPLETE", (results: any) => {
+        console.log("✅ Payment completed:", results)
+        handlePaymentSuccess(results)
+      })
+      .on("FAILED", (results: any) => {
+        console.log("❌ Payment failed:", results)
+        handlePaymentFailure(results)
+      })
+      .on("IN-PROGRESS", (results: any) => {
+        console.log("⏳ Payment in progress:", results)
+        setPaymentStatus('processing')
+      })
+      .on("ERROR", (error: any) => {
+        console.error("❌ IntaSend error:", error)
+        handlePaymentFailure({ message: error.message || 'Payment system error' })
+      })
       
-      // Set up event listeners
-      intaSendInstance
-        .on("COMPLETE", (results: any) => {
-          console.log("✅ Payment completed:", results)
-          handlePaymentSuccess(results)
-        })
-        .on("FAILED", (results: any) => {
-          console.log("❌ Payment failed:", results)
-          handlePaymentFailure(results)
-        })
-        .on("IN-PROGRESS", (results: any) => {
-          console.log("⏳ Payment in progress:", results)
-          setPaymentStatus('processing')
-        })
-        .on("ERROR", (error: any) => {
-          console.error("❌ IntaSend error:", error)
-          handlePaymentFailure({ message: error.message || 'Payment system error' })
-        })
-      
-      // Store instance globally for button clicks
-      ;(window as any).intaSendInstance = intaSendInstance
-      
-      console.log('✅ IntaSend initialized successfully')
+      console.log('✅ IntaSend initialized successfully - buttons should now work')
     } catch (err) {
       console.error('❌ Error initializing IntaSend:', err)
       setError('Failed to initialize payment system.')
@@ -303,26 +311,23 @@ const PaymentWall: React.FC<PaymentWallProps> = ({ onPaymentSuccess }) => {
                 className="intaSendPayButton w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                 data-amount="1000"
                 data-currency="KES"
-                data-email={profile?.email || user?.email}
-                data-first_name={profile?.full_name?.split(' ')[0] || ''}
-                data-last_name={profile?.full_name?.split(' ').slice(1).join(' ') || ''}
+                data-email={profile?.email || user?.email || ''}
+                data-phone_number="254700000000"
+                data-first_name={profile?.full_name?.split(' ')[0] || 'User'}
+                data-last_name={profile?.full_name?.split(' ').slice(1).join(' ') || 'Name'}
                 data-api_ref={`PAY_${user?.id}_${Date.now()}`}
                 data-comment="AI Career Finder - Lifetime Access"
-                data-method="" // Allow all payment methods
+                data-method=""
                 data-card_tarrif="BUSINESS-PAYS"
                 data-mobile_tarrif="BUSINESS-PAYS"
                 disabled={isLoading || paymentStatus === 'processing'}
-                onClick={(e) => {
-                  e.preventDefault()
-                  console.log('🖱️ Payment button clicked')
-                  if (window.IntaSend && (window as any).intaSendInstance) {
-                    console.log('💳 Triggering IntaSend payment...')
-                    // The IntaSend SDK should automatically handle the button click
-                    // due to the 'intaSendPayButton' class
-                  } else {
-                    console.error('❌ IntaSend not available for payment')
-                    setError('Payment system not ready. Please refresh the page.')
-                  }
+                onClick={() => {
+                  console.log('🖱️ Payment button clicked with data:')
+                  console.log('  - Amount: 1000')
+                  console.log('  - Currency: KES')
+                  console.log('  - Email:', profile?.email || user?.email || '')
+                  console.log('  - Name:', profile?.full_name || '')
+                  console.log('  - API Ref:', `PAY_${user?.id}_${Date.now()}`)
                 }}
               >
                 {isLoading || paymentStatus === 'processing' ? (
