@@ -46,7 +46,7 @@ const AIChat = () => {
     try {
       // Load user context from student profile
       const { data: studentProfile } = await supabase
-        .from('student_profiles')
+        .from('profiles')
         .select('*')
         .eq('user_id', user?.id)
         .single();

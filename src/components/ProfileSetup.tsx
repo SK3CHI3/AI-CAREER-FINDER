@@ -145,7 +145,7 @@ export const ProfileSetup: React.FC<ProfileSetupProps> = ({ onComplete }) => {
     try {
       // Check if profile already exists
       const { data: existingProfile } = await supabase
-        .from('student_profiles')
+        .from('profiles')
         .select('id')
         .eq('user_id', user.id)
         .single()
@@ -163,7 +163,7 @@ export const ProfileSetup: React.FC<ProfileSetupProps> = ({ onComplete }) => {
       if (existingProfile) {
         // Update existing profile
         const { error } = await supabase
-          .from('student_profiles')
+          .from('profiles')
           .update(profileData)
           .eq('user_id', user.id)
 
@@ -171,7 +171,7 @@ export const ProfileSetup: React.FC<ProfileSetupProps> = ({ onComplete }) => {
       } else {
         // Create new profile
         const { error } = await supabase
-          .from('student_profiles')
+          .from('profiles')
           .insert(profileData)
 
         if (error) throw error
