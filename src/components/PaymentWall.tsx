@@ -88,8 +88,7 @@ const PaymentWall: React.FC<PaymentWallProps> = ({ onPaymentSuccess }) => {
       new window.IntaSend({
         publicAPIKey: apiKey,
         live: isLive,
-        sandbox: !isLive, // Explicitly set sandbox mode
-        methods: ['MPESA'] // Only allow M-Pesa payments
+        sandbox: !isLive // Explicitly set sandbox mode
       })
       .on("COMPLETE", (results: any) => {
         console.log("✅ Payment completed:", results)
@@ -318,7 +317,7 @@ const PaymentWall: React.FC<PaymentWallProps> = ({ onPaymentSuccess }) => {
                 data-api_ref={`PAY_${user?.id}_${Date.now()}`}
                 data-comment="AI Career Finder - Lifetime Access"
                 data-mobile_tarrif="BUSINESS-PAYS"
-                data-method="MPESA"
+                data-method="M-PESA"
                 disabled={isLoading || paymentStatus === 'processing'}
                 onClick={() => {
                   console.log('🖱️ Payment button clicked with data:')
