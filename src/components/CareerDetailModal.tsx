@@ -90,9 +90,10 @@ Focus on:
           'X-Title': 'AI Career Finder'
         },
         body: JSON.stringify({
-          model: 'deepseek/deepseek-r1-distill-qwen-14b',
+          model: 'deepseek/deepseek-r1:free',
           messages: [{ role: 'user', content: prompt }],
-          temperature: 0.7
+          temperature: 0.7,
+          max_tokens: 2000
         })
       })
 
