@@ -1,6 +1,6 @@
 [build]
-  # Install dependencies and build
-  command = "npm install && npm run build"
+  # Install dependencies and build (2025 best practice)
+  command = "npm ci --production=false && npm run build"
   
   # Directory to publish
   publish = "dist"
@@ -9,8 +9,8 @@
   functions = "netlify/functions"
 
 [build.environment]
-  # Node.js version
-  NODE_VERSION = "18"
+  # Node.js version (2025 LTS)
+  NODE_VERSION = "20"
   # Ensure npm is available
   NPM_FLAGS = "--version"
 
