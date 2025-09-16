@@ -87,7 +87,8 @@ const PaymentWall: React.FC<PaymentWallProps> = ({ onPaymentSuccess }) => {
       // Initialize IntaSend - this automatically binds to buttons with 'intaSendPayButton' class
       new window.IntaSend({
         publicAPIKey: apiKey,
-        live: isLive
+        live: isLive,
+        sandbox: !isLive // Explicitly set sandbox mode
       })
       .on("COMPLETE", (results: any) => {
         console.log("✅ Payment completed:", results)
@@ -315,7 +316,6 @@ const PaymentWall: React.FC<PaymentWallProps> = ({ onPaymentSuccess }) => {
                 data-last_name={profile?.full_name?.split(' ').slice(1).join(' ') || 'Name'}
                 data-api_ref={`PAY_${user?.id}_${Date.now()}`}
                 data-comment="AI Career Finder - Lifetime Access"
-                data-method=""
                 data-card_tarrif="BUSINESS-PAYS"
                 data-mobile_tarrif="BUSINESS-PAYS"
                 disabled={isLoading || paymentStatus === 'processing'}

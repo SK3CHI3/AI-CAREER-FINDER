@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IntaSend Test</title>
+    <script src="https://unpkg.com/intasend-inlinejs-sdk@latest/build/intasend-inline.js"></script>
+</head>
+<body>
+    <h1>IntaSend Test</h1>
+    <button class="intaSendPayButton" data-amount="1000" data-currency="KES" data-email="test@example.com" data-phone_number="254700000000" data-first_name="Test" data-last_name="User">Pay KSh 1,000</button>
+    
+    <script>
+        console.log('Testing IntaSend with your API key...')
+        
+        new window.IntaSend({
+            publicAPIKey: 'ISPubKey_test_11d3151f-543e-4b01-af11-a1735e2e9bc5',
+            live: false
+        })
+        .on("COMPLETE", (results) => {
+            console.log("✅ Payment completed:", results)
+        })
+        .on("FAILED", (results) => {
+            console.log("❌ Payment failed:", results)
+        })
+        .on("IN-PROGRESS", (results) => {
+            console.log("⏳ Payment in progress:", results)
+        })
+        .on("ERROR", (error) => {
+            console.error("❌ IntaSend error:", error)
+        })
+        
+        console.log('IntaSend initialized for testing')
+    </script>
+</body>
+</html>
