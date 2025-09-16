@@ -15,6 +15,12 @@ export interface UserContext {
   careerGoals?: string
   assessmentResults?: UserProfile['assessment_results']
   previousRecommendations?: UserProfile['previous_recommendations']
+  academicPerformance?: {
+    overallAverage: number
+    strongSubjects: string[]
+    weakSubjects: string[]
+    performanceTrend: 'improving' | 'declining' | 'stable'
+  }
 }
 
 class AICareerService {
@@ -163,13 +169,23 @@ Remember: YOU MUST ALWAYS BE CURIOUS TO KNOW THEM. Make each question feel perso
 
   async generateCareerRecommendations(userContext: UserContext): Promise<any[]> {
     try {
-      // Simplified prompt for faster response
-      const prompt = `Generate 3 career recommendations for a Kenyan student. Return ONLY a JSON array:
+      // Enhanced prompt with academic performance data
+      const academicInfo = userContext.academicPerformance ? `
+Academic Performance:
+- Overall Average: ${userContext.academicPerformance.overallAverage.toFixed(1)}%
+- Strong Subjects: ${userContext.academicPerformance.strongSubjects.join(', ') || 'None identified'}
+- Weak Subjects: ${userContext.academicPerformance.weakSubjects.join(', ') || 'None identified'}
+- Performance Trend: ${userContext.academicPerformance.performanceTrend}
+` : ''
+
+      const prompt = `Generate 3 career recommendations for a Kenyan student based on their profile and academic performance. Return ONLY a JSON array:
 
 Profile: ${userContext.schoolLevel || 'Secondary'} student, Grade ${userContext.currentGrade || '10'}, Subjects: ${userContext.subjects?.slice(0, 3).join(', ') || 'Math, English, Science'}, Interests: ${userContext.interests?.slice(0, 2).join(', ') || 'Technology, Business'}
+${academicInfo}
+Consider their academic strengths and weaknesses when recommending careers. Focus on careers that align with their strong subjects and provide growth opportunities.
 
 Return exactly this format:
-[{"title":"Software Engineer","matchPercentage":85},{"title":"Data Analyst","matchPercentage":78},{"title":"Business Manager","matchPercentage":72}]`
+[{"title":"Software Engineer","matchPercentage":85,"description":"Develops software applications","salaryRange":"KSh 80,000-200,000","education":"Computer Science degree","whyRecommended":"Matches your strong performance in Mathematics and interest in technology"},{"title":"Data Analyst","matchPercentage":78,"description":"Analyzes data to help businesses make decisions","salaryRange":"KSh 60,000-150,000","education":"Statistics or Mathematics degree","whyRecommended":"Leverages your analytical skills and strong subject performance"},{"title":"Business Manager","matchPercentage":72,"description":"Manages business operations and teams","salaryRange":"KSh 70,000-180,000","education":"Business Administration degree","whyRecommended":"Combines your interests with leadership opportunities"}]`
 
       const response = await this.sendMessage(prompt, [], userContext)
 
@@ -184,7 +200,7 @@ Return exactly this format:
           }
         }
 
-        // Fallback recommendations based on profile
+        // Fallback recommendations based on profile and academic performance
         return this.getFallbackRecommendations(userContext)
       } catch (parseError) {
         console.error('Failed to parse career recommendations:', parseError)
@@ -197,42 +213,8 @@ Return exactly this format:
   }
 
   private getFallbackRecommendations(userContext: UserContext): any[] {
-    // Smart fallback based on user context
-    const hasSTEM = userContext.subjects?.some(s =>
-      ['Mathematics', 'Physics', 'Chemistry', 'Biology', 'Computer Science'].includes(s)
-    );
-    const hasBusiness = userContext.subjects?.some(s =>
-      ['Business Studies', 'Economics'].includes(s)
-    );
-    const hasArts = userContext.subjects?.some(s =>
-      ['Art', 'Music', 'Literature'].includes(s)
-    );
-
-    if (hasSTEM) {
-      return [
-        { title: 'Software Engineer', matchPercentage: 85 },
-        { title: 'Data Scientist', matchPercentage: 78 },
-        { title: 'Engineering Technician', matchPercentage: 72 }
-      ];
-    } else if (hasBusiness) {
-      return [
-        { title: 'Business Analyst', matchPercentage: 82 },
-        { title: 'Marketing Manager', matchPercentage: 75 },
-        { title: 'Financial Advisor', matchPercentage: 70 }
-      ];
-    } else if (hasArts) {
-      return [
-        { title: 'Graphic Designer', matchPercentage: 80 },
-        { title: 'Content Creator', matchPercentage: 73 },
-        { title: 'Art Teacher', matchPercentage: 68 }
-      ];
-    } else {
-      return [
-        { title: 'Complete Your Profile', matchPercentage: 100 },
-        { title: 'Take Assessment', matchPercentage: 0 },
-        { title: 'Explore Careers', matchPercentage: 0 }
-      ];
-    }
+    // Return empty array to force dynamic generation
+    return [];
   }
 
   async saveConversation(userId: string, messages: ChatMessage[]): Promise<void> {

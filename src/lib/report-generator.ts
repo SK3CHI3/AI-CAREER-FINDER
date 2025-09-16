@@ -479,7 +479,7 @@ export class ReportGenerator {
     const summary = assistantMsgs.reverse().find(t => (t || '').length > 80) || assistantMsgs[0];
     
     // Clean and format the summary with proper list parsing
-    let formattedSummary = summary
+    const formattedSummary = summary
       .replace(/\n{3,}/g, '\n\n')
       .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
       .replace(/\*(.*?)\*/g, '<em>$1</em>')
@@ -546,13 +546,13 @@ export class ReportGenerator {
     
     // Look for patterns that indicate next steps
     const nextStepsPatterns = [
-      /next steps?[:\-]?\s*(.*?)(?=\n\n|\n[A-Z]|$)/is,
-      /recommended actions?[:\-]?\s*(.*?)(?=\n\n|\n[A-Z]|$)/is,
-      /what to do next[:\-]?\s*(.*?)(?=\n\n|\n[A-Z]|$)/is,
-      /immediate actions?[:\-]?\s*(.*?)(?=\n\n|\n[A-Z]|$)/is,
-      /follow-up steps?[:\-]?\s*(.*?)(?=\n\n|\n[A-Z]|$)/is,
-      /recommendations?[:\-]?\s*(.*?)(?=\n\n|\n[A-Z]|$)/is,
-      /suggestions?[:\-]?\s*(.*?)(?=\n\n|\n[A-Z]|$)/is
+      /next steps?[:-]?\s*(.*?)(?=\n\n|\n[A-Z]|$)/is,
+      /recommended actions?[:-]?\s*(.*?)(?=\n\n|\n[A-Z]|$)/is,
+      /what to do next[:-]?\s*(.*?)(?=\n\n|\n[A-Z]|$)/is,
+      /immediate actions?[:-]?\s*(.*?)(?=\n\n|\n[A-Z]|$)/is,
+      /follow-up steps?[:-]?\s*(.*?)(?=\n\n|\n[A-Z]|$)/is,
+      /recommendations?[:-]?\s*(.*?)(?=\n\n|\n[A-Z]|$)/is,
+      /suggestions?[:-]?\s*(.*?)(?=\n\n|\n[A-Z]|$)/is
     ];
 
     for (const pattern of nextStepsPatterns) {

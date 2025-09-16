@@ -2,6 +2,7 @@
 import React, { createContext, useContext, useEffect, useState } from 'react'
 import { User, Session, AuthError } from '@supabase/supabase-js'
 import { supabase } from '@/lib/supabase'
+import { getJWTClaims, hasMFAEnabled, validateJWTForSensitiveOperation } from '@/lib/auth-utils'
 
 interface Profile {
   id: string
@@ -9,6 +10,13 @@ interface Profile {
   full_name: string | null
   avatar_url: string | null
   role: 'student' | 'admin'
+  school_level?: 'primary' | 'secondary' | 'tertiary'
+  current_grade?: string
+  cbe_subjects?: string[]
+  subjects?: string[]
+  career_interests?: string[]
+  interests?: string[]
+  career_goals?: string
   created_at: string
   updated_at: string
 }
@@ -18,10 +26,12 @@ interface AuthContextType {
   profile: Profile | null
   session: Session | null
   loading: boolean
+  isMFAEnabled: boolean
   signUp: (email: string, password: string, fullName: string) => Promise<{ error: AuthError | null }>
   signIn: (email: string, password: string) => Promise<{ error: AuthError | null }>
   signOut: () => Promise<{ error: AuthError | null }>
   updateProfile: (updates: Partial<Profile>) => Promise<{ error: Error | null }>
+  validateForSensitiveOperation: () => { isValid: boolean; reason?: string }
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
@@ -39,6 +49,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [profile, setProfile] = useState<Profile | null>(null)
   const [session, setSession] = useState<Session | null>(null)
   const [loading, setLoading] = useState(true)
+  const [isMFAEnabled, setIsMFAEnabled] = useState(false)
 
   // Fetch user profile
   const fetchProfile = async (userId: string) => {
@@ -83,8 +94,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (session?.user) {
         console.log('AuthContext: User found, fetching profile')
         await fetchProfile(session.user.id)
+        setIsMFAEnabled(hasMFAEnabled(session.user))
       } else {
         console.log('AuthContext: No user found')
+        setIsMFAEnabled(false)
       }
       console.log('AuthContext: Setting loading to false')
       setLoading(false)
@@ -101,9 +114,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (session?.user) {
         console.log('AuthContext: User found in state change, fetching profile')
         await fetchProfile(session.user.id)
+        setIsMFAEnabled(hasMFAEnabled(session.user))
       } else {
         console.log('AuthContext: No user in state change, clearing profile')
         setProfile(null)
+        setIsMFAEnabled(false)
       }
       console.log('AuthContext: Setting loading to false after state change')
       setLoading(false)
@@ -167,15 +182,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }
 
+  // Validate JWT for sensitive operations
+  const validateForSensitiveOperation = () => {
+    return validateJWTForSensitiveOperation(user)
+  }
+
   const value = {
     user,
     profile,
     session,
     loading,
+    isMFAEnabled,
     signUp,
     signIn,
     signOut,
     updateProfile,
+    validateForSensitiveOperation,
   }
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

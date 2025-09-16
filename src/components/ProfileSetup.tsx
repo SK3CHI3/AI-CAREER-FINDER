@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import * as z from 'zod'
@@ -14,6 +14,7 @@ import { Badge } from '@/components/ui/badge'
 import { Loader2, CheckCircle, User, BookOpen, Target } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
 import { supabase } from '@/lib/supabase'
+import { dashboardService, CbeSubject, CareerInterest } from '@/lib/dashboard-service'
 
 const profileSchema = z.object({
   schoolLevel: z.enum(['primary', 'secondary', 'tertiary']),
@@ -91,6 +92,9 @@ export const ProfileSetup: React.FC<ProfileSetupProps> = ({ onComplete }) => {
   const [error, setError] = useState<string | null>(null)
   const [selectedSubjects, setSelectedSubjects] = useState<string[]>([])
   const [selectedInterests, setSelectedInterests] = useState<string[]>([])
+  const [dynamicSubjects, setDynamicSubjects] = useState<CbeSubject[]>([])
+  const [dynamicInterests, setDynamicInterests] = useState<CareerInterest[]>([])
+  const [isLoadingData, setIsLoadingData] = useState(true)
 
   const {
     register,
@@ -107,6 +111,30 @@ export const ProfileSetup: React.FC<ProfileSetupProps> = ({ onComplete }) => {
   })
 
   const schoolLevel = watch('schoolLevel')
+
+  // Load dynamic data on component mount
+  useEffect(() => {
+    const loadDynamicData = async () => {
+      try {
+        setIsLoadingData(true)
+        const [subjects, interests] = await Promise.all([
+          dashboardService.getCbeSubjects(),
+          dashboardService.getCareerInterests()
+        ])
+        setDynamicSubjects(subjects)
+        setDynamicInterests(interests)
+      } catch (error) {
+        console.error('Failed to load dynamic data:', error)
+        // Fallback to hardcoded data if API fails
+        setDynamicSubjects(cbeSubjects.map(name => ({ id: name, subject_name: name, subject_code: '', category: 'General', description: '', is_active: true, created_at: '' })))
+        setDynamicInterests(careerInterests.map(name => ({ id: name, interest_name: name, category: 'General', description: '', related_subjects: [], is_active: true, created_at: '' })))
+      } finally {
+        setIsLoadingData(false)
+      }
+    }
+
+    loadDynamicData()
+  }, [])
 
   const onSubmit = async (data: ProfileFormData) => {
     if (!user) return
@@ -243,19 +271,27 @@ export const ProfileSetup: React.FC<ProfileSetupProps> = ({ onComplete }) => {
                 Select the CBE learning areas and subjects you're currently studying or have studied
               </p>
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-                {cbeSubjects.map((subject) => (
-                  <div
-                    key={subject}
-                    onClick={() => handleSubjectToggle(subject)}
-                    className={`p-3 rounded-lg border cursor-pointer transition-all ${
-                      selectedSubjects.includes(subject)
-                        ? 'bg-primary text-primary-foreground border-primary'
-                        : 'bg-background border-card-border hover:border-primary/50'
-                    }`}
-                  >
-                    <span className="text-sm font-medium">{subject}</span>
-                  </div>
-                ))}
+                {isLoadingData ? (
+                  Array.from({ length: 12 }).map((_, index) => (
+                    <div key={index} className="p-3 rounded-lg border bg-muted animate-pulse">
+                      <div className="h-4 bg-muted-foreground/20 rounded"></div>
+                    </div>
+                  ))
+                ) : (
+                  dynamicSubjects.map((subject) => (
+                    <div
+                      key={subject.id}
+                      onClick={() => handleSubjectToggle(subject.subject_name)}
+                      className={`p-3 rounded-lg border cursor-pointer transition-all ${
+                        selectedSubjects.includes(subject.subject_name)
+                          ? 'bg-primary text-primary-foreground border-primary'
+                          : 'bg-background border-card-border hover:border-primary/50'
+                      }`}
+                    >
+                      <span className="text-sm font-medium">{subject.subject_name}</span>
+                    </div>
+                  ))
+                )}
               </div>
               {errors.subjects && (
                 <p className="text-sm text-destructive">{errors.subjects.message}</p>
@@ -272,19 +308,27 @@ export const ProfileSetup: React.FC<ProfileSetupProps> = ({ onComplete }) => {
                 What career fields interest you most? (Aligned with Kenya's Vision 2030 priorities)
               </p>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                {careerInterests.map((interest) => (
-                  <div
-                    key={interest}
-                    onClick={() => handleInterestToggle(interest)}
-                    className={`p-3 rounded-lg border cursor-pointer transition-all ${
-                      selectedInterests.includes(interest)
-                        ? 'bg-secondary text-secondary-foreground border-secondary'
-                        : 'bg-background border-card-border hover:border-secondary/50'
-                    }`}
-                  >
-                    <span className="text-sm font-medium">{interest}</span>
-                  </div>
-                ))}
+                {isLoadingData ? (
+                  Array.from({ length: 12 }).map((_, index) => (
+                    <div key={index} className="p-3 rounded-lg border bg-muted animate-pulse">
+                      <div className="h-4 bg-muted-foreground/20 rounded"></div>
+                    </div>
+                  ))
+                ) : (
+                  dynamicInterests.map((interest) => (
+                    <div
+                      key={interest.id}
+                      onClick={() => handleInterestToggle(interest.interest_name)}
+                      className={`p-3 rounded-lg border cursor-pointer transition-all ${
+                        selectedInterests.includes(interest.interest_name)
+                          ? 'bg-secondary text-secondary-foreground border-secondary'
+                          : 'bg-background border-card-border hover:border-secondary/50'
+                      }`}
+                    >
+                      <span className="text-sm font-medium">{interest.interest_name}</span>
+                    </div>
+                  ))
+                )}
               </div>
               {errors.interests && (
                 <p className="text-sm text-destructive">{errors.interests.message}</p>

@@ -40,11 +40,26 @@ import {
 import AIChat from '@/components/AIChat'
 import { ReportGenerator } from '@/lib/report-generator'
 import { ProfileSetup } from '@/components/ProfileSetup'
+import GradesManager from '@/components/GradesManager'
+import CareerDetailModal from '@/components/CareerDetailModal'
+import CourseRecommendations from '@/components/CourseRecommendations'
 import { supabase } from '@/lib/supabase'
 import { aiCareerService } from '@/lib/ai-service'
+import { dashboardService, UserStat, UserActivity, CareerRecommendation } from '@/lib/dashboard-service'
+import { useActivityTracking } from '@/hooks/useActivityTracking'
 
 // Default career data - will be replaced with AI recommendations
-const defaultCareerData = [
+interface CareerDataItem {
+  name: string
+  value: number
+  color: string
+  description?: string
+  salaryRange?: string
+  growth?: string
+  education?: string
+}
+
+const defaultCareerData: CareerDataItem[] = [
   { name: 'Complete Profile', value: 100, color: '#6b7280' },
   { name: 'Take Assessment', value: 0, color: '#e5e7eb' },
   { name: 'Get AI Guidance', value: 0, color: '#e5e7eb' },
@@ -155,55 +170,64 @@ const quickStats = [
 const StudentDashboard = () => {
   const { user, profile, signOut } = useAuth()
   const [activeTab, setActiveTab] = useState('overview')
-  const [careerData, setCareerData] = useState(defaultCareerData)
+  const [careerData, setCareerData] = useState<CareerDataItem[]>(defaultCareerData)
   const [isLoadingRecommendations, setIsLoadingRecommendations] = useState(false)
-  const [dynamicStats, setDynamicStats] = useState(quickStats)
-  const [dynamicActivities, setDynamicActivities] = useState(recentActivities)
+  const [dynamicStats, setDynamicStats] = useState<UserStat[]>([])
+  const [dynamicActivities, setDynamicActivities] = useState<UserActivity[]>([])
+  const [isLoadingStats, setIsLoadingStats] = useState(true)
+  const [isLoadingActivities, setIsLoadingActivities] = useState(true)
+  const [selectedCareer, setSelectedCareer] = useState<CareerDataItem | null>(null)
+  const [isCareerModalOpen, setIsCareerModalOpen] = useState(false)
+
+  // Activity tracking
+  const { trackPageView, trackButtonClick, trackAIChat } = useActivityTracking({
+    trackPageViews: true,
+    trackClicks: true,
+    trackScroll: true,
+    trackTimeOnPage: true,
+    trackFormInteractions: true
+  })
 
   // Load data when component mounts (user and profile guaranteed by ProtectedRoute)
   useEffect(() => {
     if (user && profile) {
-      fetchUserStats();
-      fetchAIInsights();
-      loadCareerRecommendations(profile);
+      loadDashboardData();
+      trackPageView('Student Dashboard');
     }
   }, [user, profile])
 
-  // Generate dynamic stats based on profile data
-  const fetchUserStats = () => {
+  // Load all dashboard data
+  const loadDashboardData = async () => {
     if (!user || !profile) return;
 
-    // Calculate dynamic stats based on profile data
-    const profileCompleteness = calculateProfileCompleteness(profile);
-    const careerMatchesCount = Math.max(careerData.length, 3); // Ensure at least 3
-    const aiSessionsCount = Math.floor(Math.random() * 30) + 10; // Simulate AI sessions
-    const learningHours = Math.floor(Math.random() * 50) + 20; // Simulate learning hours
+    try {
+      setIsLoadingStats(true);
+      setIsLoadingActivities(true);
 
-    setDynamicStats([
-      {
-        ...quickStats[0],
-        value: careerMatchesCount.toString(),
-        change: `+${Math.floor(Math.random() * 5) + 1} this week`
-      },
-      {
-        ...quickStats[1],
-        value: `${profileCompleteness}%`,
-        change: `+${Math.floor(Math.random() * 20) + 5}% this month`
-      },
-      {
-        ...quickStats[2],
-        value: aiSessionsCount.toString(),
-        change: `+${Math.floor(Math.random() * 10) + 3} this week`
-      },
-      {
-        ...quickStats[3],
-        value: `${learningHours}h`,
-        change: `+${Math.floor(Math.random() * 15) + 5}h this week`
+      // Load user stats and activities in parallel
+      const [stats, activities] = await Promise.all([
+        dashboardService.calculateUserStats(user.id, profile),
+        dashboardService.getUserActivities(user.id, 10)
+      ]);
+
+      setDynamicStats(stats);
+      setDynamicActivities(activities);
+
+      // Load career recommendations
+      await loadCareerRecommendations(profile);
+
+      // Generate additional activities if none exist
+      if (activities.length === 0) {
+        const generatedActivities = await dashboardService.generateDynamicActivities(user.id, profile);
+        setDynamicActivities(generatedActivities);
       }
-    ]);
 
-    // Generate dynamic activities based on profile data
-    generateDynamicActivities(profile);
+    } catch (error) {
+      console.error('Failed to load dashboard data:', error);
+    } finally {
+      setIsLoadingStats(false);
+      setIsLoadingActivities(false);
+    }
   };
 
   // Calculate profile completeness percentage
@@ -393,6 +417,8 @@ const StudentDashboard = () => {
 
 
   const loadCareerRecommendations = async (profileData: any) => {
+    if (!user) return;
+
     console.log('🤖 loadCareerRecommendations started with profile:', {
       school_level: profileData.school_level,
       current_grade: profileData.current_grade,
@@ -402,16 +428,23 @@ const StudentDashboard = () => {
 
     setIsLoadingRecommendations(true);
 
-    // Set a timeout for the AI call
-    console.log('⏰ Setting 15-second timeout for AI call');
-    const timeoutPromise = new Promise((_, reject) =>
-      setTimeout(() => {
-        console.log('⏰ AI request timeout after 15 seconds');
-        reject(new Error('AI request timeout'));
-      }, 15000)
-    );
-
     try {
+      // Always generate fresh recommendations based on current data
+      console.log('🔄 Generating fresh career recommendations based on current profile and grades data');
+
+      // If no existing recommendations, generate new ones with AI including grades data
+      console.log('🤖 Generating new career recommendations with AI (including grades data)');
+      const timeoutPromise = new Promise((_, reject) =>
+        setTimeout(() => {
+          console.log('⏰ AI request timeout after 15 seconds');
+          reject(new Error('AI request timeout'));
+        }, 15000)
+      );
+
+      // Get academic performance data
+      const academicPerformance = await dashboardService.calculateAcademicPerformance(user.id);
+      console.log('📊 Academic performance data:', academicPerformance);
+
       const userContext = {
         name: profile?.full_name || undefined,
         schoolLevel: profileData.school_level,
@@ -419,7 +452,13 @@ const StudentDashboard = () => {
         subjects: profileData.cbe_subjects || profileData.subjects || undefined,
         interests: profileData.career_interests || profileData.interests || undefined,
         careerGoals: profileData.career_goals || undefined,
-        assessmentResults: profileData.assessment_scores
+        assessmentResults: profileData.assessment_scores,
+        academicPerformance: {
+          overallAverage: academicPerformance.overallAverage,
+          strongSubjects: academicPerformance.strongSubjects,
+          weakSubjects: academicPerformance.weakSubjects,
+          performanceTrend: academicPerformance.performanceTrend
+        }
       }
 
       // Race between AI call and timeout
@@ -429,28 +468,34 @@ const StudentDashboard = () => {
       ]) as any[];
 
       if (recommendations && recommendations.length > 0) {
+        // Save recommendations to database
+        const recommendationsToSave = recommendations.slice(0, 5).map((rec, index) => ({
+          career_name: rec.title,
+          match_percentage: rec.matchPercentage,
+          description: getCareerDescription(rec.title),
+          salary_range: getCareerSalary(rec.title),
+          growth_prospect: getCareerGrowth(rec.title),
+          education_required: getCareerEducation(rec.title),
+          skills_required: rec.skills || []
+        }));
+
+        await dashboardService.saveCareerRecommendations(user.id, recommendationsToSave);
+
+        // Update chart data
         const top3 = recommendations.slice(0, 3).map((rec, index) => ({
           name: rec.title,
           value: rec.matchPercentage,
-          color: index === 0 ? '#3b82f6' : index === 1 ? '#10b981' : '#f59e0b'
+          color: index === 0 ? '#3b82f6' : index === 1 ? '#10b981' : '#f59e0b',
+          description: getCareerDescription(rec.title),
+          salaryRange: getCareerSalary(rec.title),
+          growth: getCareerGrowth(rec.title),
+          education: getCareerEducation(rec.title)
         }));
 
         setCareerData(top3);
 
-        // Enhance recommendations with additional data
-        const enhancedRecommendations = top3.map((rec, index) => ({
-          ...rec,
-          description: getCareerDescription(rec.name),
-          salaryRange: getCareerSalary(rec.name),
-          growth: getCareerGrowth(rec.name),
-          education: getCareerEducation(rec.name)
-        }));
-
-        setCareerData(enhancedRecommendations);
-
-        // Cache the results
-        localStorage.setItem(`career_recommendations_${user?.id}`, JSON.stringify(enhancedRecommendations));
-        localStorage.setItem(`career_recommendations_timestamp_${user?.id}`, Date.now().toString());
+        // Track the AI recommendation generation
+        trackButtonClick('AI Career Recommendations Generated', 'Dashboard');
       } else {
         // Fallback to enhanced default data if no recommendations
         setCareerData([
@@ -511,6 +556,24 @@ const StudentDashboard = () => {
       .join('')
       .toUpperCase()
       .slice(0, 2)
+  }
+
+  const getTimeAgo = (dateString: string) => {
+    const now = new Date()
+    const date = new Date(dateString)
+    const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000)
+
+    if (diffInSeconds < 60) return 'Just now'
+    if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}m ago`
+    if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)}h ago`
+    if (diffInSeconds < 604800) return `${Math.floor(diffInSeconds / 86400)}d ago`
+    return `${Math.floor(diffInSeconds / 604800)}w ago`
+  }
+
+  const handleCareerDetailClick = (career: CareerDataItem) => {
+    setSelectedCareer(career)
+    setIsCareerModalOpen(true)
+    trackButtonClick('View Career Details', 'Career Card')
   }
 
   const CustomTooltip = ({ active, payload }: any) => {
@@ -611,25 +674,57 @@ const StudentDashboard = () => {
           <TabsContent value="overview" className="space-y-6">
             {/* Quick Stats */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              {dynamicStats.map((stat) => (
-                <Card key={stat.id} className="bg-card border-card-border hover:shadow-card transition-all duration-300">
-                  <CardHeader className="pb-3">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <CardDescription className="text-sm font-medium">{stat.title}</CardDescription>
-                        <CardTitle className="text-3xl font-bold mt-1">{stat.value}</CardTitle>
-                        <p className="text-xs text-green-600 flex items-center gap-1 mt-1">
-                          <TrendingUp className="w-3 h-3" />
-                          {stat.change}
-                        </p>
+              {isLoadingStats ? (
+                // Loading skeleton for stats
+                Array.from({ length: 4 }).map((_, index) => (
+                  <Card key={index} className="bg-card border-card-border">
+                    <CardHeader className="pb-3">
+                      <div className="flex items-center justify-between">
+                        <div className="flex-1">
+                          <div className="h-4 bg-muted rounded animate-pulse mb-2"></div>
+                          <div className="h-8 bg-muted rounded animate-pulse mb-2"></div>
+                          <div className="h-3 bg-muted rounded animate-pulse w-2/3"></div>
+                        </div>
+                        <div className="w-12 h-12 bg-muted rounded-xl animate-pulse"></div>
                       </div>
-                      <div className={`w-12 h-12 rounded-xl ${stat.bgColor} flex items-center justify-center`}>
-                        <stat.icon className={`w-6 h-6 ${stat.color}`} />
-                      </div>
-                    </div>
-                  </CardHeader>
-                </Card>
-              ))}
+                    </CardHeader>
+                  </Card>
+                ))
+              ) : (
+                dynamicStats.map((stat, index) => {
+                  const statConfig = {
+                    'profile_completeness': { title: 'Profile Complete', icon: User, color: 'text-green-600', bgColor: 'bg-green-100' },
+                    'career_matches': { title: 'Career Matches', icon: Target, color: 'text-blue-600', bgColor: 'bg-blue-100' },
+                    'ai_sessions': { title: 'AI Sessions', icon: Bot, color: 'text-purple-600', bgColor: 'bg-purple-100' },
+                    'learning_hours': { title: 'Learning Hours', icon: BookMarked, color: 'text-orange-600', bgColor: 'bg-orange-100' }
+                  }[stat.stat_type] || { title: stat.stat_type, icon: Activity, color: 'text-gray-600', bgColor: 'bg-gray-100' };
+
+                  const IconComponent = statConfig.icon;
+
+                  return (
+                    <Card key={stat.id} className="bg-card border-card-border hover:shadow-card transition-all duration-300">
+                      <CardHeader className="pb-3">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <CardDescription className="text-sm font-medium">{statConfig.title}</CardDescription>
+                            <CardTitle className="text-3xl font-bold mt-1">{stat.stat_value}</CardTitle>
+                            <p className={`text-xs flex items-center gap-1 mt-1 ${
+                              stat.stat_trend === 'up' ? 'text-green-600' : 
+                              stat.stat_trend === 'down' ? 'text-red-600' : 'text-gray-600'
+                            }`}>
+                              <TrendingUp className={`w-3 h-3 ${stat.stat_trend === 'down' ? 'rotate-180' : ''}`} />
+                              {stat.stat_change}
+                            </p>
+                          </div>
+                          <div className={`w-12 h-12 rounded-xl ${statConfig.bgColor} flex items-center justify-center`}>
+                            <IconComponent className={`w-6 h-6 ${statConfig.color}`} />
+                          </div>
+                        </div>
+                      </CardHeader>
+                    </Card>
+                  );
+                })
+              )}
             </div>
 
             {/* Main Dashboard Grid */}
@@ -702,30 +797,66 @@ const StudentDashboard = () => {
                   <CardDescription>Your latest achievements</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  {dynamicActivities.slice(0, 4).map((activity) => (
-                    <div key={activity.id} className="flex items-start gap-3 p-3 rounded-lg hover:bg-muted/50 transition-colors duration-200">
-                      <div className={`w-10 h-10 rounded-lg ${activity.bgColor} flex items-center justify-center flex-shrink-0`}>
-                        <activity.icon className={`w-5 h-5 ${activity.color}`} />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="font-medium text-sm text-foreground truncate">{activity.title}</p>
-                        <p className="text-xs text-foreground-muted mt-1">{activity.description}</p>
-                        <div className="flex items-center justify-between mt-2">
-                          <p className="text-xs text-foreground-muted">{activity.time}</p>
-                          <div className="flex items-center gap-1">
-                            <div className="w-16 h-1.5 bg-muted rounded-full overflow-hidden">
-                              <div
-                                className="h-full bg-gradient-to-r from-blue-500 to-purple-500 rounded-full transition-all duration-500"
-                                style={{ width: `${activity.progress}%` }}
-                              />
-                            </div>
-                            <span className="text-xs font-medium text-foreground-muted">{activity.progress}%</span>
+                  {isLoadingActivities ? (
+                    // Loading skeleton for activities
+                    Array.from({ length: 3 }).map((_, index) => (
+                      <div key={index} className="flex items-start gap-3 p-3 rounded-lg">
+                        <div className="w-10 h-10 bg-muted rounded-lg animate-pulse"></div>
+                        <div className="flex-1 min-w-0">
+                          <div className="h-4 bg-muted rounded animate-pulse mb-2"></div>
+                          <div className="h-3 bg-muted rounded animate-pulse mb-2 w-3/4"></div>
+                          <div className="flex items-center justify-between">
+                            <div className="h-3 bg-muted rounded animate-pulse w-1/4"></div>
+                            <div className="h-3 bg-muted rounded animate-pulse w-1/6"></div>
                           </div>
                         </div>
                       </div>
-                    </div>
-                  ))}
-                  <Button variant="ghost" className="w-full mt-4" size="sm">
+                    ))
+                  ) : (
+                    dynamicActivities.slice(0, 3).map((activity) => {
+                      const activityConfig = {
+                        'profile': { icon: User, color: 'text-blue-500', bgColor: 'bg-blue-50' },
+                        'interests': { icon: Target, color: 'text-green-500', bgColor: 'bg-green-50' },
+                        'ai': { icon: Bot, color: 'text-purple-500', bgColor: 'bg-purple-50' },
+                        'assessment': { icon: Trophy, color: 'text-orange-500', bgColor: 'bg-orange-50' },
+                        'career': { icon: Briefcase, color: 'text-indigo-500', bgColor: 'bg-indigo-50' },
+                        'learning': { icon: BookOpen, color: 'text-emerald-500', bgColor: 'bg-emerald-50' }
+                      }[activity.activity_type] || { icon: Activity, color: 'text-gray-500', bgColor: 'bg-gray-50' };
+
+                      const IconComponent = activityConfig.icon;
+                      const timeAgo = getTimeAgo(activity.created_at);
+
+                      return (
+                        <div key={activity.id} className="flex items-start gap-3 p-3 rounded-lg hover:bg-muted/50 transition-colors duration-200">
+                          <div className={`w-10 h-10 rounded-lg ${activityConfig.bgColor} flex items-center justify-center flex-shrink-0`}>
+                            <IconComponent className={`w-5 h-5 ${activityConfig.color}`} />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="font-medium text-sm text-foreground truncate">{activity.activity_title}</p>
+                            <p className="text-xs text-foreground-muted mt-1">{activity.activity_description}</p>
+                            <div className="flex items-center justify-between mt-2">
+                              <p className="text-xs text-foreground-muted">{timeAgo}</p>
+                              <div className="flex items-center gap-1">
+                                <div className="w-16 h-1.5 bg-muted rounded-full overflow-hidden">
+                                  <div
+                                    className="h-full bg-gradient-to-r from-blue-500 to-purple-500 rounded-full transition-all duration-500"
+                                    style={{ width: `${activity.progress_percentage}%` }}
+                                  />
+                                </div>
+                                <span className="text-xs font-medium text-foreground-muted">{activity.progress_percentage}%</span>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })
+                  )}
+                  <Button 
+                    variant="ghost" 
+                    className="w-full mt-4" 
+                    size="sm"
+                    onClick={() => trackButtonClick('View All Activity', 'Recent Activity')}
+                  >
                     View All Activity <ArrowRight className="w-4 h-4 ml-1" />
                   </Button>
                 </CardContent>
@@ -748,7 +879,10 @@ const StudentDashboard = () => {
                 </CardHeader>
                 <CardContent>
                   <p className="text-sm text-foreground-muted mb-4">Complete our comprehensive career assessment to get personalized recommendations.</p>
-                  <Button className="w-full bg-blue-600 hover:bg-blue-700">
+                  <Button 
+                    className="w-full bg-blue-600 hover:bg-blue-700"
+                    onClick={() => trackButtonClick('Start Assessment', 'Action Cards')}
+                  >
                     Start Assessment <ArrowRight className="w-4 h-4 ml-1" />
                   </Button>
                 </CardContent>
@@ -768,7 +902,10 @@ const StudentDashboard = () => {
                 </CardHeader>
                 <CardContent>
                   <p className="text-sm text-foreground-muted mb-4">Learn about Senior Secondary pathways and university requirements.</p>
-                  <Button className="w-full bg-green-600 hover:bg-green-700">
+                  <Button 
+                    className="w-full bg-green-600 hover:bg-green-700"
+                    onClick={() => trackButtonClick('Explore Paths', 'Action Cards')}
+                  >
                     Explore Paths <ArrowRight className="w-4 h-4 ml-1" />
                   </Button>
                 </CardContent>
@@ -788,7 +925,13 @@ const StudentDashboard = () => {
                 </CardHeader>
                 <CardContent>
                   <p className="text-sm text-foreground-muted mb-4">Get personalized career advice from our AI counselor.</p>
-                  <Button className="w-full bg-purple-600 hover:bg-purple-700" onClick={() => setActiveTab('chat')}>
+                  <Button 
+                    className="w-full bg-purple-600 hover:bg-purple-700" 
+                    onClick={() => {
+                      setActiveTab('chat')
+                      trackButtonClick('Start Chat', 'Action Cards')
+                    }}
+                  >
                     Start Chat <ArrowRight className="w-4 h-4 ml-1" />
                   </Button>
                 </CardContent>
@@ -800,7 +943,7 @@ const StudentDashboard = () => {
           <TabsContent value="careers" className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {careerData.map((career, index) => (
-                <Card key={index} className="bg-card border-card-border hover:shadow-card transition-all duration-300 cursor-pointer">
+                <Card key={index} className="bg-card border-card-border hover:shadow-card transition-all duration-300 cursor-pointer" onClick={() => handleCareerDetailClick(career)}>
                   <CardHeader>
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-3">
@@ -850,89 +993,187 @@ const StudentDashboard = () => {
 
           {/* Progress Tab */}
           <TabsContent value="progress" className="space-y-6">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <Card className="bg-card border-card-border">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Trophy className="w-5 h-5 text-yellow-500" />
-                    Your Achievements
-                  </CardTitle>
-                  <CardDescription>Track your career exploration milestones</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  {dynamicActivities.map((activity) => (
-                    <div key={activity.id} className="flex items-center gap-3 p-3 rounded-lg hover:bg-muted/50 transition-colors">
-                      <div className={`w-10 h-10 rounded-lg ${activity.bgColor} flex items-center justify-center`}>
-                        <activity.icon className={`w-5 h-5 ${activity.color}`} />
-                      </div>
-                      <div className="flex-1">
-                        <p className="font-medium text-sm">{activity.title}</p>
-                        <p className="text-xs text-foreground-muted">{activity.time}</p>
-                      </div>
-                      <div className="text-right">
-                        <span className="text-sm font-medium">{activity.progress}%</span>
-                      </div>
-                    </div>
-                  ))}
-                </CardContent>
-              </Card>
+            <Tabs value="overview" onValueChange={(value) => {}} className="space-y-6">
+              <TabsList>
+                <TabsTrigger value="overview">Overview</TabsTrigger>
+                <TabsTrigger value="grades">Academic Performance</TabsTrigger>
+                <TabsTrigger value="achievements">Free Courses</TabsTrigger>
+              </TabsList>
 
-              <Card className="bg-card border-card-border">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Target className="w-5 h-5 text-blue-500" />
-                    Next Steps
-                  </CardTitle>
-                  <CardDescription>Recommended actions for your journey</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="space-y-3">
-                    <div className="flex items-center space-x-3 p-3 rounded-lg bg-blue-50 border border-blue-200">
-                      <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                      <span className="text-sm font-medium">Complete Skills Assessment</span>
-                    </div>
-                    <div className="flex items-center space-x-3 p-3 rounded-lg bg-muted/50">
-                      <div className="w-2 h-2 bg-foreground-muted rounded-full"></div>
-                      <span className="text-sm text-foreground-muted">Update academic interests</span>
-                    </div>
-                    <div className="flex items-center space-x-3 p-3 rounded-lg bg-muted/50">
-                      <div className="w-2 h-2 bg-foreground-muted rounded-full"></div>
-                      <span className="text-sm text-foreground-muted">Explore university programs</span>
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-2">
-                    <Button className="w-full">
-                      Take Next Assessment <ArrowRight className="w-4 h-4 ml-1" />
-                    </Button>
-                    <Button
-                      variant="outline"
-                      className="w-full"
-                      onClick={async () => {
-                        const profileData = profile || ({} as any)
-                        const html = ReportGenerator.generatePDFReport(
-                          {
-                            name: profileData.full_name,
-                            grade: profileData.current_grade,
-                            subjects: profileData.cbe_subjects || profileData.subjects,
-                            interests: profileData.career_interests || profileData.interests,
-                            careerGoals: profileData.career_goals,
-                            location: profileData.location,
-                          },
-                          [],
-                          []
-                        )
-                        await ReportGenerator.downloadPDF(html, 'CareerPathAI_Assessment.pdf')
-                      }}
-                    >
-                      Download PDF
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
+              {/* Progress Overview */}
+              <TabsContent value="overview" className="space-y-6">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  <Card className="bg-card border-card-border">
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <Trophy className="w-5 h-5 text-yellow-500" />
+                        Recent Activity
+                      </CardTitle>
+                      <CardDescription>Your latest career exploration activities</CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      {isLoadingActivities ? (
+                        Array.from({ length: 3 }).map((_, index) => (
+                          <div key={index} className="flex items-center gap-3 p-3 rounded-lg">
+                            <div className="w-10 h-10 bg-muted rounded-lg animate-pulse"></div>
+                            <div className="flex-1">
+                              <div className="h-4 bg-muted rounded animate-pulse mb-2"></div>
+                              <div className="h-3 bg-muted rounded animate-pulse w-1/3"></div>
+                            </div>
+                            <div className="h-4 bg-muted rounded animate-pulse w-12"></div>
+                          </div>
+                        ))
+                      ) : (
+                        dynamicActivities.slice(0, 3).map((activity) => {
+                          const activityConfig = {
+                            'profile': { icon: User, color: 'text-blue-500', bgColor: 'bg-blue-50' },
+                            'interests': { icon: Target, color: 'text-green-500', bgColor: 'bg-green-50' },
+                            'ai': { icon: Bot, color: 'text-purple-500', bgColor: 'bg-purple-50' },
+                            'assessment': { icon: Trophy, color: 'text-orange-500', bgColor: 'bg-orange-50' },
+                            'career': { icon: Briefcase, color: 'text-indigo-500', bgColor: 'bg-indigo-50' },
+                            'learning': { icon: BookOpen, color: 'text-emerald-500', bgColor: 'bg-emerald-50' }
+                          }[activity.activity_type] || { icon: Activity, color: 'text-gray-500', bgColor: 'bg-gray-50' };
+
+                          const IconComponent = activityConfig.icon;
+                          const timeAgo = getTimeAgo(activity.created_at);
+
+                          return (
+                            <div key={activity.id} className="flex items-center gap-3 p-3 rounded-lg hover:bg-muted/50 transition-colors">
+                              <div className={`w-10 h-10 rounded-lg ${activityConfig.bgColor} flex items-center justify-center`}>
+                                <IconComponent className={`w-5 h-5 ${activityConfig.color}`} />
+                              </div>
+                              <div className="flex-1">
+                                <p className="font-medium text-sm">{activity.activity_title}</p>
+                                <p className="text-xs text-foreground-muted">{timeAgo}</p>
+                              </div>
+                              <div className="text-right">
+                                <span className="text-sm font-medium">{activity.progress_percentage}%</span>
+                              </div>
+                            </div>
+                          );
+                        })
+                      )}
+                    </CardContent>
+                  </Card>
+
+                  <Card className="bg-card border-card-border">
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <Target className="w-5 h-5 text-blue-500" />
+                        Your Journey Actions
+                      </CardTitle>
+                      <CardDescription>Take action to advance your career path</CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div className="space-y-3">
+                        <div 
+                          className="flex items-center justify-between p-3 rounded-lg bg-blue-50 border border-blue-200 cursor-pointer hover:bg-blue-100 transition-colors"
+                          onClick={() => {
+                            setActiveTab('progress')
+                            trackButtonClick('Record Grades', 'Journey Actions')
+                          }}
+                        >
+                          <div className="flex items-center space-x-3">
+                            <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                            <span className="text-sm font-medium">Record your academic grades</span>
+                          </div>
+                          <ArrowRight className="w-4 h-4 text-blue-500" />
+                        </div>
+                        <div 
+                          className="flex items-center justify-between p-3 rounded-lg bg-green-50 border border-green-200 cursor-pointer hover:bg-green-100 transition-colors"
+                          onClick={() => {
+                            setActiveTab('chat')
+                            trackButtonClick('Complete Assessment', 'Journey Actions')
+                          }}
+                        >
+                          <div className="flex items-center space-x-3">
+                            <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                            <span className="text-sm font-medium">Complete Skills Assessment</span>
+                          </div>
+                          <ArrowRight className="w-4 h-4 text-green-500" />
+                        </div>
+                        <div 
+                          className="flex items-center justify-between p-3 rounded-lg bg-purple-50 border border-purple-200 cursor-pointer hover:bg-purple-100 transition-colors"
+                          onClick={() => {
+                            setActiveTab('careers')
+                            trackButtonClick('Explore Programs', 'Journey Actions')
+                          }}
+                        >
+                          <div className="flex items-center space-x-3">
+                            <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
+                            <span className="text-sm font-medium">Explore university programs</span>
+                          </div>
+                          <ArrowRight className="w-4 h-4 text-purple-500" />
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-4">
+                        <Button 
+                          className="w-full"
+                          onClick={() => {
+                            setActiveTab('chat')
+                            trackButtonClick('Start Assessment', 'Journey Actions')
+                          }}
+                        >
+                          Start Assessment <ArrowRight className="w-4 h-4 ml-1" />
+                        </Button>
+                        <Button
+                          variant="outline"
+                          className="w-full"
+                          onClick={async () => {
+                            const profileData = profile || ({} as any)
+                            const html = ReportGenerator.generatePDFReport(
+                              {
+                                name: profileData.full_name,
+                                grade: profileData.current_grade,
+                                subjects: profileData.cbe_subjects || profileData.subjects,
+                                interests: profileData.career_interests || profileData.interests,
+                                careerGoals: profileData.career_goals,
+                                location: profileData.location,
+                              },
+                              [],
+                              []
+                            )
+                            await ReportGenerator.downloadPDF(html, 'CareerPathAI_Assessment.pdf')
+                            trackButtonClick('Download PDF', 'Journey Actions')
+                          }}
+                        >
+                          Download PDF
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+              </TabsContent>
+
+              {/* Academic Performance Tab */}
+              <TabsContent value="grades" className="space-y-6">
+                <GradesManager />
+              </TabsContent>
+
+              {/* Course Recommendations Tab */}
+              <TabsContent value="achievements" className="space-y-6">
+                <CourseRecommendations 
+                  careerInterests={profile?.career_interests || profile?.interests}
+                  cbeSubjects={profile?.cbe_subjects || profile?.subjects}
+                  strongSubjects={[]} // This will be populated from grades data
+                />
+              </TabsContent>
+            </Tabs>
           </TabsContent>
         </Tabs>
       </main>
+
+      {/* Career Detail Modal */}
+      {selectedCareer && (
+        <CareerDetailModal
+          isOpen={isCareerModalOpen}
+          onClose={() => {
+            setIsCareerModalOpen(false)
+            setSelectedCareer(null)
+          }}
+          career={selectedCareer}
+        />
+      )}
     </div>
   )
 }

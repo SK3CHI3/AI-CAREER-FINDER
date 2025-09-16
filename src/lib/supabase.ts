@@ -8,5 +8,12 @@ if (!supabaseUrl || !supabaseAnonKey) {
   throw new Error('Missing Supabase environment variables')
 }
 
-// Official Supabase pattern - simple and clean
-export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey)
+// Official Supabase pattern - production ready with security config
+export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
+  auth: {
+    storage: localStorage,
+    persistSession: true,
+    autoRefreshToken: true,
+    detectSessionInUrl: true, // For magic links and email confirmations
+  }
+})
