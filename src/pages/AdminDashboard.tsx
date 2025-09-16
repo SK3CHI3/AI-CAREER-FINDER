@@ -79,7 +79,7 @@ const AdminDashboard = () => {
   )
 
   return (
-    <div className="min-h-screen" style={{ background: 'var(--gradient-homepage)' }}>
+    <div className="min-h-screen" style={{ background: 'var(--gradient-page-subtle)' }}>
       {/* Header */}
       <header className="border-b border-card-border bg-background/80 backdrop-blur-md sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -143,7 +143,7 @@ const AdminDashboard = () => {
           <TabsContent value="overview" className="space-y-6">
             {/* Key Metrics */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              <Card className="bg-gradient-surface border-card-border">
+              <Card className="bg-card border-card-border">
                 <CardHeader className="pb-3">
                   <div className="flex items-center justify-between">
                     <div>
@@ -156,7 +156,7 @@ const AdminDashboard = () => {
                 </CardHeader>
               </Card>
 
-              <Card className="bg-gradient-surface border-card-border">
+              <Card className="bg-card border-card-border">
                 <CardHeader className="pb-3">
                   <div className="flex items-center justify-between">
                     <div>
@@ -169,7 +169,7 @@ const AdminDashboard = () => {
                 </CardHeader>
               </Card>
 
-              <Card className="bg-gradient-surface border-card-border">
+              <Card className="bg-card border-card-border">
                 <CardHeader className="pb-3">
                   <div className="flex items-center justify-between">
                     <div>
@@ -182,7 +182,7 @@ const AdminDashboard = () => {
                 </CardHeader>
               </Card>
 
-              <Card className="bg-gradient-surface border-card-border">
+              <Card className="bg-card border-card-border">
                 <CardHeader className="pb-3">
                   <div className="flex items-center justify-between">
                     <div>
@@ -199,7 +199,7 @@ const AdminDashboard = () => {
             {/* Charts */}
             <div className="grid lg:grid-cols-2 gap-6">
               {/* User Growth Chart */}
-              <Card className="bg-gradient-surface border-card-border">
+              <Card className="bg-card border-card-border">
                 <CardHeader>
                   <CardTitle>User Growth & Engagement</CardTitle>
                   <CardDescription>Monthly student registrations and assessment completions</CardDescription>
@@ -221,7 +221,7 @@ const AdminDashboard = () => {
               </Card>
 
               {/* Career Interest Distribution */}
-              <Card className="bg-gradient-surface border-card-border">
+              <Card className="bg-card border-card-border">
                 <CardHeader>
                   <CardTitle>Career Interest Distribution</CardTitle>
                   <CardDescription>Popular career fields among students</CardDescription>

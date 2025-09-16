@@ -17,8 +17,10 @@ const GuestAIChat = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [guestProfile, setGuestProfile] = useState<GuestProfile>({});
+  const [showFinishCTA, setShowFinishCTA] = useState(false);
   const [assessmentComplete, setAssessmentComplete] = useState(false);
   const [showReport, setShowReport] = useState(false);
+  const [isGeneratingReport, setIsGeneratingReport] = useState(false);
   const [connectionTest, setConnectionTest] = useState<string>('');
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -125,6 +127,11 @@ CRITICAL RULES:
 - Make each question feel personal and engaging
 - Use proper formatting with emojis and bold text
 - Reference Kenya's CBE system and opportunities
+
+CONVERSATION FLOW:
+- Continue asking questions naturally until the user decides to finish
+- Keep the conversation engaging and personal
+- Focus on gathering comprehensive information about their interests, goals, and preferences
 
 Remember: YOU MUST ALWAYS BE CURIOUS TO KNOW THEM. Make this the most engaging career conversation they've ever had!`;
   };
@@ -238,6 +245,7 @@ Remember: YOU MUST ALWAYS BE CURIOUS TO KNOW THEM. Make this the most engaging c
     setGuestProfile(newProfile);
   };
 
+
   const handleSend = async () => {
     if (!message.trim() || isLoading) return;
     
@@ -287,8 +295,13 @@ Remember: YOU MUST ALWAYS BE CURIOUS TO KNOW THEM. Make this the most engaging c
       // Extract profile information from the conversation
       extractProfileInfo(userMessage.content, response);
 
-      // Check if assessment is complete (after 6+ exchanges)
-      if (updatedConversation.length >= 12 && !assessmentComplete) {
+      // Show "Finish assessment" CTA after 6 user turns (subtle)
+      // Complete assessment after 8 user turns
+      const userAnswers = updatedConversation.filter(m => m.role === 'user').length;
+      if (userAnswers >= 6 && !showFinishCTA) {
+        setShowFinishCTA(true);
+      }
+      if (userAnswers >= 8 && !assessmentComplete) {
         setAssessmentComplete(true);
       }
 
@@ -300,8 +313,43 @@ Remember: YOU MUST ALWAYS BE CURIOUS TO KNOW THEM. Make this the most engaging c
     }
   };
 
-  const generateReport = () => {
-    setShowReport(true);
+  const finishAssessment = async () => {
+    try {
+      setIsGeneratingReport(true);
+      // Ask AI to produce a concise summary tailored for the PDF
+      const guestContext = {
+        name: guestProfile.name,
+        schoolLevel: 'secondary' as const,
+        currentGrade: guestProfile.grade,
+        subjects: guestProfile.subjects,
+        interests: guestProfile.interests,
+        careerGoals: guestProfile.careerGoals
+      };
+
+      const summaryPrompt = `Create a concise assessment summary for a Kenyan CBE learner. Output clean paragraphs (no markdown, no lists unless needed). Include:
+1) Overview: student context in one paragraph.
+2) Top 3 career suggestions with one-line reasoning each.
+3) CBE pathway guidance: Senior School or TVET direction and subject focus.
+4) Immediate next steps: 3-4 actions.
+Keep tone professional, clear, and actionable.`;
+
+      const aiSummary = await aiCareerService.sendMessage(summaryPrompt, conversation, guestContext);
+
+      // Append the AI summary to conversation so the PDF picks it up as the latest assistant content
+      const assistantMessage: ChatMessage = {
+        id: crypto.randomUUID(),
+        role: 'assistant',
+        content: cleanMarkdownFormatting(aiSummary),
+        timestamp: new Date()
+      };
+      setConversation(prev => [...prev, assistantMessage]);
+
+      setShowReport(true);
+    } catch (e) {
+      setError('Could not generate summary. Please try again.');
+    } finally {
+      setIsGeneratingReport(false);
+    }
   };
 
   const testConnection = async () => {
@@ -333,24 +381,10 @@ Remember: YOU MUST ALWAYS BE CURIOUS TO KNOW THEM. Make this the most engaging c
     }
   };
 
-  const downloadReport = () => {
+  const downloadReport = async () => {
     const reportName = `CareerPath-AI-Assessment-${guestProfile.name || 'Report'}-${new Date().toISOString().split('T')[0]}`;
-
-    // Generate HTML report for better formatting
     const htmlReport = ReportGenerator.generatePDFReport(guestProfile, conversation);
-    ReportGenerator.downloadHTMLReport(htmlReport, `${reportName}.html`);
-
-    // Also generate text version as backup
-    const textReport = ReportGenerator.generateTextReport(guestProfile, conversation);
-    const blob = new Blob([textReport], { type: 'text/plain' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `${reportName}.txt`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+    await ReportGenerator.downloadPDF(htmlReport, `${reportName}.pdf`);
   };
 
   return (
@@ -445,8 +479,33 @@ Remember: YOU MUST ALWAYS BE CURIOUS TO KNOW THEM. Make this the most engaging c
           </ScrollArea>
         </CardContent>
         
-        {/* Assessment Complete Actions */}
-        {assessmentComplete && !showReport && (
+        {/* Finish Assessment CTA - Subtle */}
+        {showFinishCTA && !assessmentComplete && !isLoading && !showReport && (
+          <div className="p-4 border-t border-card-border bg-gradient-surface/30">
+            <div className="text-center space-y-3">
+              <p className="text-sm text-foreground-muted">
+                You've answered enough questions! Ready to finish your assessment?
+              </p>
+              <Button 
+                onClick={finishAssessment} 
+                disabled={isGeneratingReport} 
+                variant="outline"
+                size="sm"
+                className="text-xs"
+              >
+                {isGeneratingReport ? (
+                  <Loader2 className="w-3 h-3 mr-1 animate-spin" />
+                ) : (
+                  <Download className="w-3 h-3 mr-1" />
+                )}
+                {isGeneratingReport ? 'Preparing…' : 'Finish Assessment & Get Report'}
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {/* Assessment Complete - Force Finish */}
+        {assessmentComplete && !isLoading && !showReport && (
           <div className="p-6 border-t border-card-border bg-gradient-surface/50">
             <div className="text-center space-y-4">
               <div className="flex items-center justify-center space-x-2 text-green-600">
@@ -456,9 +515,13 @@ Remember: YOU MUST ALWAYS BE CURIOUS TO KNOW THEM. Make this the most engaging c
               <p className="text-sm text-foreground-muted">
                 Great job! I've gathered enough information to create your personalized career report.
               </p>
-              <Button onClick={generateReport} className="bg-gradient-primary hover:opacity-90 text-primary-foreground">
-                <Download className="w-4 h-4 mr-2" />
-                Generate My Career Report
+              <Button onClick={finishAssessment} disabled={isGeneratingReport} className="bg-gradient-primary hover:opacity-90 text-primary-foreground">
+                {isGeneratingReport ? (
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                ) : (
+                  <Download className="w-4 h-4 mr-2" />
+                )}
+                {isGeneratingReport ? 'Preparing…' : 'Generate My Career Report'}
               </Button>
             </div>
           </div>
@@ -490,7 +553,7 @@ Remember: YOU MUST ALWAYS BE CURIOUS TO KNOW THEM. Make this the most engaging c
         )}
         
         {/* Chat Input */}
-        {!showReport && (
+        {!showReport && !assessmentComplete && (
           <div className="p-6 border-t border-card-border">
             {connectionTest && (
               <Alert className="mb-4">

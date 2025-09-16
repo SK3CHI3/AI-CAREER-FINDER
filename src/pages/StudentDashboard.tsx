@@ -38,6 +38,7 @@ import {
   Lightbulb
 } from 'lucide-react'
 import AIChat from '@/components/AIChat'
+import { ReportGenerator } from '@/lib/report-generator'
 import { ProfileSetup } from '@/components/ProfileSetup'
 import { supabase } from '@/lib/supabase'
 import { aiCareerService } from '@/lib/ai-service'
@@ -532,7 +533,7 @@ const StudentDashboard = () => {
 
 
   return (
-    <div className="min-h-screen" style={{ background: 'var(--gradient-homepage)' }}>
+    <div className="min-h-screen" style={{ background: 'var(--gradient-page-subtle)' }}>
       {/* Header */}
       <header className="border-b border-card-border bg-background/80 backdrop-blur-md sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -611,7 +612,7 @@ const StudentDashboard = () => {
             {/* Quick Stats */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               {dynamicStats.map((stat) => (
-                <Card key={stat.id} className="bg-gradient-surface border-card-border hover:shadow-lg transition-all duration-300 hover:scale-105 group">
+                <Card key={stat.id} className="bg-card border-card-border hover:shadow-card transition-all duration-300">
                   <CardHeader className="pb-3">
                     <div className="flex items-center justify-between">
                       <div>
@@ -622,7 +623,7 @@ const StudentDashboard = () => {
                           {stat.change}
                         </p>
                       </div>
-                      <div className={`w-12 h-12 rounded-xl ${stat.bgColor} flex items-center justify-center group-hover:scale-110 transition-transform duration-300`}>
+                      <div className={`w-12 h-12 rounded-xl ${stat.bgColor} flex items-center justify-center`}>
                         <stat.icon className={`w-6 h-6 ${stat.color}`} />
                       </div>
                     </div>
@@ -634,7 +635,7 @@ const StudentDashboard = () => {
             {/* Main Dashboard Grid */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               {/* Career Recommendations Chart */}
-              <Card className="lg:col-span-2 bg-gradient-surface border-card-border">
+              <Card className="lg:col-span-2 bg-card border-card-border">
                 <CardHeader>
                   <div className="flex items-center justify-between">
                     <div>
@@ -692,7 +693,7 @@ const StudentDashboard = () => {
               </Card>
 
               {/* Recent Activity */}
-              <Card className="bg-gradient-surface border-card-border">
+              <Card className="bg-card border-card-border">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <Activity className="w-5 h-5 text-blue-500" />
@@ -733,7 +734,7 @@ const StudentDashboard = () => {
 
             {/* Action Cards */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <Card className="bg-gradient-to-br from-blue-50 to-indigo-50 border-blue-200 hover:shadow-lg transition-all duration-300 hover:scale-105 group cursor-pointer">
+              <Card className="bg-gradient-to-br from-blue-50 to-indigo-50 border-blue-200 hover:shadow-card transition-all duration-300 cursor-pointer">
                 <CardHeader>
                   <div className="flex items-center gap-3">
                     <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
@@ -753,7 +754,7 @@ const StudentDashboard = () => {
                 </CardContent>
               </Card>
 
-              <Card className="bg-gradient-to-br from-green-50 to-emerald-50 border-green-200 hover:shadow-lg transition-all duration-300 hover:scale-105 group cursor-pointer">
+              <Card className="bg-gradient-to-br from-green-50 to-emerald-50 border-green-200 hover:shadow-card transition-all duration-300 cursor-pointer">
                 <CardHeader>
                   <div className="flex items-center gap-3">
                     <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
@@ -773,7 +774,7 @@ const StudentDashboard = () => {
                 </CardContent>
               </Card>
 
-              <Card className="bg-gradient-to-br from-purple-50 to-violet-50 border-purple-200 hover:shadow-lg transition-all duration-300 hover:scale-105 group cursor-pointer">
+              <Card className="bg-gradient-to-br from-purple-50 to-violet-50 border-purple-200 hover:shadow-card transition-all duration-300 cursor-pointer">
                 <CardHeader>
                   <div className="flex items-center gap-3">
                     <div className="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
@@ -799,7 +800,7 @@ const StudentDashboard = () => {
           <TabsContent value="careers" className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {careerData.map((career, index) => (
-                <Card key={index} className="bg-gradient-surface border-card-border hover:shadow-lg transition-all duration-300 hover:scale-105 group cursor-pointer">
+                <Card key={index} className="bg-card border-card-border hover:shadow-card transition-all duration-300 cursor-pointer">
                   <CardHeader>
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-3">
@@ -850,7 +851,7 @@ const StudentDashboard = () => {
           {/* Progress Tab */}
           <TabsContent value="progress" className="space-y-6">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <Card className="bg-gradient-surface border-card-border">
+              <Card className="bg-card border-card-border">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <Trophy className="w-5 h-5 text-yellow-500" />
@@ -876,7 +877,7 @@ const StudentDashboard = () => {
                 </CardContent>
               </Card>
 
-              <Card className="bg-gradient-surface border-card-border">
+              <Card className="bg-card border-card-border">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <Target className="w-5 h-5 text-blue-500" />
@@ -899,9 +900,33 @@ const StudentDashboard = () => {
                       <span className="text-sm text-foreground-muted">Explore university programs</span>
                     </div>
                   </div>
-                  <Button className="w-full mt-4">
-                    Take Next Assessment <ArrowRight className="w-4 h-4 ml-1" />
-                  </Button>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-2">
+                    <Button className="w-full">
+                      Take Next Assessment <ArrowRight className="w-4 h-4 ml-1" />
+                    </Button>
+                    <Button
+                      variant="outline"
+                      className="w-full"
+                      onClick={async () => {
+                        const profileData = profile || ({} as any)
+                        const html = ReportGenerator.generatePDFReport(
+                          {
+                            name: profileData.full_name,
+                            grade: profileData.current_grade,
+                            subjects: profileData.cbe_subjects || profileData.subjects,
+                            interests: profileData.career_interests || profileData.interests,
+                            careerGoals: profileData.career_goals,
+                            location: profileData.location,
+                          },
+                          [],
+                          []
+                        )
+                        await ReportGenerator.downloadPDF(html, 'CareerPathAI_Assessment.pdf')
+                      }}
+                    >
+                      Download PDF
+                    </Button>
+                  </div>
                 </CardContent>
               </Card>
             </div>

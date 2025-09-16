@@ -20,7 +20,7 @@ const Hero = () => {
               </span>
             </div>
             
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold leading-tight">
+            <h1 className="text-4xl sm:text-6xl lg:text-7xl font-bold leading-tight tracking-tight">
               Discover Your{" "}
               <span className="bg-gradient-text bg-clip-text text-transparent">
                 Perfect Career
@@ -28,9 +28,9 @@ const Hero = () => {
               Path with AI
             </h1>
             
-            <p className="text-xl text-foreground-muted leading-relaxed max-w-xl">
-              Navigate Kenya's Competency-Based Education system with intelligent career guidance. 
-              Get personalized pathways, real-time job market insights, and future-proof career recommendations.
+            <p className="text-lg sm:text-xl text-foreground-muted leading-relaxed max-w-2xl">
+              Navigate Kenya’s Competency-Based Education (CBE) with intelligent guidance. 
+              Choose Senior School or TVET pathways, understand entry requirements, and build skills for real roles.
             </p>
             
             <div className="flex flex-col sm:flex-row gap-4">

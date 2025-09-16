@@ -5,14 +5,23 @@ import CareerPaths from "@/components/CareerPaths";
 import AIChat from "@/components/AIChat";
 import GuestAIChat from "@/components/GuestAIChat";
 import Footer from "@/components/Footer";
+import Explainers from "@/components/Explainers";
+import FeatureShowcase from "@/components/FeatureShowcase";
+import Testimonials from "@/components/Testimonials";
+import LogosBand from "@/components/LogosBand";
+import BackgroundGradient from "@/components/BackgroundGradient";
 
 const Index = () => {
   return (
-    <div className="min-h-screen text-foreground overflow-x-hidden" style={{ background: 'var(--gradient-homepage)' }}>
+    <div className="min-h-screen text-foreground overflow-x-hidden relative">
+      <BackgroundGradient />
       <Navigation />
       <main>
         <Hero />
-        <Features />
+        <FeatureShowcase />
+        <Explainers />
+        <Testimonials />
+        <LogosBand />
         <CareerPaths />
         <div className="guest-chat-section">
           <GuestAIChat />

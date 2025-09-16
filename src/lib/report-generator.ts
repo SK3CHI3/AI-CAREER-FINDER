@@ -42,243 +42,583 @@ export class ReportGenerator {
     <meta charset="UTF-8">
     <title>CareerPath AI Assessment Report</title>
     <style>
+        :root { 
+          --brand: #2563eb; 
+          --brand-light: #3b82f6; 
+          --ink: #0f172a; 
+          --muted: #475569; 
+          --light: #f8fafc; 
+          --border: #e2e8f0; 
+          --success: #059669;
+          --warning: #d97706;
+        }
+        
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        
         body { 
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
-            line-height: 1.6; 
-            color: #333; 
-            max-width: 800px; 
-            margin: 0 auto; 
-            padding: 20px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
+          font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; 
+          color: var(--ink); 
+          background: #ffffff; 
+          line-height: 1.6;
+          font-size: 14px;
         }
-        .report-container {
-            background: white;
-            padding: 40px;
-            border-radius: 15px;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        
+        .report-container { 
+          max-width: 800px; 
+          margin: 0 auto; 
+          padding: 40px; 
+          background: #fff;
         }
-        .header { 
-            text-align: center; 
-            border-bottom: 3px solid #667eea; 
-            padding-bottom: 20px; 
-            margin-bottom: 30px; 
+        
+        /* Header Styles */
+        .brand-header {
+          border-bottom: 3px solid var(--brand);
+          padding-bottom: 20px;
+          margin-bottom: 30px;
         }
-        .header h1 { 
-            color: #667eea; 
-            font-size: 2.5em; 
-            margin: 0; 
-            font-weight: 700;
+        
+        .brand-title {
+          font-size: 28px;
+          font-weight: 800;
+          color: var(--brand);
+          margin-bottom: 5px;
+          letter-spacing: -0.02em;
         }
-        .header p { 
-            color: #666; 
-            font-size: 1.1em; 
-            margin: 10px 0 0 0; 
+        
+        .brand-subtitle {
+          color: var(--muted);
+          font-size: 16px;
+          font-weight: 500;
         }
-        .section { 
-            margin: 30px 0; 
-            padding: 20px; 
-            background: #f8f9ff; 
-            border-radius: 10px; 
-            border-left: 5px solid #667eea;
+        
+        .report-meta {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin-top: 15px;
+          font-size: 12px;
+          color: var(--muted);
         }
-        .section h2 { 
-            color: #667eea; 
-            font-size: 1.5em; 
-            margin-top: 0; 
-            display: flex;
-            align-items: center;
+        
+        /* Main Content */
+        .main-title {
+          font-size: 32px;
+          font-weight: 700;
+          color: var(--ink);
+          margin-bottom: 8px;
+          letter-spacing: -0.02em;
         }
-        .section h2::before {
-            content: "🎯";
-            margin-right: 10px;
+        
+        .main-subtitle {
+          font-size: 18px;
+          color: var(--muted);
+          margin-bottom: 40px;
+          font-weight: 400;
         }
-        .profile-grid { 
-            display: grid; 
-            grid-template-columns: 1fr 1fr; 
-            gap: 15px; 
-            margin: 15px 0; 
+        
+        /* Section Styles */
+        .section {
+          margin-bottom: 35px;
+          page-break-inside: avoid;
         }
-        .profile-item { 
-            background: white; 
-            padding: 15px; 
-            border-radius: 8px; 
-            border: 1px solid #e0e6ff;
+        
+        .section-title {
+          font-size: 20px;
+          font-weight: 700;
+          color: var(--brand);
+          margin-bottom: 15px;
+          padding-bottom: 8px;
+          border-bottom: 2px solid var(--border);
+          text-transform: uppercase;
+          letter-spacing: 0.5px;
         }
-        .profile-item strong { 
-            color: #667eea; 
-            display: block; 
-            margin-bottom: 5px; 
+        
+        .section-subtitle {
+          font-size: 16px;
+          font-weight: 600;
+          color: var(--ink);
+          margin-bottom: 12px;
+          margin-top: 20px;
         }
-        .recommendation { 
-            background: white; 
-            padding: 20px; 
-            margin: 15px 0; 
-            border-radius: 10px; 
-            border: 1px solid #e0e6ff;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        
+        /* Profile Grid */
+        .profile-grid {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 15px;
+          margin-bottom: 20px;
         }
-        .recommendation h3 { 
-            color: #667eea; 
-            margin-top: 0; 
-            font-size: 1.3em;
+        
+        .profile-item {
+          background: var(--light);
+          padding: 15px;
+          border-radius: 8px;
+          border-left: 4px solid var(--brand);
         }
-        .match-percentage { 
-            background: linear-gradient(135deg, #667eea, #764ba2); 
-            color: white; 
-            padding: 5px 15px; 
-            border-radius: 20px; 
-            font-weight: bold; 
-            display: inline-block; 
-            margin-bottom: 10px;
+        
+        .profile-label {
+          font-size: 12px;
+          font-weight: 600;
+          color: var(--muted);
+          text-transform: uppercase;
+          letter-spacing: 0.5px;
+          margin-bottom: 5px;
         }
-        .conversation-summary { 
-            background: white; 
-            padding: 15px; 
-            border-radius: 8px; 
-            margin: 10px 0; 
-            border-left: 4px solid #667eea;
+        
+        .profile-value {
+          font-size: 14px;
+          font-weight: 500;
+          color: var(--ink);
         }
-        .next-steps { 
-            background: linear-gradient(135deg, #667eea, #764ba2); 
-            color: white; 
-            padding: 25px; 
-            border-radius: 10px; 
-            margin-top: 30px;
+        
+        /* Lists */
+        .bullet-list {
+          margin: 15px 0;
+          padding-left: 0;
         }
-        .next-steps h2 { 
-            color: white; 
-            margin-top: 0; 
+        
+        .bullet-list li {
+          margin: 8px 0;
+          padding-left: 20px;
+          position: relative;
+          font-size: 14px;
+          line-height: 1.5;
         }
-        .next-steps ul { 
-            list-style: none; 
-            padding: 0; 
+        
+        .bullet-list li::before {
+          content: "•";
+          color: var(--brand);
+          font-weight: bold;
+          position: absolute;
+          left: 0;
+          top: 0;
         }
-        .next-steps li { 
-            padding: 8px 0; 
-            padding-left: 25px; 
-            position: relative;
+        
+        .numbered-list {
+          margin: 15px 0;
+          padding-left: 0;
         }
-        .next-steps li::before { 
-            content: "✓"; 
-            position: absolute; 
-            left: 0; 
-            color: #4ade80; 
-            font-weight: bold; 
+        
+        .numbered-list li {
+          margin: 10px 0;
+          padding-left: 25px;
+          position: relative;
+          font-size: 14px;
+          line-height: 1.5;
         }
-        .footer { 
-            text-align: center; 
-            margin-top: 40px; 
-            padding-top: 20px; 
-            border-top: 2px solid #e0e6ff; 
-            color: #666; 
+        
+        .numbered-list li::before {
+          content: counter(item) ".";
+          counter-increment: item;
+          color: var(--brand);
+          font-weight: bold;
+          position: absolute;
+          left: 0;
+          top: 0;
         }
-        .cbe-info {
-            background: linear-gradient(135deg, #10b981, #059669);
-            color: white;
-            padding: 20px;
-            border-radius: 10px;
-            margin: 20px 0;
+        
+        .numbered-list {
+          counter-reset: item;
         }
-        .cbe-info h3 {
-            color: white;
-            margin-top: 0;
+        
+        /* Career Recommendations */
+        .career-card {
+          background: #fff;
+          border: 1px solid var(--border);
+          border-radius: 12px;
+          padding: 20px;
+          margin: 15px 0;
+          box-shadow: 0 2px 4px rgba(0,0,0,0.05);
         }
+        
+        .career-title {
+          font-size: 18px;
+          font-weight: 700;
+          color: var(--ink);
+          margin-bottom: 8px;
+        }
+        
+        .match-badge {
+          display: inline-block;
+          background: #dcfce7;
+          color: var(--success);
+          padding: 4px 12px;
+          border-radius: 20px;
+          font-size: 12px;
+          font-weight: 600;
+          margin-bottom: 10px;
+        }
+        
+        .career-details {
+          margin: 10px 0;
+        }
+        
+        .career-details strong {
+          color: var(--brand);
+          font-weight: 600;
+        }
+        
+        /* AI Summary */
+        .ai-summary {
+          background: var(--light);
+          border-left: 4px solid var(--brand);
+          padding: 20px;
+          border-radius: 8px;
+          margin: 15px 0;
+        }
+        
+        .ai-summary p {
+          margin: 10px 0;
+          font-size: 14px;
+          line-height: 1.6;
+        }
+        
+        /* CBE Context */
+        .cbe-context {
+          background: #fef3c7;
+          border: 1px solid #f59e0b;
+          border-radius: 8px;
+          padding: 20px;
+          margin: 15px 0;
+        }
+        
+        .cbe-context h4 {
+          color: var(--warning);
+          font-size: 16px;
+          font-weight: 600;
+          margin-bottom: 10px;
+        }
+        
+        /* Next Steps */
+        .next-steps {
+          background: #f0f9ff;
+          border: 1px solid var(--brand);
+          border-radius: 8px;
+          padding: 20px;
+          margin: 15px 0;
+        }
+        
+        .next-steps h4 {
+          color: var(--brand);
+          font-size: 16px;
+          font-weight: 600;
+          margin-bottom: 15px;
+        }
+        
+        /* Footer */
+        .footer {
+          margin-top: 50px;
+          padding-top: 20px;
+          border-top: 2px solid var(--border);
+          text-align: center;
+          color: var(--muted);
+          font-size: 12px;
+        }
+        
+        .footer p {
+          margin: 5px 0;
+        }
+        
+        .footer strong {
+          color: var(--brand);
+        }
+        
+        /* Print Styles */
         @media print {
-            body { background: white; }
-            .report-container { box-shadow: none; }
+          .report-container {
+            margin: 0;
+            padding: 20px;
+            max-width: none;
+          }
+          
+          .section {
+            page-break-inside: avoid;
+          }
         }
     </style>
 </head>
 <body>
     <div class="report-container">
-        <div class="header">
-            <h1>🎓 CareerPath AI Assessment Report</h1>
-            <p>Personalized Career Guidance for Kenya's CBE System</p>
-            <p><strong>Generated:</strong> ${currentDate}</p>
+        <!-- Header -->
+        <div class="brand-header">
+            <div class="brand-title">CareerPath AI</div>
+            <div class="brand-subtitle">Kenya's Premier CBE Career Guidance Platform</div>
+            <div class="report-meta">
+                <span>Generated: ${currentDate}</span>
+                <span>Report ID: ${Date.now().toString().slice(-6)}</span>
+            </div>
         </div>
-
+        
+        <!-- Main Title -->
+        <h1 class="main-title">Career Assessment Report</h1>
+        <p class="main-subtitle">Personalized guidance aligned to Kenya's Competency-Based Education (CBE) pathways</p>
+        
+        <!-- Student Profile Section -->
         <div class="section">
-            <h2>Student Profile</h2>
+            <h2 class="section-title">Student Profile</h2>
+            
             <div class="profile-grid">
-                ${profile.name ? `<div class="profile-item"><strong>Name:</strong> ${profile.name}</div>` : ''}
-                ${profile.grade ? `<div class="profile-item"><strong>Current Grade:</strong> ${profile.grade}</div>` : ''}
-                ${profile.age ? `<div class="profile-item"><strong>Age:</strong> ${profile.age}</div>` : ''}
-                ${profile.location ? `<div class="profile-item"><strong>Location:</strong> ${profile.location}</div>` : ''}
+                ${profile.name ? `
+                <div class="profile-item">
+                    <div class="profile-label">Full Name</div>
+                    <div class="profile-value">${profile.name}</div>
+                </div>
+                ` : ''}
+                
+                ${profile.subjects?.length ? `
+                <div class="profile-item">
+                    <div class="profile-label">CBE Subjects of Interest</div>
+                    <div class="profile-value">${profile.subjects.join(', ')}</div>
+                </div>
+                ` : ''}
+                
+                ${profile.grade ? `
+                <div class="profile-item">
+                    <div class="profile-label">Current Grade</div>
+                    <div class="profile-value">${profile.grade}</div>
+                </div>
+                ` : ''}
+                
+                ${profile.interests?.length ? `
+                <div class="profile-item">
+                    <div class="profile-label">Career Interests</div>
+                    <div class="profile-value">${profile.interests.join(', ')}</div>
+                </div>
+                ` : ''}
+                
+                ${profile.age ? `
+                <div class="profile-item">
+                    <div class="profile-label">Age</div>
+                    <div class="profile-value">${profile.age} years</div>
+                </div>
+                ` : ''}
+                
+                ${profile.location ? `
+                <div class="profile-item">
+                    <div class="profile-label">Location</div>
+                    <div class="profile-value">${profile.location}</div>
+                </div>
+                ` : ''}
             </div>
-            
-            ${profile.subjects?.length ? `
-            <div class="profile-item">
-                <strong>CBE Subjects:</strong> ${profile.subjects.join(', ')}
-            </div>
-            ` : ''}
-            
-            ${profile.interests?.length ? `
-            <div class="profile-item">
-                <strong>Career Interests:</strong> ${profile.interests.join(', ')}
-            </div>
-            ` : ''}
             
             ${profile.careerGoals ? `
-            <div class="profile-item">
-                <strong>Career Goals:</strong> ${profile.careerGoals}
-            </div>
+            <h3 class="section-subtitle">Career Goals</h3>
+            <p style="margin: 10px 0; font-size: 14px; line-height: 1.6;">${profile.careerGoals}</p>
             ` : ''}
         </div>
 
-        <div class="cbe-info">
-            <h3>🇰🇪 Kenya's CBE System Overview</h3>
-            <p><strong>Your Current Path:</strong> ${this.getCBEPathInfo(profile.grade)}</p>
-            <p><strong>Next Steps:</strong> ${this.getNextSteps(profile.grade)}</p>
+        <!-- CBE Context Section -->
+        <div class="section">
+            <h2 class="section-title">CBE Pathway Context</h2>
+            <div class="cbe-context">
+                <h4>Your Current Educational Path</h4>
+                <p>${this.getCBEPathInfo(profile.grade)}</p>
+                
+                <h4>Recommended Next Steps</h4>
+                <p>${this.getNextSteps(profile.grade)}</p>
+            </div>
         </div>
 
+        <!-- Career Recommendations Section -->
         ${recommendations.length > 0 ? `
         <div class="section">
-            <h2>Career Recommendations</h2>
+            <h2 class="section-title">Career Recommendations</h2>
             ${recommendations.map(rec => `
-                <div class="recommendation">
-                    <div class="match-percentage">${rec.matchPercentage}% Match</div>
-                    <h3>${rec.title}</h3>
-                    <p>${rec.description}</p>
-                    <p><strong>Required CBE Subjects:</strong> ${rec.requiredSubjects.join(', ')}</p>
-                    <p><strong>Kenyan Universities:</strong> ${rec.universities.join(', ')}</p>
-                    <p><strong>Salary Range:</strong> ${rec.salaryRange}</p>
-                    <p><strong>Job Outlook:</strong> ${rec.jobOutlook}</p>
+                <div class="career-card">
+                    <span class="match-badge">${rec.matchPercentage}% Match</span>
+                    <h3 class="career-title">${rec.title}</h3>
+                    <p style="margin: 10px 0; font-size: 14px; line-height: 1.6;">${rec.description}</p>
+                    
+                    <div class="career-details">
+                        <p><strong>Required CBE Subjects:</strong> ${rec.requiredSubjects.join(', ')}</p>
+                        <p><strong>Recommended Universities:</strong> ${rec.universities.join(', ')}</p>
+                        <p><strong>Expected Salary Range:</strong> ${rec.salaryRange}</p>
+                        <p><strong>Job Market Outlook:</strong> ${rec.jobOutlook}</p>
+                    </div>
                 </div>
             `).join('')}
         </div>
         ` : ''}
 
+        <!-- AI Assessment Summary -->
         <div class="section">
-            <h2>Assessment Summary</h2>
-            ${conversation.filter(msg => msg.role === 'user').slice(0, 5).map((msg, index) => `
-                <div class="conversation-summary">
-                    <strong>Q${index + 1}:</strong> ${msg.content.substring(0, 200)}${msg.content.length > 200 ? '...' : ''}
-                </div>
-            `).join('')}
+            <h2 class="section-title">AI Assessment Summary</h2>
+            <div class="ai-summary">
+                ${ReportGenerator.extractAISummary(conversation)}
+            </div>
         </div>
 
-        <div class="next-steps">
-            <h2>🚀 Your Next Steps</h2>
-            <ul>
-                <li>Create a full CareerPath AI account for detailed assessments</li>
-                <li>Explore CBE pathway options for your grade level</li>
-                <li>Research recommended universities and their admission requirements</li>
-                <li>Connect with career counselors for personalized guidance</li>
-                <li>Take practice assessments to improve your academic performance</li>
-                <li>Join career-focused extracurricular activities</li>
-            </ul>
+        <!-- Next Steps Section -->
+        <div class="section">
+            <h2 class="section-title">Recommended Next Steps</h2>
+            <div class="next-steps">
+                ${ReportGenerator.extractNextSteps(conversation)}
+            </div>
         </div>
 
+        <!-- Footer -->
         <div class="footer">
             <p><strong>CareerPath AI</strong> - Empowering Kenya's Students Through CBE</p>
-            <p>Visit <strong>${window.location.origin}</strong> to continue your career journey</p>
+            <p>Visit <strong>${typeof window !== 'undefined' ? window.location.origin : 'careerpathai.com'}</strong> to continue your career journey</p>
             <p><em>This report is generated by AI and should be used as guidance alongside professional career counseling.</em></p>
+            <p style="margin-top: 15px; font-size: 11px; color: #94a3b8;">
+                Report generated on ${currentDate} | CareerPath AI v1.0 | Kenya CBE System
+            </p>
         </div>
     </div>
 </body>
 </html>
     `;
+  }
+
+  static extractAISummary(conversation: ChatMessage[]): string {
+    const assistantMsgs = conversation.filter(m => m.role === 'assistant').map(m => m.content);
+    if (assistantMsgs.length === 0) return '<p>No AI summary available yet.</p>';
+
+    // Take the last substantial assistant message as the summary
+    const summary = assistantMsgs.reverse().find(t => (t || '').length > 80) || assistantMsgs[0];
+    
+    // Clean and format the summary with proper list parsing
+    let formattedSummary = summary
+      .replace(/\n{3,}/g, '\n\n')
+      .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+      .replace(/\*(.*?)\*/g, '<em>$1</em>')
+      .slice(0, 1800);
+    
+    // Convert to HTML with proper list formatting
+    const lines = formattedSummary.split('\n').filter(line => line.trim().length > 0);
+    let html = '';
+    let inList = false;
+    let listItems: string[] = [];
+    
+    for (const line of lines) {
+      const trimmedLine = line.trim();
+      
+      // Check for bullet points or numbered lists
+      if (trimmedLine.match(/^[\d]+\.\s/) || trimmedLine.match(/^[-•*]\s/) || trimmedLine.match(/^[1-9]\.\s/)) {
+        if (!inList) {
+          // Close previous paragraph if any
+          if (html && !html.endsWith('</ul>') && !html.endsWith('</ol>')) {
+            html += '</p>';
+          }
+          inList = true;
+          listItems = [];
+        }
+        
+        // Extract list item content
+        const itemContent = trimmedLine.replace(/^[\d]+\.\s/, '').replace(/^[-•*]\s/, '').trim();
+        listItems.push(`<li>${itemContent}</li>`);
+      } else {
+        // Close list if we were in one
+        if (inList && listItems.length > 0) {
+          const isNumbered = listItems.some(item => item.includes('</li>'));
+          const listTag = isNumbered ? 'ol' : 'ul';
+          html += `<${listTag} class="bullet-list">${listItems.join('')}</${listTag}>`;
+          listItems = [];
+          inList = false;
+        }
+        
+        // Add as paragraph
+        if (trimmedLine.length > 0) {
+          html += `<p>${trimmedLine}</p>`;
+        }
+      }
+    }
+    
+    // Close any remaining list
+    if (inList && listItems.length > 0) {
+      const isNumbered = listItems.some(item => item.includes('</li>'));
+      const listTag = isNumbered ? 'ol' : 'ul';
+      html += `<${listTag} class="bullet-list">${listItems.join('')}</${listTag}>`;
+    }
+    
+    return html || '<p>Assessment summary will be available after completion.</p>';
+  }
+
+  static extractNextSteps(conversation: ChatMessage[]): string {
+    const assistantMsgs = conversation.filter(m => m.role === 'assistant').map(m => m.content);
+    if (assistantMsgs.length === 0) {
+      return '<p><em>Next steps will be provided after the AI completes the assessment summary.</em></p>';
+    }
+
+    // Look for next steps in the AI summary
+    const summary = assistantMsgs.reverse().find(t => (t || '').length > 80) || assistantMsgs[0];
+    
+    // Look for patterns that indicate next steps
+    const nextStepsPatterns = [
+      /next steps?[:\-]?\s*(.*?)(?=\n\n|\n[A-Z]|$)/is,
+      /recommended actions?[:\-]?\s*(.*?)(?=\n\n|\n[A-Z]|$)/is,
+      /what to do next[:\-]?\s*(.*?)(?=\n\n|\n[A-Z]|$)/is,
+      /immediate actions?[:\-]?\s*(.*?)(?=\n\n|\n[A-Z]|$)/is,
+      /follow-up steps?[:\-]?\s*(.*?)(?=\n\n|\n[A-Z]|$)/is,
+      /recommendations?[:\-]?\s*(.*?)(?=\n\n|\n[A-Z]|$)/is,
+      /suggestions?[:\-]?\s*(.*?)(?=\n\n|\n[A-Z]|$)/is
+    ];
+
+    for (const pattern of nextStepsPatterns) {
+      const match = summary.match(pattern);
+      if (match && match[1]) {
+        const nextStepsText = match[1].trim();
+        
+        // Convert to HTML list format
+        const lines = nextStepsText.split('\n').filter(line => line.trim().length > 0);
+        let html = '<h4>AI Recommended Next Steps</h4>';
+        
+        // Check if it's already a list format
+        const hasListMarkers = lines.some(line => 
+          line.match(/^[\d]+\.\s/) || line.match(/^[-•*]\s/) || line.match(/^[1-9]\.\s/)
+        );
+        
+        if (hasListMarkers) {
+          html += '<ol class="numbered-list">';
+          for (const line of lines) {
+            const trimmedLine = line.trim();
+            if (trimmedLine.match(/^[\d]+\.\s/) || trimmedLine.match(/^[-•*]\s/) || trimmedLine.match(/^[1-9]\.\s/)) {
+              const itemContent = trimmedLine.replace(/^[\d]+\.\s/, '').replace(/^[-•*]\s/, '').trim();
+              if (itemContent) {
+                html += `<li>${itemContent}</li>`;
+              }
+            }
+          }
+          html += '</ol>';
+        } else {
+          // Convert paragraphs to list items
+          html += '<ol class="numbered-list">';
+          for (const line of lines) {
+            const trimmedLine = line.trim();
+            if (trimmedLine) {
+              html += `<li>${trimmedLine}</li>`;
+            }
+          }
+          html += '</ol>';
+        }
+        
+        return html;
+      }
+    }
+
+    // If no specific next steps found, try to extract any actionable items from the summary
+    const actionablePatterns = [
+      /(?:you should|you can|try to|consider|focus on|work on|develop|build|improve|enhance)[^.!?]*[.!?]/gi
+    ];
+
+    for (const pattern of actionablePatterns) {
+      const matches = summary.match(pattern);
+      if (matches && matches.length > 0) {
+        let html = '<h4>AI Recommended Actions</h4><ol class="numbered-list">';
+        matches.forEach(match => {
+          const cleanMatch = match.trim().replace(/^(?:you should|you can|try to|consider|focus on|work on|develop|build|improve|enhance)\s*/i, '');
+          if (cleanMatch) {
+            html += `<li>${cleanMatch}</li>`;
+          }
+        });
+        html += '</ol>';
+        return html;
+      }
+    }
+
+    // If still no next steps found, show a message
+    return '<p><em>Next steps will be provided in the AI assessment summary. Please ensure the AI has completed its analysis.</em></p>';
   }
 
   static getCBEPathInfo(grade?: string): string {
@@ -315,16 +655,22 @@ export class ReportGenerator {
     }
   }
 
-  static downloadHTMLReport(htmlContent: string, filename: string): void {
-    const blob = new Blob([htmlContent], { type: 'text/html' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = filename;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+  static async downloadPDF(htmlContent: string, filename: string): Promise<void> {
+    const html2pdf = (await import('html2pdf.js')).default;
+    const container = document.createElement('div');
+    container.innerHTML = htmlContent;
+    document.body.appendChild(container);
+    await html2pdf()
+      .from(container)
+      .set({
+        margin: [10, 10, 10, 10],
+        filename,
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2, useCORS: true },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+      })
+      .save();
+    document.body.removeChild(container);
   }
 
   static generateTextReport(profile: GuestProfile, conversation: ChatMessage[]): string {
