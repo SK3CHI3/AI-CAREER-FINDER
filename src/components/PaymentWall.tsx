@@ -84,7 +84,7 @@ const PaymentWall: React.FC<PaymentWallProps> = ({ onPaymentSuccess }) => {
       console.log('🔑 IntaSend API Key:', apiKey ? `${apiKey.substring(0, 10)}...` : 'NOT SET')
       console.log('🌍 Live mode:', isLive)
       
-      // Initialize IntaSend - this automatically binds to buttons with 'intaSendPayButton' class
+      // Initialize IntaSend - this automatically binds to buttons with 'intasend-pay' class
       new window.IntaSend({
         publicAPIKey: apiKey,
         live: isLive,
@@ -307,7 +307,7 @@ const PaymentWall: React.FC<PaymentWallProps> = ({ onPaymentSuccess }) => {
 
             {paymentStatus !== 'success' && (
               <button
-                className="intaSendPayButton w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="intasend-pay w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                 data-amount="1000"
                 data-currency="KES"
                 data-email={profile?.email || user?.email || ''}
@@ -318,6 +318,7 @@ const PaymentWall: React.FC<PaymentWallProps> = ({ onPaymentSuccess }) => {
                 data-comment="AI Career Finder - Lifetime Access"
                 data-mobile_tarrif="BUSINESS-PAYS"
                 data-method="M-PESA"
+                data-api-key={import.meta.env.VITE_INTASEND_PUBLIC_KEY || 'ISPubKey_test_123456789'}
                 disabled={isLoading || paymentStatus === 'processing'}
                 onClick={() => {
                   console.log('🖱️ Payment button clicked with data:')
