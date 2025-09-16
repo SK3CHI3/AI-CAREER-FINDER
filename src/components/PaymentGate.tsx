@@ -52,13 +52,26 @@ const PaymentGate: React.FC<PaymentGateProps> = ({ children }) => {
       'career_interests'
     ]
 
-    return requiredFields.every(field => {
+    // Check basic required fields
+    const basicFieldsComplete = requiredFields.every(field => {
       const value = profile[field]
       if (Array.isArray(value)) {
         return value.length > 0
       }
       return value && value.trim() !== ''
     })
+
+    // Additional validation for CBE subjects
+    const cbeSubjectsComplete = profile.cbe_subjects && 
+      Array.isArray(profile.cbe_subjects) && 
+      profile.cbe_subjects.length >= 3 // Minimum 3 CBE subjects required
+
+    // Additional validation for career interests
+    const careerInterestsComplete = profile.career_interests && 
+      Array.isArray(profile.career_interests) && 
+      profile.career_interests.length >= 2 // Minimum 2 career interests required
+
+    return basicFieldsComplete && cbeSubjectsComplete && careerInterestsComplete
   }
 
   const handleProfileComplete = () => {

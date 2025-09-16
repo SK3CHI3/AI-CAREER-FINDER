@@ -19,8 +19,8 @@ import { dashboardService, CbeSubject, CareerInterest } from '@/lib/dashboard-se
 const profileSchema = z.object({
   schoolLevel: z.enum(['primary', 'secondary', 'tertiary']),
   currentGrade: z.string().optional(),
-  subjects: z.array(z.string()).min(1, 'Please select at least one subject'),
-  interests: z.array(z.string()).min(1, 'Please select at least one interest'),
+  subjects: z.array(z.string()).min(3, 'Please select at least 3 CBE subjects'),
+  interests: z.array(z.string()).min(2, 'Please select at least 2 career interests'),
   careerGoals: z.string().optional(),
 })
 
@@ -266,9 +266,12 @@ export const ProfileSetup: React.FC<ProfileSetupProps> = ({ onComplete }) => {
               <div className="flex items-center space-x-2">
                 <BookOpen className="w-5 h-5 text-primary" />
                 <Label className="text-lg font-semibold">CBE Learning Areas & Subjects</Label>
+                <Badge variant="outline" className="bg-blue-100 text-blue-800 border-blue-200">
+                  Required: {selectedSubjects.length}/3 minimum
+                </Badge>
               </div>
               <p className="text-sm text-foreground-muted">
-                Select the CBE learning areas and subjects you're currently studying or have studied
+                Select at least 3 CBE learning areas and subjects you're currently studying or have studied. This helps us provide accurate career recommendations aligned with Kenya's Competency Based Curriculum.
               </p>
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
                 {isLoadingData ? (
@@ -302,10 +305,13 @@ export const ProfileSetup: React.FC<ProfileSetupProps> = ({ onComplete }) => {
             <div className="space-y-4">
               <div className="flex items-center space-x-2">
                 <Target className="w-5 h-5 text-primary" />
-                <Label className="text-lg font-semibold">Your Interests</Label>
+                <Label className="text-lg font-semibold">Career Interests</Label>
+                <Badge variant="outline" className="bg-green-100 text-green-800 border-green-200">
+                  Required: {selectedInterests.length}/2 minimum
+                </Badge>
               </div>
               <p className="text-sm text-foreground-muted">
-                What career fields interest you most? (Aligned with Kenya's Vision 2030 priorities)
+                Select at least 2 career fields that interest you most. This helps us provide personalized career recommendations aligned with Kenya's Vision 2030 priorities.
               </p>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
                 {isLoadingData ? (
