@@ -61,17 +61,6 @@ const PaymentWall: React.FC<PaymentWallProps> = ({ onPaymentSuccess }) => {
     }
   }, [])
 
-  // Re-initialize IntaSend when component becomes visible to ensure button binding
-  useEffect(() => {
-    if (isIntaSendLoaded && window.IntaSend) {
-      console.log('🔄 Re-initializing IntaSend for button binding...')
-      // Small delay to ensure DOM is ready
-      setTimeout(() => {
-        initializeIntaSend()
-      }, 100)
-    }
-  }, [isIntaSendLoaded])
-
   const initializeIntaSend = () => {
     console.log('🔧 Initializing IntaSend...')
     if (!window.IntaSend) {
@@ -79,8 +68,14 @@ const PaymentWall: React.FC<PaymentWallProps> = ({ onPaymentSuccess }) => {
       return
     }
 
+    // Prevent multiple initializations
+    if ((window as any).intaSendInitialized) {
+      console.log('⚠️ IntaSend already initialized, skipping...')
+      return
+    }
+
     try {
-      const apiKey = import.meta.env.VITE_INTASEND_PUBLIC_KEY || 'test_pk_123456789'
+      const apiKey = import.meta.env.VITE_INTASEND_PUBLIC_KEY || 'ISPubKey_test_123456789'
       const isLive = import.meta.env.VITE_INTASEND_LIVE === 'true'
       
       console.log('🔍 Environment check:')
@@ -110,6 +105,9 @@ const PaymentWall: React.FC<PaymentWallProps> = ({ onPaymentSuccess }) => {
         console.error("❌ IntaSend error:", error)
         handlePaymentFailure({ message: error.message || 'Payment system error' })
       })
+      
+      // Mark as initialized
+      ;(window as any).intaSendInitialized = true
       
       console.log('✅ IntaSend initialized successfully - buttons should now work')
     } catch (err) {
