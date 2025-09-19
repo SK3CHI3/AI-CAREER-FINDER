@@ -37,6 +37,7 @@ interface AuthContextType {
   signIn: (email: string, password: string) => Promise<{ error: AuthError | null }>
   signOut: () => Promise<{ error: AuthError | null }>
   updateProfile: (updates: Partial<Profile>) => Promise<{ error: Error | null }>
+  refreshProfile: () => Promise<void>
   validateForSensitiveOperation: () => { isValid: boolean; reason?: string }
 }
 
@@ -188,6 +189,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }
 
+  // Refresh profile from database
+  const refreshProfile = async () => {
+    if (user) {
+      console.log('Refreshing profile for user:', user.id)
+      await fetchProfile(user.id)
+    }
+  }
+
   // Validate JWT for sensitive operations
   const validateForSensitiveOperation = () => {
     return validateJWTForSensitiveOperation(user)
@@ -203,6 +212,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     signIn,
     signOut,
     updateProfile,
+    refreshProfile,
     validateForSensitiveOperation,
   }
 

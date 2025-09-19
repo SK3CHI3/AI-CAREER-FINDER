@@ -10,7 +10,7 @@ interface PaymentGateProps {
 }
 
 const PaymentGate: React.FC<PaymentGateProps> = ({ children }) => {
-  const { user, profile, loading } = useAuth()
+  const { user, profile, loading, refreshProfile } = useAuth()
   const [isProfileComplete, setIsProfileComplete] = useState(false)
   const [isPaymentComplete, setIsPaymentComplete] = useState(false)
   const [isChecking, setIsChecking] = useState(true)
@@ -30,6 +30,10 @@ const PaymentGate: React.FC<PaymentGateProps> = ({ children }) => {
         if (profileComplete) {
           // Check payment status
           const paymentComplete = profile.payment_status === 'completed'
+          console.log('Payment status check:', { 
+            payment_status: profile.payment_status, 
+            paymentComplete 
+          })
           setIsPaymentComplete(paymentComplete)
         }
 
@@ -42,6 +46,18 @@ const PaymentGate: React.FC<PaymentGateProps> = ({ children }) => {
 
     checkUserStatus()
   }, [user, profile])
+
+  // Separate effect to refresh profile when it's complete but payment is pending
+  useEffect(() => {
+    const refreshPaymentStatus = async () => {
+      if (user && profile && isProfileComplete && !isPaymentComplete) {
+        console.log('Profile complete but payment pending, refreshing profile...')
+        await refreshProfile()
+      }
+    }
+
+    refreshPaymentStatus()
+  }, [user, profile, isProfileComplete, isPaymentComplete, refreshProfile])
 
   const checkProfileCompletion = (profile: any): boolean => {
     const requiredFields = [
