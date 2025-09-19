@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Send, Bot, User, Sparkles, Loader2, AlertCircle } from "lucide-react";
+import { Send, Bot, User, Sparkles, Loader2, AlertCircle, RefreshCw } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { aiCareerService, type ChatMessage, type UserContext } from "@/lib/ai-service";
 import { supabase } from "@/lib/supabase";
@@ -19,6 +19,7 @@ const AIChat = () => {
   const [userContext, setUserContext] = useState<UserContext>({});
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [isInitialized, setIsInitialized] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   // Function to clean markdown formatting from AI responses
   const cleanMarkdownFormatting = (text: string): string => {
@@ -95,6 +96,27 @@ What subjects do you enjoy most in your current studies? 🎯`,
     }
   }
 
+  // Function to refresh/clear the chat
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    try {
+      // Clear the conversation
+      setConversation([]);
+      setError(null);
+      
+      // Re-initialize the chat
+      setIsInitialized(false);
+      await initializeChat();
+      
+      console.log('Chat refreshed - conversation cleared and re-initialized');
+    } catch (error) {
+      console.error('Failed to refresh chat:', error);
+      setError('Failed to refresh chat. Please try again.');
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
+
   const handleSend = async () => {
     if (!message.trim() || isLoading || !user) return;
 
@@ -127,8 +149,8 @@ What subjects do you enjoy most in your current studies? 🎯`,
       const updatedConversation = [...conversation, userMessage, assistantMessage];
       setConversation(updatedConversation);
 
-      // Save conversation
-      await aiCareerService.saveConversation(user.id, updatedConversation);
+      // Quick assessment - don't save conversation to database
+      console.log('Quick assessment chat - conversation not saved to database');
 
     } catch (error) {
       console.error('Failed to send message:', error);
@@ -161,7 +183,8 @@ What subjects do you enjoy most in your current studies? 🎯`,
           </span>
         </h2>
         <p className="text-foreground-muted max-w-2xl mx-auto">
-          Get personalized career guidance based on Kenya's education system and job market.
+          Quick AI assessment - Get personalized career guidance based on Kenya's education system and job market. 
+          <span className="text-blue-600 font-medium"> Conversations are not saved.</span>
         </p>
       </div>
 
@@ -175,10 +198,24 @@ What subjects do you enjoy most in your current studies? 🎯`,
               </div>
               <div>
                 <CardTitle className="text-lg">CareerPath AI Assistant</CardTitle>
-                <CardDescription>Powered by DeepSeek R1 - Advanced reasoning for career guidance</CardDescription>
+                <CardDescription>Quick Assessment • Powered by DeepSeek R1 • No data saved</CardDescription>
               </div>
             </div>
             <div className="flex items-center space-x-2">
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={handleRefresh}
+                disabled={isRefreshing}
+                className="text-xs"
+              >
+                {isRefreshing ? (
+                  <Loader2 className="w-3 h-3 animate-spin mr-1" />
+                ) : (
+                  <RefreshCw className="w-3 h-3 mr-1" />
+                )}
+                Refresh
+              </Button>
               <Badge variant="secondary" className="bg-green-100 text-green-700">
                 <div className="w-2 h-2 bg-green-500 rounded-full mr-1"></div>
                 Online
