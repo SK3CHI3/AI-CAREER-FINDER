@@ -23,7 +23,7 @@ const PaymentGate: React.FC<PaymentGateProps> = ({ children }) => {
       }
 
       try {
-        // Check if profile is complete
+        // Check if profile is complete - this should be a one-time check
         const profileComplete = checkProfileCompletion(profile)
         console.log('Profile completion check:', { 
           profileComplete,
@@ -35,9 +35,15 @@ const PaymentGate: React.FC<PaymentGateProps> = ({ children }) => {
             career_interests: profile.career_interests?.length
           }
         })
-        setIsProfileComplete(profileComplete)
-
-        if (profileComplete) {
+        
+        // Check localStorage first - if profile was completed before, don't show setup again
+        const profileCompleteKey = `profile_complete_${user.id}`
+        const storedProfileComplete = localStorage.getItem(profileCompleteKey)
+        
+        if (storedProfileComplete === 'true' || profileComplete) {
+          // Profile is complete (either from localStorage or current check)
+          setIsProfileComplete(true)
+          
           // Check payment status
           const paymentComplete = profile.payment_status === 'completed'
           console.log('Payment status check:', { 
@@ -45,6 +51,10 @@ const PaymentGate: React.FC<PaymentGateProps> = ({ children }) => {
             paymentComplete 
           })
           setIsPaymentComplete(paymentComplete)
+        } else {
+          // Profile is not complete, show profile setup
+          setIsProfileComplete(false)
+          setIsPaymentComplete(false)
         }
 
       } catch (error) {
@@ -58,10 +68,10 @@ const PaymentGate: React.FC<PaymentGateProps> = ({ children }) => {
   }, [user, profile])
 
   const checkProfileCompletion = (profile: any): boolean => {
+    // Required fields (current_grade is optional)
     const requiredFields = [
       'full_name',
       'school_level',
-      'current_grade',
       'cbe_subjects',
       'career_interests'
     ]
@@ -84,6 +94,14 @@ const PaymentGate: React.FC<PaymentGateProps> = ({ children }) => {
     const careerInterestsComplete = profile.career_interests && 
       Array.isArray(profile.career_interests) && 
       profile.career_interests.length >= 2 // Minimum 2 career interests required
+
+    console.log('Profile completion check details:', {
+      basicFieldsComplete,
+      cbeSubjectsComplete,
+      careerInterestsComplete,
+      cbeSubjectsLength: profile.cbe_subjects?.length,
+      careerInterestsLength: profile.career_interests?.length
+    })
 
     return basicFieldsComplete && cbeSubjectsComplete && careerInterestsComplete
   }
