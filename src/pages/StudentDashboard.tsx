@@ -47,9 +47,9 @@ import CourseRecommendations from '@/components/CourseRecommendations'
 import GradesModal from '@/components/GradesModal'
 import { supabase } from '@/lib/supabase'
 import { aiCareerService } from '@/lib/ai-service'
+import { aiCacheService } from '@/lib/ai-cache-service'
 import { dashboardService, UserStat, UserActivity, CareerRecommendation } from '@/lib/dashboard-service'
 import { useActivityTracking } from '@/hooks/useActivityTracking'
-import { aiCacheService } from '@/lib/ai-cache-service'
 
 // Default career data - will be replaced with AI recommendations
 interface CareerDataItem {
@@ -433,11 +433,31 @@ const StudentDashboard = () => {
     setIsLoadingRecommendations(true);
 
     try {
-      // Always generate fresh recommendations based on current data
-      console.log('🔄 Generating fresh career recommendations based on current profile and grades data');
+      // First, try to get cached recommendations
+      console.log('🔍 Checking for cached career recommendations...');
+      const cachedRecommendations = await aiCacheService.getCachedCareerRecommendations(user.id);
+      
+      if (cachedRecommendations && cachedRecommendations.length > 0) {
+        console.log('✅ Using cached career recommendations:', cachedRecommendations.length);
+        
+        // Convert cached data to chart format
+        const top3 = cachedRecommendations.slice(0, 3).map((rec, index) => ({
+          name: rec.career_name,
+          value: rec.match_percentage,
+          color: index === 0 ? '#3b82f6' : index === 1 ? '#10b981' : '#f59e0b',
+          description: rec.description || getCareerDescription(rec.career_name),
+          salaryRange: rec.salary_range || getCareerSalary(rec.career_name),
+          growth: rec.growth || getCareerGrowth(rec.career_name),
+          education: rec.education || getCareerEducation(rec.career_name)
+        }));
 
-      // If no existing recommendations, generate new ones with AI including grades data
-      console.log('🤖 Generating new career recommendations with AI (including grades data)');
+        setCareerData(top3);
+        console.log('✅ Cached career recommendations loaded');
+        return;
+      }
+
+      // No cached data, generate fresh recommendations
+      console.log('🤖 No cached data found, generating fresh career recommendations with AI...');
 
       // Get academic performance data
       const academicPerformance = await dashboardService.calculateAcademicPerformance(user.id);
@@ -459,22 +479,13 @@ const StudentDashboard = () => {
         }
       }
 
-      // Generate AI recommendations without timeout
+      // Generate AI recommendations
       const recommendations = await aiCareerService.generateCareerRecommendations(userContext) as any[];
 
       if (recommendations && recommendations.length > 0) {
-        // Save recommendations to database
-        const recommendationsToSave = recommendations.slice(0, 5).map((rec, index) => ({
-          career_name: rec.title,
-          match_percentage: rec.matchPercentage,
-          description: getCareerDescription(rec.title),
-          salary_range: getCareerSalary(rec.title),
-          growth_prospect: getCareerGrowth(rec.title),
-          education_required: getCareerEducation(rec.title),
-          skills_required: rec.skills || []
-        }));
-
-        await dashboardService.saveCareerRecommendations(user.id, recommendationsToSave);
+        // Save recommendations to cache
+        await aiCacheService.saveCareerRecommendations(user.id, recommendations);
+        console.log('💾 Career recommendations saved to cache');
 
         // Update chart data
         const top3 = recommendations.slice(0, 3).map((rec, index) => ({
@@ -488,6 +499,7 @@ const StudentDashboard = () => {
         }));
 
         setCareerData(top3);
+        console.log('✅ Fresh career recommendations generated and cached');
 
         // Track the AI recommendation generation
         trackButtonClick('AI Career Recommendations Generated', 'Dashboard');

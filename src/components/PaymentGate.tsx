@@ -36,12 +36,8 @@ const PaymentGate: React.FC<PaymentGateProps> = ({ children }) => {
           }
         })
         
-        // Check localStorage first - if profile was completed before, don't show setup again
-        const profileCompleteKey = `profile_complete_${user.id}`
-        const storedProfileComplete = localStorage.getItem(profileCompleteKey)
-        
-        if (storedProfileComplete === 'true' || profileComplete) {
-          // Profile is complete (either from localStorage or current check)
+        // Once profile is complete, it stays complete
+        if (profileComplete) {
           setIsProfileComplete(true)
           
           // Check payment status
