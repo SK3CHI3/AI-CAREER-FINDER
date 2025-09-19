@@ -24,6 +24,7 @@ const PaymentWall: React.FC<PaymentWallProps> = ({ onPaymentSuccess }) => {
   const [paymentStatus, setPaymentStatus] = useState<'idle' | 'processing' | 'success' | 'failed'>('idle')
   const [error, setError] = useState<string | null>(null)
   const [isIntaSendLoaded, setIsIntaSendLoaded] = useState(false)
+  const [intaSendInstance, setIntaSendInstance] = useState<any>(null)
 
   // Load IntaSend SDK from CDN
   useEffect(() => {
@@ -101,8 +102,8 @@ const PaymentWall: React.FC<PaymentWallProps> = ({ onPaymentSuccess }) => {
       console.log('🔑 IntaSend API Key:', apiKey ? `${apiKey.substring(0, 10)}...` : 'NOT SET')
       console.log('🌍 Live mode:', isLive)
       
-      // Initialize IntaSend for popup mode - automatically binds to buttons with 'intaSendPayButton' class
-      new window.IntaSend({
+      // Initialize IntaSend for popup mode
+      const intaSend = new window.IntaSend({
         publicAPIKey: apiKey,
         live: isLive,
         redirectURL: window.location.origin + '/student' // Redirect after payment
@@ -124,10 +125,13 @@ const PaymentWall: React.FC<PaymentWallProps> = ({ onPaymentSuccess }) => {
         handlePaymentFailure({ message: error.message || 'Payment system error' })
       })
       
+      // Store the instance for manual triggering
+      setIntaSendInstance(intaSend)
+      
       // Mark as initialized
       ;(window as any).intaSendInitialized = true
       
-      console.log('✅ IntaSend initialized successfully - buttons should now work')
+      console.log('✅ IntaSend initialized successfully - ready for manual payment triggering')
     } catch (err) {
       console.error('❌ Error initializing IntaSend:', err)
       setError('Failed to initialize payment system.')
@@ -180,6 +184,37 @@ const PaymentWall: React.FC<PaymentWallProps> = ({ onPaymentSuccess }) => {
   const handleRetryPayment = () => {
     setPaymentStatus('idle')
     setError(null)
+  }
+
+  const handlePaymentClick = () => {
+    if (!intaSendInstance) {
+      console.error('❌ IntaSend instance not available')
+      setError('Payment system not ready. Please refresh the page.')
+      return
+    }
+
+    console.log('🖱️ Payment button clicked - triggering IntaSend payment')
+    console.log('  - Amount: 1000')
+    console.log('  - Currency: KES')
+    console.log('  - Email:', profile?.email || user?.email || '')
+    console.log('  - Name:', profile?.full_name || '')
+    console.log('  - API Ref:', `PAY_${user?.id}_${Date.now()}`)
+
+    try {
+      // Trigger the payment using IntaSend's run method
+      intaSendInstance.run({
+        amount: 1000,
+        currency: 'KES',
+        email: profile?.email || user?.email || '',
+        phone_number: '254700000000',
+        api_ref: `PAY_${user?.id}_${Date.now()}`,
+        first_name: profile?.full_name?.split(' ')[0] || 'User',
+        last_name: profile?.full_name?.split(' ').slice(1).join(' ') || 'Name'
+      })
+    } catch (err) {
+      console.error('❌ Error triggering payment:', err)
+      setError('Failed to open payment window. Please try again.')
+    }
   }
 
   if (!isIntaSendLoaded) {
@@ -324,26 +359,19 @@ const PaymentWall: React.FC<PaymentWallProps> = ({ onPaymentSuccess }) => {
 
             {paymentStatus !== 'success' && (
               <button
-                className="intaSendPayButton w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-                data-amount="1000"
-                data-currency="KES"
-                data-email={profile?.email || user?.email || ''}
-                data-phone_number="254700000000"
-                data-api_ref={`PAY_${user?.id}_${Date.now()}`}
-                disabled={isLoading || paymentStatus === 'processing'}
-                onClick={() => {
-                  console.log('🖱️ Payment button clicked with data:')
-                  console.log('  - Amount: 1000')
-                  console.log('  - Currency: KES')
-                  console.log('  - Email:', profile?.email || user?.email || '')
-                  console.log('  - Name:', profile?.full_name || '')
-                  console.log('  - API Ref:', `PAY_${user?.id}_${Date.now()}`)
-                }}
+                className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                disabled={isLoading || paymentStatus === 'processing' || !intaSendInstance}
+                onClick={handlePaymentClick}
               >
                 {isLoading || paymentStatus === 'processing' ? (
                   <>
                     <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                     Processing...
+                  </>
+                ) : !intaSendInstance ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Loading Payment...
                   </>
                 ) : (
                   <>
