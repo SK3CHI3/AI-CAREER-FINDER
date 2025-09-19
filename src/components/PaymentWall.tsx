@@ -6,7 +6,6 @@ import { Badge } from '@/components/ui/badge'
 import { Loader2, CheckCircle, XCircle, CreditCard, Smartphone, Shield, Lock } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
 import { supabase } from '@/lib/supabase'
-import 'intasend-inlinejs-sdk'
 
 // Declare IntaSend types for TypeScript
 declare global {
@@ -26,39 +25,57 @@ const PaymentWall: React.FC<PaymentWallProps> = ({ onPaymentSuccess }) => {
   const [error, setError] = useState<string | null>(null)
   const [isIntaSendLoaded, setIsIntaSendLoaded] = useState(false)
 
-  // Initialize IntaSend SDK
+  // Load IntaSend SDK from CDN
   useEffect(() => {
-    console.log('🔄 Initializing IntaSend SDK...')
+    console.log('🔄 Loading IntaSend SDK from CDN...')
     
-    // Check if IntaSend is available
+    // Check if script is already loaded
     if (window.IntaSend) {
-      console.log('✅ IntaSend SDK available, initializing...')
+      console.log('✅ IntaSend SDK already available')
       setIsIntaSendLoaded(true)
       initializeIntaSend()
-    } else {
-      // Wait a bit for the SDK to load from the import
+      return
+    }
+
+    // Check if script is already being loaded
+    if (document.querySelector('script[src*="intasend-inlinejs-sdk"]')) {
+      console.log('⏳ IntaSend script already loading, waiting...')
       const checkIntaSend = () => {
         if (window.IntaSend) {
-          console.log('✅ IntaSend SDK loaded, initializing...')
+          console.log('✅ IntaSend SDK loaded from existing script')
           setIsIntaSendLoaded(true)
           initializeIntaSend()
         } else {
-          console.log('⏳ Waiting for IntaSend SDK to load...')
           setTimeout(checkIntaSend, 100)
         }
       }
-      
-      // Start checking after a short delay
       setTimeout(checkIntaSend, 100)
-      
-      // Set a timeout fallback
-      setTimeout(() => {
-        if (!window.IntaSend) {
-          console.error('❌ IntaSend SDK failed to load')
-          setError('Failed to load payment system. Please refresh the page.')
-        }
-      }, 5000) // 5 second timeout
+      return
     }
+
+    // Load the script
+    const script = document.createElement('script')
+    script.src = 'https://unpkg.com/intasend-inlinejs-sdk@4.0.7/build/intasend-inline.js'
+    script.async = true
+    script.onload = () => {
+      console.log('✅ IntaSend SDK loaded from CDN')
+      setIsIntaSendLoaded(true)
+      initializeIntaSend()
+    }
+    script.onerror = () => {
+      console.error('❌ Failed to load IntaSend SDK from CDN')
+      setError('Failed to load payment system. Please check your internet connection and refresh the page.')
+    }
+    
+    document.head.appendChild(script)
+    
+    // Set a timeout fallback
+    setTimeout(() => {
+      if (!window.IntaSend) {
+        console.error('❌ IntaSend SDK failed to load within timeout')
+        setError('Failed to load payment system. Please refresh the page.')
+      }
+    }, 10000) // 10 second timeout
   }, [])
 
   const initializeIntaSend = () => {
@@ -84,11 +101,11 @@ const PaymentWall: React.FC<PaymentWallProps> = ({ onPaymentSuccess }) => {
       console.log('🔑 IntaSend API Key:', apiKey ? `${apiKey.substring(0, 10)}...` : 'NOT SET')
       console.log('🌍 Live mode:', isLive)
       
-      // Initialize IntaSend - this automatically binds to buttons with 'intasend-pay' class
+      // Initialize IntaSend for popup mode - automatically binds to buttons with 'intaSendPayButton' class
       new window.IntaSend({
         publicAPIKey: apiKey,
         live: isLive,
-        sandbox: !isLive // Explicitly set sandbox mode
+        redirectURL: window.location.origin + '/student' // Redirect after payment
       })
       .on("COMPLETE", (results: any) => {
         console.log("✅ Payment completed:", results)
@@ -307,18 +324,12 @@ const PaymentWall: React.FC<PaymentWallProps> = ({ onPaymentSuccess }) => {
 
             {paymentStatus !== 'success' && (
               <button
-                className="intasend-pay w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="intaSendPayButton w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                 data-amount="1000"
                 data-currency="KES"
                 data-email={profile?.email || user?.email || ''}
                 data-phone_number="254700000000"
-                data-first_name={profile?.full_name?.split(' ')[0] || 'User'}
-                data-last_name={profile?.full_name?.split(' ').slice(1).join(' ') || 'Name'}
                 data-api_ref={`PAY_${user?.id}_${Date.now()}`}
-                data-comment="AI Career Finder - Lifetime Access"
-                data-mobile_tarrif="BUSINESS-PAYS"
-                data-method="M-PESA"
-                data-api-key={import.meta.env.VITE_INTASEND_PUBLIC_KEY || 'ISPubKey_test_123456789'}
                 disabled={isLoading || paymentStatus === 'processing'}
                 onClick={() => {
                   console.log('🖱️ Payment button clicked with data:')
