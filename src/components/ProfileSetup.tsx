@@ -83,11 +83,11 @@ const careerInterests = [
 ]
 
 interface ProfileSetupProps {
-  onComplete: () => void
+  onComplete: (isPaymentComplete: boolean) => void
 }
 
 export const ProfileSetup: React.FC<ProfileSetupProps> = ({ onComplete }) => {
-  const { user } = useAuth()
+  const { user, refreshProfile } = useAuth()
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [selectedSubjects, setSelectedSubjects] = useState<string[]>([])
@@ -176,7 +176,21 @@ export const ProfileSetup: React.FC<ProfileSetupProps> = ({ onComplete }) => {
         if (error) throw error
       }
 
-      onComplete()
+      // Refresh profile in auth context to get latest data
+      console.log('Profile saved successfully, refreshing auth context...')
+      await refreshProfile()
+      
+      // Check payment status after profile completion
+      const { data: updatedProfile } = await supabase
+        .from('profiles')
+        .select('payment_status')
+        .eq('id', user.id)
+        .single()
+      
+      console.log('Payment status after profile completion:', updatedProfile?.payment_status)
+      
+      // Call onComplete with payment status
+      onComplete(updatedProfile?.payment_status === 'completed')
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to save profile')
     } finally {

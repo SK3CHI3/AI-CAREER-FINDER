@@ -10,7 +10,7 @@ interface PaymentGateProps {
 }
 
 const PaymentGate: React.FC<PaymentGateProps> = ({ children }) => {
-  const { user, profile, loading, refreshProfile } = useAuth()
+  const { user, profile, loading } = useAuth()
   const [isProfileComplete, setIsProfileComplete] = useState(false)
   const [isPaymentComplete, setIsPaymentComplete] = useState(false)
   const [isChecking, setIsChecking] = useState(true)
@@ -25,6 +25,16 @@ const PaymentGate: React.FC<PaymentGateProps> = ({ children }) => {
       try {
         // Check if profile is complete
         const profileComplete = checkProfileCompletion(profile)
+        console.log('Profile completion check:', { 
+          profileComplete,
+          profile: {
+            full_name: profile.full_name,
+            school_level: profile.school_level,
+            current_grade: profile.current_grade,
+            cbe_subjects: profile.cbe_subjects?.length,
+            career_interests: profile.career_interests?.length
+          }
+        })
         setIsProfileComplete(profileComplete)
 
         if (profileComplete) {
@@ -46,18 +56,6 @@ const PaymentGate: React.FC<PaymentGateProps> = ({ children }) => {
 
     checkUserStatus()
   }, [user, profile])
-
-  // Separate effect to refresh profile when it's complete but payment is pending
-  useEffect(() => {
-    const refreshPaymentStatus = async () => {
-      if (user && profile && isProfileComplete && !isPaymentComplete) {
-        console.log('Profile complete but payment pending, refreshing profile...')
-        await refreshProfile()
-      }
-    }
-
-    refreshPaymentStatus()
-  }, [user, profile, isProfileComplete, isPaymentComplete, refreshProfile])
 
   const checkProfileCompletion = (profile: any): boolean => {
     const requiredFields = [
@@ -90,9 +88,10 @@ const PaymentGate: React.FC<PaymentGateProps> = ({ children }) => {
     return basicFieldsComplete && cbeSubjectsComplete && careerInterestsComplete
   }
 
-  const handleProfileComplete = () => {
+  const handleProfileComplete = (isPaymentComplete: boolean) => {
+    console.log('Profile completion callback triggered with payment status:', isPaymentComplete)
     setIsProfileComplete(true)
-    // Payment status will be checked in the next render
+    setIsPaymentComplete(isPaymentComplete)
   }
 
   const handlePaymentSuccess = () => {
