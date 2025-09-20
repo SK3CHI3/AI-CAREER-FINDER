@@ -112,14 +112,23 @@ class DashboardService {
   }
 
   async createUserActivity(activity: Omit<UserActivity, 'id' | 'created_at' | 'updated_at'>): Promise<UserActivity> {
-    const { data, error } = await supabase
-      .from('user_activities')
-      .insert(activity)
-      .select()
-      .single()
+    try {
+      const { data, error } = await supabase
+        .from('user_activities')
+        .insert(activity)
+        .select()
+        .single()
 
-    if (error) throw error
-    return data
+      if (error) throw error
+      return data
+    } catch (error) {
+      // Handle network errors gracefully
+      if (error instanceof Error && error.message.includes('Failed to fetch')) {
+        console.warn('User activity creation failed due to network issue')
+        throw new Error('Network connection failed')
+      }
+      throw error
+    }
   }
 
   async updateUserActivity(id: string, updates: Partial<UserActivity>): Promise<UserActivity> {
@@ -358,15 +367,24 @@ class DashboardService {
     if (pageViews !== undefined) updates.page_views = pageViews
     if (actionsCount !== undefined) updates.actions_count = actionsCount
 
-    const { data, error } = await supabase
-      .from('user_sessions')
-      .update(updates)
-      .eq('id', sessionId)
-      .select()
-      .single()
+    try {
+      const { data, error } = await supabase
+        .from('user_sessions')
+        .update(updates)
+        .eq('id', sessionId)
+        .select()
+        .single()
 
-    if (error) throw error
-    return data
+      if (error) throw error
+      return data
+    } catch (error) {
+      // Handle network errors gracefully
+      if (error instanceof Error && error.message.includes('Failed to fetch')) {
+        console.warn('Session activity update failed due to network issue')
+        throw new Error('Network connection failed')
+      }
+      throw error
+    }
   }
 
   // Get user grades for career recommendations

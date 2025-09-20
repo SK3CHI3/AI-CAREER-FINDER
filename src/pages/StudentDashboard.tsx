@@ -552,7 +552,15 @@ const StudentDashboard = () => {
 
 
   const handleSignOut = async () => {
-    await signOut()
+    try {
+      const { error } = await signOut()
+      if (error) {
+        console.error('Sign out failed:', error)
+        // Still redirect to login even if there's an error
+      }
+    } catch (error) {
+      console.error('Sign out error:', error)
+    }
   }
 
   const getInitials = (name: string | null) => {
@@ -812,7 +820,7 @@ const StudentDashboard = () => {
                     <Activity className="w-5 h-5 text-blue-500" />
                     Recent Activity
                   </CardTitle>
-                  <CardDescription>Your latest achievements</CardDescription>
+                  <CardDescription>Your recent platform activity</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   {isLoadingActivities ? (
@@ -854,15 +862,19 @@ const StudentDashboard = () => {
                             <p className="text-xs text-foreground-muted mt-1">{activity.activity_description}</p>
                         <div className="flex items-center justify-between mt-2">
                               <p className="text-xs text-foreground-muted">{timeAgo}</p>
-                          <div className="flex items-center gap-1">
-                            <div className="w-16 h-1.5 bg-muted rounded-full overflow-hidden">
-                              <div
-                                className="h-full bg-gradient-to-r from-blue-500 to-purple-500 rounded-full transition-all duration-500"
-                                    style={{ width: `${activity.progress_percentage}%` }}
-                              />
+                          {activity.progress_percentage && activity.progress_percentage > 0 ? (
+                            <div className="flex items-center gap-1">
+                              <div className="w-16 h-1.5 bg-muted rounded-full overflow-hidden">
+                                <div
+                                  className="h-full bg-gradient-to-r from-blue-500 to-purple-500 rounded-full transition-all duration-500"
+                                  style={{ width: `${activity.progress_percentage}%` }}
+                                />
+                              </div>
+                              <span className="text-xs font-medium text-foreground-muted">{activity.progress_percentage}%</span>
                             </div>
-                                <span className="text-xs font-medium text-foreground-muted">{activity.progress_percentage}%</span>
-                          </div>
+                          ) : (
+                            <div className="text-xs text-foreground-muted">Completed</div>
+                          )}
                         </div>
                       </div>
                     </div>

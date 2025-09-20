@@ -38,6 +38,35 @@ const AIChat = () => {
     }
   }, [user, profile, isInitialized]);
 
+  // Load conversation from localStorage on component mount
+  useEffect(() => {
+    if (user?.id) {
+      const savedConversation = localStorage.getItem(`ai_chat_${user.id}`);
+      if (savedConversation) {
+        try {
+          const parsedConversation = JSON.parse(savedConversation);
+          // Convert timestamp strings back to Date objects
+          const conversationWithDates = parsedConversation.map((msg: ChatMessage) => ({
+            ...msg,
+            timestamp: new Date(msg.timestamp)
+          }));
+          setConversation(conversationWithDates);
+          console.log('✅ Loaded conversation from localStorage');
+        } catch (error) {
+          console.error('Failed to parse saved conversation:', error);
+        }
+      }
+    }
+  }, [user?.id]);
+
+  // Save conversation to localStorage whenever it changes
+  useEffect(() => {
+    if (user?.id && conversation.length > 0) {
+      localStorage.setItem(`ai_chat_${user.id}`, JSON.stringify(conversation));
+      console.log('💾 Saved conversation to localStorage');
+    }
+  }, [conversation, user?.id]);
+
   // Auto-scroll to bottom
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -104,6 +133,12 @@ What subjects do you enjoy most in your current studies? 🎯`,
       setConversation([]);
       setError(null);
       
+      // Clear localStorage
+      if (user?.id) {
+        localStorage.removeItem(`ai_chat_${user.id}`);
+        console.log('🗑️ Cleared conversation from localStorage');
+      }
+      
       // Re-initialize the chat
       setIsInitialized(false);
       await initializeChat();
@@ -154,7 +189,22 @@ What subjects do you enjoy most in your current studies? 🎯`,
 
     } catch (error) {
       console.error('Failed to send message:', error);
-      setError(error instanceof Error ? error.message : 'Failed to send message. Please try again.');
+      
+      // Show user-friendly error messages
+      let errorMessage = 'Failed to send message. Please try again.';
+      if (error instanceof Error) {
+        if (error.message.includes('Network connection failed')) {
+          errorMessage = 'Network connection failed. Please check your internet connection.';
+        } else if (error.message.includes('timeout')) {
+          errorMessage = 'Request timed out. Please try again.';
+        } else if (error.message.includes('Too many requests')) {
+          errorMessage = 'Too many requests. Please wait a moment and try again.';
+        } else {
+          errorMessage = error.message;
+        }
+      }
+      
+      setError(errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -184,7 +234,7 @@ What subjects do you enjoy most in your current studies? 🎯`,
         </h2>
         <p className="text-foreground-muted max-w-2xl mx-auto">
           Quick AI assessment - Get personalized career guidance based on Kenya's education system and job market. 
-          <span className="text-blue-600 font-medium"> Conversations are not saved.</span>
+          <span className="text-blue-600 font-medium"> Conversations persist during your session but are not saved to database.</span>
         </p>
       </div>
 
@@ -198,7 +248,7 @@ What subjects do you enjoy most in your current studies? 🎯`,
               </div>
               <div>
                 <CardTitle className="text-lg">CareerPath AI Assistant</CardTitle>
-                <CardDescription>Quick Assessment • Powered by DeepSeek R1 • No data saved</CardDescription>
+                <CardDescription>Quick Assessment • Powered by DeepSeek R1 • Session-based (survives page refresh)</CardDescription>
               </div>
             </div>
             <div className="flex items-center space-x-2">
@@ -249,7 +299,7 @@ What subjects do you enjoy most in your current studies? 🎯`,
                     }`}>
                       <p className="text-sm leading-relaxed whitespace-pre-wrap">{msg.content}</p>
                       <p className="text-xs opacity-70 mt-2">
-                        {msg.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                       </p>
                     </div>
                   </div>

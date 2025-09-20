@@ -78,7 +78,7 @@ const PaymentGate: React.FC<PaymentGateProps> = ({ children }) => {
       if (Array.isArray(value)) {
         return value.length > 0
       }
-      return value && value.trim() !== ''
+      return value && typeof value === 'string' && value.trim() !== ''
     })
 
     // Additional validation for CBE subjects
@@ -95,8 +95,8 @@ const PaymentGate: React.FC<PaymentGateProps> = ({ children }) => {
       basicFieldsComplete,
       cbeSubjectsComplete,
       careerInterestsComplete,
-      cbeSubjectsLength: profile.cbe_subjects?.length,
-      careerInterestsLength: profile.career_interests?.length
+      cbeSubjectsLength: Array.isArray(profile.cbe_subjects) ? profile.cbe_subjects.length : 0,
+      careerInterestsLength: Array.isArray(profile.career_interests) ? profile.career_interests.length : 0
     })
 
     return basicFieldsComplete && cbeSubjectsComplete && careerInterestsComplete

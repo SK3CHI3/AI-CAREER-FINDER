@@ -451,7 +451,7 @@ Keep tone professional, clear, and actionable.`;
                     }`}>
                       <p className="text-xs sm:text-sm leading-relaxed whitespace-pre-wrap">{msg.content}</p>
                       <p className="text-[10px] sm:text-xs opacity-70 mt-1 sm:mt-2">
-                        {msg.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                       </p>
                     </div>
                   </div>

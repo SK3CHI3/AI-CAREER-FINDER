@@ -232,9 +232,9 @@ const GradesManager = ({ onGradesUpdated }: GradesManagerProps) => {
       form.reset()
       setEditingGrade(null)
 
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Failed to save grade:', error)
-      setError(error.message || 'Failed to save grade')
+      setError(error instanceof Error ? error.message : 'Failed to save grade')
     } finally {
       setIsSubmitting(false)
     }
@@ -267,9 +267,9 @@ const GradesManager = ({ onGradesUpdated }: GradesManagerProps) => {
 
       setSuccess('Grade deleted successfully!')
       await loadGradesData()
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Failed to delete grade:', error)
-      setError(error.message || 'Failed to delete grade')
+      setError(error instanceof Error ? error.message : 'Failed to delete grade')
     }
   }
 

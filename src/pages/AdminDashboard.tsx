@@ -67,7 +67,15 @@ const AdminDashboard = () => {
   const [isLoading, setIsLoading] = useState(true)
 
   const handleSignOut = async () => {
-    await signOut()
+    try {
+      const { error } = await signOut()
+      if (error) {
+        console.error('Sign out failed:', error)
+        // Still redirect to login even if there's an error
+      }
+    } catch (error) {
+      console.error('Sign out error:', error)
+    }
   }
 
   // Load admin dashboard data

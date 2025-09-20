@@ -69,7 +69,11 @@ export const useActivityTracking = (options: ActivityTrackingOptions = {}) => {
     pageViewCountRef.current += 1
     
     if (sessionId) {
-      dashboardService.updateSessionActivity(sessionId, pageViewCountRef.current)
+      dashboardService.updateSessionActivity(sessionId, pageViewCountRef.current).catch(error => {
+        if (error instanceof Error && error.message.includes('Failed to fetch')) {
+          console.warn('Session tracking temporarily unavailable (network issue)')
+        }
+      })
     }
   }, [trackPageViews, isTracking, sessionId])
 
@@ -165,7 +169,12 @@ export const useActivityTracking = (options: ActivityTrackingOptions = {}) => {
         progress_percentage: progress || 0
       })
     } catch (error) {
-      console.error('Failed to track activity:', error)
+      // Silently fail for network errors - don't spam console
+      if (error instanceof Error && error.message.includes('Failed to fetch')) {
+        console.warn('Activity tracking temporarily unavailable (network issue)')
+      } else {
+        console.error('Failed to track activity:', error)
+      }
     }
   }
 

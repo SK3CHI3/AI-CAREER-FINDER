@@ -15,5 +15,8 @@ export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
     persistSession: true,
     autoRefreshToken: true,
     detectSessionInUrl: true, // For magic links and email confirmations
+    // Session configuration for 30-day persistence
+    flowType: 'implicit', // Use implicit flow instead of PKCE for better compatibility
+    debug: false, // Set to true for debugging auth issues
   }
 })

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { ExternalLink, Clock, Users, Star, Loader2, BookOpen, Award, Globe } from 'lucide-react'
+import { ExternalLink, Clock, Users, Star, Loader2, BookOpen, Award, Globe, RefreshCw } from 'lucide-react'
 import { aiCacheService } from '@/lib/ai-cache-service'
 import { useAuth } from '@/contexts/AuthContext'
 
@@ -41,7 +41,12 @@ const CourseRecommendations: React.FC<CourseRecommendationsProps> = ({
   useEffect(() => {
     // First check for cached courses
     const loadCachedCourses = async () => {
-      if (user?.id) {
+      if (!user?.id) {
+        setIsLoading(false)
+        return
+      }
+
+      try {
         const cachedCourses = await aiCacheService.getCachedCourseRecommendations(user.id)
         if (cachedCourses && cachedCourses.length > 0) {
           console.log('✅ Using cached course recommendations')
@@ -49,17 +54,36 @@ const CourseRecommendations: React.FC<CourseRecommendationsProps> = ({
           setIsLoading(false)
           return
         }
+      } catch (error) {
+        console.warn('Failed to load cached courses:', error)
       }
-      // If no cache, generate new recommendations
+
+      // Only generate new recommendations if no cache exists
+      console.log('No cached courses found, generating new recommendations...')
       generateCourseRecommendations()
     }
     
     loadCachedCourses()
-  }, [careerInterests, cbeSubjects, strongSubjects, user?.id])
+  }, [user?.id]) // Remove other dependencies to prevent unnecessary regenerations
 
-  const generateCourseRecommendations = async () => {
+  const generateCourseRecommendations = async (forceRefresh = false) => {
     setIsLoading(true)
     setError(null)
+
+    // Check cache first unless forcing refresh
+    if (!forceRefresh && user?.id) {
+      try {
+        const cachedCourses = await aiCacheService.getCachedCourseRecommendations(user.id)
+        if (cachedCourses && cachedCourses.length > 0) {
+          console.log('✅ Using cached course recommendations')
+          setCourses(cachedCourses)
+          setIsLoading(false)
+          return
+        }
+      } catch (error) {
+        console.warn('Failed to load cached courses:', error)
+      }
+    }
 
     try {
       const prompt = `Generate 3 free online course recommendations for a Kenyan student based on their profile. Return a JSON array:
@@ -245,10 +269,22 @@ Focus on:
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <BookOpen className="h-5 w-5" />
-          Recommended Free Courses
-        </CardTitle>
+        <div className="flex items-center justify-between">
+          <CardTitle className="flex items-center gap-2">
+            <BookOpen className="h-5 w-5" />
+            Recommended Free Courses
+          </CardTitle>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => generateCourseRecommendations(true)}
+            disabled={isLoading}
+            className="flex items-center gap-2"
+          >
+            <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
+            Refresh
+          </Button>
+        </div>
       </CardHeader>
       <CardContent>
         <div className="space-y-4">

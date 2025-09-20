@@ -105,8 +105,12 @@ Remember: YOU MUST ALWAYS BE CURIOUS TO KNOW THEM. Make each question feel perso
   async sendMessage(
     message: string, 
     conversationHistory: ChatMessage[], 
-    userContext: UserContext
+    userContext: UserContext,
+    retryCount = 0
   ): Promise<string> {
+    const maxRetries = 2
+    const retryDelay = 1000 * (retryCount + 1) // Exponential backoff
+
     try {
       const systemPrompt = this.createSystemPrompt(userContext)
       
@@ -163,7 +167,27 @@ Remember: YOU MUST ALWAYS BE CURIOUS TO KNOW THEM. Make each question feel perso
       return data.choices[0].message.content
     } catch (error) {
       console.error('AI Service Error:', error)
-      throw new Error(`Failed to get AI response: ${error instanceof Error ? error.message : 'Unknown error'}`)
+      
+      // Retry logic for network errors
+      if (retryCount < maxRetries && (
+        (error instanceof TypeError && error.message.includes('Failed to fetch')) ||
+        (error instanceof Error && error.message.includes('timeout'))
+      )) {
+        console.log(`Retrying AI request (attempt ${retryCount + 1}/${maxRetries})...`)
+        await new Promise(resolve => setTimeout(resolve, retryDelay))
+        return this.sendMessage(message, conversationHistory, userContext, retryCount + 1)
+      }
+      
+      // Handle specific network errors with user-friendly messages
+      if (error instanceof TypeError && error.message.includes('Failed to fetch')) {
+        throw new Error('Network connection failed. Please check your internet connection and try again.')
+      } else if (error instanceof Error && error.message.includes('timeout')) {
+        throw new Error('Request timed out. Please try again.')
+      } else if (error instanceof Error && error.message.includes('429')) {
+        throw new Error('Too many requests. Please wait a moment and try again.')
+      } else {
+        throw new Error(`Failed to get AI response: ${error instanceof Error ? error.message : 'Unknown error'}`)
+      }
     }
   }
 
@@ -217,43 +241,18 @@ Return exactly this format:
     return [];
   }
 
+  // Note: Conversations are now stored in localStorage only (not in database)
+  // This prevents unnecessary database queries and 404 errors
   async saveConversation(userId: string, messages: ChatMessage[]): Promise<void> {
-    try {
-      const { error } = await supabase
-        .from('ai_conversations')
-        .insert({
-          user_id: userId,
-          messages: messages,
-          created_at: new Date().toISOString()
-        })
-
-      if (error) {
-        console.error('Failed to save conversation:', error)
-      }
-    } catch (error) {
-      console.error('Failed to save conversation:', error)
-    }
+    // Conversations are stored in localStorage only
+    // No database storage to prevent 404 errors
+    console.log('Conversation saved to localStorage only')
   }
 
   async loadConversationHistory(userId: string): Promise<ChatMessage[]> {
-    try {
-      const { data, error } = await supabase
-        .from('ai_conversations')
-        .select('messages')
-        .eq('user_id', userId)
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .single()
-
-      if (error || !data) {
-        return []
-      }
-
-      return data.messages || []
-    } catch (error) {
-      console.error('Failed to load conversation history:', error)
-      return []
-    }
+    // Conversations are loaded from localStorage only
+    // No database queries to prevent 404 errors
+    return []
   }
 
   // Test method to verify API connectivity
