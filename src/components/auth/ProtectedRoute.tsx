@@ -11,10 +11,10 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   children, 
   requiredRole 
 }) => {
-  const { user, profile, loading } = useAuth()
+  const { user, profile, loading, profileLoading } = useAuth()
 
-  // Show loading state
-  if (loading) {
+  // Show loading state while auth or profile is loading
+  if (loading || (user && profileLoading)) {
     return (
       <div className="min-h-screen flex items-center justify-center" style={{ background: 'var(--gradient-homepage)' }}>
         <div className="text-center">
@@ -32,9 +32,18 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
     return <Navigate to="/auth" replace />
   }
 
-  // Redirect to auth if no profile (shouldn't happen with trigger, but safety check)
-  if (!profile) {
-    return <Navigate to="/auth" replace />
+  // If user exists but no profile yet, show loading (profile is being fetched in background)
+  if (user && !profile) {
+    return (
+      <div className="min-h-screen flex items-center justify-center" style={{ background: 'var(--gradient-homepage)' }}>
+        <div className="text-center">
+          <div className="w-16 h-16 bg-gradient-primary rounded-2xl flex items-center justify-center mx-auto mb-4 animate-pulse">
+            <Bot className="w-8 h-8 text-primary-foreground" />
+          </div>
+          <p className="text-foreground-muted">Loading profile...</p>
+        </div>
+      </div>
+    )
   }
 
   // Check role requirement

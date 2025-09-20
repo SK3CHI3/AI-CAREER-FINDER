@@ -65,10 +65,17 @@ class SessionManager {
   }
 }
 
-// Create singleton instance
-export const sessionManager = new SessionManager()
+// Lazy-loaded session manager to avoid initialization issues
+let sessionManagerInstance: SessionManager | null = null
+
+const getSessionManager = () => {
+  if (!sessionManagerInstance) {
+    sessionManagerInstance = new SessionManager()
+  }
+  return sessionManagerInstance
+}
 
 // Export utility functions
-export const isSessionValid = () => sessionManager.isSessionValid()
+export const isSessionValid = () => getSessionManager().isSessionValid()
 
-export default sessionManager
+export default getSessionManager

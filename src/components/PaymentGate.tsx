@@ -17,7 +17,7 @@ const PaymentGate: React.FC<PaymentGateProps> = ({ children }) => {
 
   useEffect(() => {
     const checkUserStatus = async () => {
-      if (!user || !profile) {
+      if (!user || !profile || loading) {
         setIsChecking(false)
         return
       }
@@ -25,16 +25,6 @@ const PaymentGate: React.FC<PaymentGateProps> = ({ children }) => {
       try {
         // Check if profile is complete - this should be a one-time check
         const profileComplete = checkProfileCompletion(profile)
-        console.log('Profile completion check:', { 
-          profileComplete,
-          profile: {
-            full_name: profile.full_name,
-            school_level: profile.school_level,
-            current_grade: profile.current_grade,
-            cbe_subjects: profile.cbe_subjects?.length,
-            career_interests: profile.career_interests?.length
-          }
-        })
         
         // Once profile is complete, it stays complete
         if (profileComplete) {
@@ -42,10 +32,6 @@ const PaymentGate: React.FC<PaymentGateProps> = ({ children }) => {
           
           // Check payment status
           const paymentComplete = profile.payment_status === 'completed'
-          console.log('Payment status check:', { 
-            payment_status: profile.payment_status, 
-            paymentComplete 
-          })
           setIsPaymentComplete(paymentComplete)
         } else {
           // Profile is not complete, show profile setup
@@ -61,7 +47,7 @@ const PaymentGate: React.FC<PaymentGateProps> = ({ children }) => {
     }
 
     checkUserStatus()
-  }, [user, profile])
+  }, [user?.id, profile?.id, loading]) // Only depend on IDs and loading state
 
   const checkProfileCompletion = (profile: any): boolean => {
     // Required fields (current_grade is optional)

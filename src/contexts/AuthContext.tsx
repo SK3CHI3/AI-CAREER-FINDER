@@ -60,61 +60,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [loading, setLoading] = useState(true)
   const [profileLoading, setProfileLoading] = useState(false)
   const [isMFAEnabled, setIsMFAEnabled] = useState(false)
-  const [lastProfileFetch, setLastProfileFetch] = useState<number>(0)
-  const [profileCache, setProfileCache] = useState<Map<string, { profile: Profile; timestamp: number }>>(new Map())
 
-  // Cache duration: 5 minutes
-  const PROFILE_CACHE_DURATION = 5 * 60 * 1000
-
-  // Fetch user profile with caching
+  // Fetch user profile - Simple and fast
   const fetchProfile = async (userId: string, forceRefresh = false) => {
-    // Check cache first
-    if (!forceRefresh && profileCache.has(userId)) {
-      const cached = profileCache.get(userId)!
-      const now = Date.now()
-      if (now - cached.timestamp < PROFILE_CACHE_DURATION) {
-        console.log('Using cached profile for user:', userId)
-        setProfile(cached.profile)
-        return
-      }
-    }
-
-    // Prevent duplicate requests
-    if (profileLoading) {
-      console.log('Profile fetch already in progress, skipping...')
-      return
-    }
-
     try {
       setProfileLoading(true)
-      console.log('Fetching profile for user:', userId)
 
-      // Add timeout to prevent hanging
-      const timeoutPromise = new Promise((_, reject) =>
-        setTimeout(() => reject(new Error('Profile fetch timeout')), 10000)
-      )
-
-      const fetchPromise = supabase
+      const { data, error } = await supabase
         .from('profiles')
         .select('*')
         .eq('id', userId)
         .single()
 
-      const { data, error } = await Promise.race([fetchPromise, timeoutPromise]) as { data: Profile | null; error: Error | null }
-
       if (error) {
         console.error('Error fetching profile:', error)
         setProfile(null)
       } else {
-        console.log('Profile fetched successfully:', data)
         setProfile(data)
-        
-        // Cache the profile
-        setProfileCache(prev => new Map(prev.set(userId, { 
-          profile: data, 
-          timestamp: Date.now() 
-        })))
-        setLastProfileFetch(Date.now())
       }
     } catch (error) {
       console.error('Error fetching profile:', error)
@@ -124,66 +86,73 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }
 
-  // Initialize auth state - Official Supabase Pattern
+  // Initialize auth state - Simple and reliable
   useEffect(() => {
-    console.log('AuthContext: Initializing auth state')
+    let mounted = true
 
-    // Get initial session
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
-      console.log('AuthContext: Initial session:', session ? 'exists' : 'null')
-      setSession(session)
-      setUser(session?.user ?? null)
-      if (session?.user) {
-        console.log('AuthContext: User found, fetching profile')
-        await fetchProfile(session.user.id)
-        setIsMFAEnabled(hasMFAEnabled(session.user))
-      } else {
-        console.log('AuthContext: No user found')
-        setIsMFAEnabled(false)
+    const initializeAuth = async () => {
+      try {
+        console.log('🔐 AuthContext: Starting initialization')
+        
+        // Get initial session
+        const { data: { session } } = await supabase.auth.getSession()
+        console.log('🔐 AuthContext: Got session:', session ? 'exists' : 'null')
+
+        if (!mounted) return
+
+        setSession(session)
+        setUser(session?.user ?? null)
+
+        if (session?.user) {
+          console.log('🔐 AuthContext: User found, setting MFA and fetching profile')
+          setIsMFAEnabled(hasMFAEnabled(session.user))
+          // Fetch profile in background - don't wait for it
+          fetchProfile(session.user.id).catch(error => {
+            console.error('Background profile fetch failed:', error)
+          })
+        } else {
+          console.log('🔐 AuthContext: No user found')
+          setIsMFAEnabled(false)
+        }
+      } catch (error) {
+        console.error('Auth initialization error:', error)
+      } finally {
+        // Always set loading to false
+        if (mounted) {
+          console.log('🔐 AuthContext: Setting loading to false')
+          setLoading(false)
+        }
       }
-      console.log('AuthContext: Setting loading to false')
-      setLoading(false)
-    })
+    }
+
+    initializeAuth()
 
     // Listen for auth changes
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event, session) => {
-      console.log('AuthContext: Auth state changed:', event, session ? 'session exists' : 'no session')
+      if (!mounted) return
+
       setSession(session)
       setUser(session?.user ?? null)
 
       if (session?.user) {
-        // Only fetch profile if user changed or it's a sign in event
-        const shouldFetchProfile = event === 'SIGNED_IN' || 
-          (user && user.id !== session.user.id) ||
-          !profileCache.has(session.user.id)
-        
-        if (shouldFetchProfile) {
-          console.log('AuthContext: User found in state change, fetching profile')
-          await fetchProfile(session.user.id)
-        } else {
-          console.log('AuthContext: Using existing profile for user')
-          // Use cached profile if available
-          if (profileCache.has(session.user.id)) {
-            const cached = profileCache.get(session.user.id)!
-            setProfile(cached.profile)
-          }
-        }
         setIsMFAEnabled(hasMFAEnabled(session.user))
+        // Fetch profile in background
+        fetchProfile(session.user.id).catch(error => {
+          console.error('Background profile fetch failed:', error)
+        })
       } else {
-        console.log('AuthContext: No user in state change, clearing profile')
         setProfile(null)
         setIsMFAEnabled(false)
-        // Clear cache when user signs out
-        setProfileCache(new Map())
       }
-      console.log('AuthContext: Setting loading to false after state change')
-      setLoading(false)
     })
 
-    return () => subscription.unsubscribe()
-  }, [])
+    return () => {
+      mounted = false
+      subscription.unsubscribe()
+    }
+  }, []) // Empty dependency array - only run once
 
   // Check session validity periodically (30-day limit)
   useEffect(() => {
@@ -197,7 +166,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setUser(null)
         setSession(null)
         setProfile(null)
-        setProfileCache(new Map())
       }
     }, 60000) // Check every minute
 
@@ -235,11 +203,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setProfile(null)
       setSession(null)
       
-      // Clear profile cache
-      if (profileCache) {
-        profileCache.clear()
-      }
-      
       // Sign out from Supabase
       const { error } = await supabase.auth.signOut()
       
@@ -261,10 +224,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       if (!user) throw new Error('No user logged in')
 
-      // @ts-ignore - Profile update type mismatch
       const { error } = await supabase
         .from('profiles')
-        .update(updates)
+        .update(updates as any)
         .eq('id', user.id)
 
       if (error) throw error
