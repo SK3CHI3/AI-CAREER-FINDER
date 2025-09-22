@@ -28,14 +28,21 @@ const GuestAIChat = () => {
   // Function to scroll chat area to bottom
   const scrollToBottom = () => {
     if (scrollAreaRef.current) {
-      const scrollArea = scrollAreaRef.current;
-      scrollArea.scrollTop = scrollArea.scrollHeight;
+      // Find the scrollable element within the ScrollArea
+      const scrollElement = scrollAreaRef.current.querySelector('[data-radix-scroll-area-viewport]');
+      if (scrollElement) {
+        scrollElement.scrollTo({
+          top: scrollElement.scrollHeight,
+          behavior: 'smooth'
+        });
+      }
     }
   };
 
   // Auto-scroll chat area when new messages arrive
   useEffect(() => {
-    scrollToBottom();
+    // Small delay to ensure DOM is updated
+    setTimeout(scrollToBottom, 100);
   }, [conversation]);
 
   // Function to clean markdown formatting from AI responses
@@ -260,6 +267,9 @@ Remember: YOU MUST ALWAYS BE CURIOUS TO KNOW THEM. Make this the most engaging c
     setMessage("");
     setIsLoading(true);
     setError(null);
+    
+    // Scroll to bottom immediately when user sends message
+    setTimeout(scrollToBottom, 50);
 
     try {
       const guestContext = {
@@ -294,6 +304,9 @@ Remember: YOU MUST ALWAYS BE CURIOUS TO KNOW THEM. Make this the most engaging c
 
       // Extract profile information from the conversation
       extractProfileInfo(userMessage.content, response);
+      
+      // Scroll to bottom when AI response is received
+      setTimeout(scrollToBottom, 100);
 
       // Show "Finish assessment" CTA after 6 user turns (subtle)
       // Complete assessment after 8 user turns
@@ -343,6 +356,9 @@ Keep tone professional, clear, and actionable.`;
         timestamp: new Date()
       };
       setConversation(prev => [...prev, assistantMessage]);
+      
+      // Scroll to bottom when report summary is added
+      setTimeout(scrollToBottom, 100);
 
     setShowReport(true);
     } catch (e) {
