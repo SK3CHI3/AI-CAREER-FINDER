@@ -355,18 +355,17 @@ Keep tone professional, clear, and actionable.`;
   const testConnection = async () => {
     setConnectionTest('Testing...');
     try {
-      const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+      const response = await fetch('https://api.deepseek.com/chat/completions', {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${import.meta.env.VITE_OPENROUTER_API_KEY}`,
-          'Content-Type': 'application/json',
-          'HTTP-Referer': window.location.origin,
-          'X-Title': 'CareerPath AI Connection Test'
+          'Authorization': `Bearer ${import.meta.env.VITE_DEEPSEEK_API_KEY}`,
+          'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          model: 'deepseek/deepseek-r1:free',
+          model: 'deepseek-chat',
           messages: [{ role: 'user', content: 'Hello' }],
-          max_tokens: 10
+          max_tokens: 10,
+          stream: true
         })
       });
 

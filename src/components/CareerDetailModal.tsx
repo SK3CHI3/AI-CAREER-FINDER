@@ -77,9 +77,9 @@ const CareerDetailModal: React.FC<CareerDetailModalProps> = ({ isOpen, onClose, 
       }
 
       // Get API key from environment variables
-      const apiKey = import.meta.env.VITE_OPENROUTER_API_KEY
-      const baseUrl = 'https://openrouter.ai/api/v1'
-      const modelName = 'deepseek/deepseek-r1:free'
+      const apiKey = import.meta.env.VITE_DEEPSEEK_API_KEY
+      const baseUrl = 'https://api.deepseek.com'
+      const modelName = 'deepseek-chat'
       
       if (!apiKey) {
         console.error('❌ No API key found')
@@ -128,16 +128,15 @@ Keep it concise and Kenya-focused.`
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${apiKey}`,
-          'Content-Type': 'application/json',
-          'HTTP-Referer': window.location.origin,
-          'X-Title': 'CareerPath AI - Kenya CBE Career Guidance'
+          'Content-Type': 'application/json'
         },
         body: JSON.stringify({
           model: modelName,
           messages: [{ role: 'user', content: prompt }],
           temperature: 0.7,
           max_tokens: 1000,
-          top_p: 0.9
+          top_p: 0.9,
+          stream: true
         })
       })
 
@@ -145,7 +144,7 @@ Keep it concise and Kenya-focused.`
 
       if (!response.ok) {
         const errorText = await response.text().catch(() => 'Unknown error')
-        console.error('❌ OpenRouter API Error:', {
+        console.error('❌ DeepSeek API Error:', {
           status: response.status,
           statusText: response.statusText,
           error: errorText
@@ -153,14 +152,44 @@ Keep it concise and Kenya-focused.`
         throw new Error(`AI service error: ${response.status} - ${response.statusText}`)
       }
 
-      const data = await response.json()
-      console.log('📊 API Response data:', data)
-      
-      if (!data.choices || !data.choices[0] || !data.choices[0].message) {
-        throw new Error('Invalid response format from AI service')
+      // Handle streaming response
+      const reader = response.body?.getReader()
+      if (!reader) {
+        throw new Error('Failed to get response reader')
       }
 
-      const aiResponse = data.choices[0].message.content
+      const decoder = new TextDecoder()
+      let aiResponse = ''
+
+      try {
+        while (true) {
+          const { done, value } = await reader.read()
+          if (done) break
+
+          const chunk = decoder.decode(value)
+          const lines = chunk.split('\n')
+
+          for (const line of lines) {
+            if (line.startsWith('data: ')) {
+              const data = line.slice(6)
+              if (data === '[DONE]') continue
+
+              try {
+                const parsed = JSON.parse(data)
+                if (parsed.choices?.[0]?.delta?.content) {
+                  aiResponse += parsed.choices[0].delta.content
+                }
+              } catch (e) {
+                // Skip invalid JSON lines
+                continue
+              }
+            }
+          }
+        }
+      } finally {
+        reader.releaseLock()
+      }
+
       console.log('🤖 AI Response:', aiResponse)
 
       try {

@@ -121,26 +121,60 @@ Focus on:
 - Popular platforms like Coursera, edX, Khan Academy, YouTube, Udemy (free courses)
 - Skills that align with their career interests and strong subjects`
 
-      const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+      const response = await fetch('https://api.deepseek.com/chat/completions', {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${import.meta.env.VITE_OPENROUTER_API_KEY}`,
-          'Content-Type': 'application/json',
-          'HTTP-Referer': window.location.origin,
-          'X-Title': 'AI Career Finder'
+          'Authorization': `Bearer ${import.meta.env.VITE_DEEPSEEK_API_KEY}`,
+          'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          model: 'deepseek/deepseek-r1:free',
+          model: 'deepseek-chat',
           messages: [{ role: 'user', content: prompt }],
           temperature: 0.7,
-          max_tokens: 1500
+          max_tokens: 1500,
+          stream: true
         })
       })
 
       if (!response.ok) throw new Error('Failed to get course recommendations')
 
-      const data = await response.json()
-      const aiResponse = data.choices[0]?.message?.content || ''
+      // Handle streaming response
+      const reader = response.body?.getReader()
+      if (!reader) {
+        throw new Error('Failed to get response reader')
+      }
+
+      const decoder = new TextDecoder()
+      let aiResponse = ''
+
+      try {
+        while (true) {
+          const { done, value } = await reader.read()
+          if (done) break
+
+          const chunk = decoder.decode(value)
+          const lines = chunk.split('\n')
+
+          for (const line of lines) {
+            if (line.startsWith('data: ')) {
+              const data = line.slice(6)
+              if (data === '[DONE]') continue
+
+              try {
+                const parsed = JSON.parse(data)
+                if (parsed.choices?.[0]?.delta?.content) {
+                  aiResponse += parsed.choices[0].delta.content
+                }
+              } catch (e) {
+                // Skip invalid JSON lines
+                continue
+              }
+            }
+          }
+        }
+      } finally {
+        reader.releaseLock()
+      }
 
       try {
         const jsonMatch = aiResponse.match(/\[[\s\S]*?\]/)

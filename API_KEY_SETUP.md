@@ -1,42 +1,47 @@
-# 🔑 API Key Setup Instructions
+# 🔑 DeepSeek API Key Setup Instructions
 
-## Current Issue
-The OpenRouter API key in your `.env.local` file is returning a 401 "User not found" error, which means it's invalid or expired.
+## Overview
+This application now uses the DeepSeek API for AI-powered career guidance and recommendations. DeepSeek provides high-quality AI models at competitive rates.
 
-## How to Fix
+## How to Get Your API Key
 
-### Step 1: Get a New API Key
-1. Go to [https://openrouter.ai](https://openrouter.ai)
-2. Sign up or log in to your account
-3. Navigate to your API keys section
+### Step 1: Create a DeepSeek Account
+1. Go to [https://platform.deepseek.com](https://platform.deepseek.com)
+2. Sign up for a new account or log in
+3. Navigate to the API Keys section
 4. Generate a new API key
-5. Copy the new key (it should start with `sk-or-v1-`)
+5. Copy the new key (it should start with `sk-`)
 
 ### Step 2: Update Your Environment File
-Replace the current API key in `.env.local`:
+Create or update your `.env.local` file with your DeepSeek API key:
 
 ```bash
-# Current (invalid):
-VITE_OPENROUTER_API_KEY=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
+# DeepSeek API Configuration
+VITE_DEEPSEEK_API_KEY=your_deepseek_api_key_here
 
-# Replace with your new key:
-VITE_OPENROUTER_API_KEY=your_new_api_key_here
+# Supabase Configuration (if not already set)
+VITE_SUPABASE_URL=your_supabase_url_here
+VITE_SUPABASE_ANON_KEY=your_supabase_anon_key_here
 ```
 
 ### Step 3: Restart the Development Server
 After updating the API key:
 1. Stop the current dev server (Ctrl+C)
 2. Run `npm run dev` again
-3. Test the career details modal
+3. Test the AI chat and career recommendations
 
-## Alternative: Use a Different AI Service
-If you prefer, we can also integrate with other AI services like:
-- OpenAI API
-- Anthropic Claude API
-- Google Gemini API
+## DeepSeek API Features
+- **Model**: `deepseek-chat` (non-thinking mode of DeepSeek-V3.1)
+- **Base URL**: `https://api.deepseek.com`
+- **Compatible**: OpenAI-compatible API format
+- **Pricing**: Competitive rates for high-quality AI responses
 
 ## Testing
-Once you have a valid API key, the career details modal should work properly and show AI-generated insights about each career path.
+Once you have a valid API key, all AI features should work properly:
+- Career guidance chat
+- Course recommendations
+- Career detail generation
+- Academic performance analysis
 
 ## Security Note
 Never commit API keys to version control. The `.env.local` file is already in `.gitignore` to prevent this.

@@ -1,8 +1,8 @@
 import { supabase } from './supabase'
 import type { AIConversation, ChatMessage, UserProfile } from '../types/database'
 
-const OPENROUTER_API_KEY = import.meta.env.VITE_OPENROUTER_API_KEY
-const MODEL_NAME = 'deepseek/deepseek-r1:free'
+const DEEPSEEK_API_KEY = import.meta.env.VITE_DEEPSEEK_API_KEY
+const MODEL_NAME = 'deepseek-chat' // Non-thinking mode of DeepSeek-V3.1
 
 export type { ChatMessage } from '../types/database'
 
@@ -29,9 +29,9 @@ class AICareerService {
   private baseUrl: string
 
   constructor() {
-    this.apiKey = OPENROUTER_API_KEY
+    this.apiKey = DEEPSEEK_API_KEY
     this.modelName = MODEL_NAME
-    this.baseUrl = 'https://openrouter.ai/api/v1'
+    this.baseUrl = 'https://api.deepseek.com'
 
     console.log('AI Service initialized:', {
       hasApiKey: !!this.apiKey,
@@ -41,7 +41,7 @@ class AICareerService {
     });
 
     if (!this.apiKey) {
-      throw new Error('OpenRouter API key is not configured. Please add VITE_OPENROUTER_API_KEY to your environment variables.')
+      throw new Error('DeepSeek API key is not configured. Please add VITE_DEEPSEEK_API_KEY to your environment variables.')
     }
   }
 
@@ -128,29 +128,29 @@ Remember: YOU MUST ALWAYS BE CURIOUS TO KNOW THEM. Make each question feel perso
       console.log('Request payload:', {
         model: this.modelName,
         messageCount: messages.length,
-        temperature: 0.7
+        temperature: 0.7,
+        streaming: true
       });
 
       const response = await fetch(`${this.baseUrl}/chat/completions`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${this.apiKey}`,
-          'Content-Type': 'application/json',
-          'HTTP-Referer': window.location.origin,
-          'X-Title': 'CareerPath AI - Kenya CBE Career Guidance'
+          'Content-Type': 'application/json'
         },
         body: JSON.stringify({
           model: this.modelName,
           messages: messages,
           temperature: 0.7,
           max_tokens: 800,
-          top_p: 0.9
+          top_p: 0.9,
+          stream: true
         })
       })
 
       if (!response.ok) {
         const errorText = await response.text().catch(() => 'Unknown error')
-        console.error('OpenRouter API Error:', {
+        console.error('DeepSeek API Error:', {
           status: response.status,
           statusText: response.statusText,
           error: errorText
@@ -158,13 +158,49 @@ Remember: YOU MUST ALWAYS BE CURIOUS TO KNOW THEM. Make each question feel perso
         throw new Error(`AI service error: ${response.status} - ${response.statusText}`)
       }
 
-      const data = await response.json()
-      
-      if (!data.choices || !data.choices[0] || !data.choices[0].message) {
-        throw new Error('Invalid response format from AI service')
+      // Handle streaming response
+      const reader = response.body?.getReader()
+      if (!reader) {
+        throw new Error('Failed to get response reader')
       }
 
-      return data.choices[0].message.content
+      const decoder = new TextDecoder()
+      let fullResponse = ''
+
+      try {
+        while (true) {
+          const { done, value } = await reader.read()
+          if (done) break
+
+          const chunk = decoder.decode(value)
+          const lines = chunk.split('\n')
+
+          for (const line of lines) {
+            if (line.startsWith('data: ')) {
+              const data = line.slice(6)
+              if (data === '[DONE]') continue
+
+              try {
+                const parsed = JSON.parse(data)
+                if (parsed.choices?.[0]?.delta?.content) {
+                  fullResponse += parsed.choices[0].delta.content
+                }
+              } catch (e) {
+                // Skip invalid JSON lines
+                continue
+              }
+            }
+          }
+        }
+      } finally {
+        reader.releaseLock()
+      }
+
+      if (!fullResponse.trim()) {
+        throw new Error('Empty response from AI service')
+      }
+
+      return fullResponse
     } catch (error) {
       console.error('AI Service Error:', error)
       
@@ -262,14 +298,13 @@ Return exactly this format:
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${this.apiKey}`,
-          'Content-Type': 'application/json',
-          'HTTP-Referer': window.location.origin,
-          'X-Title': 'CareerPath AI Connection Test'
+          'Content-Type': 'application/json'
         },
         body: JSON.stringify({
           model: this.modelName,
           messages: [{ role: 'user', content: 'Hello' }],
-          max_tokens: 10
+          max_tokens: 10,
+          stream: false
         })
       });
 
