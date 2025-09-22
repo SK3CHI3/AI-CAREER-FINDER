@@ -41,32 +41,61 @@ const LogosBand = () => {
           ))}
         </div>
 
-        {/* Mobile Horizontal Scroll */}
+        {/* Mobile Horizontal Scroll with Continuous Animation */}
         <div className="sm:hidden">
-          <div className="flex gap-6 overflow-x-auto pb-4 scrollbar-hide px-2">
-            {logos.map((logo, i) => (
-              <div 
-                key={i} 
-                className="flex-shrink-0 w-20 h-20 rounded-full overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300"
-              >
-                <img 
-                  src={logo.src} 
-                  alt={logo.alt} 
-                  className="w-full h-full object-cover" 
-                  onLoad={() => console.log(`✅ Mobile logo loaded: ${logo.name}`)}
-                  onError={(e) => {
-                    console.error(`❌ Mobile logo failed to load: ${logo.src}`);
-                    // Fallback to text if image fails to load
-                    const target = e.target as HTMLImageElement;
-                    target.style.display = 'none';
-                    const parent = target.parentElement;
-                    if (parent) {
-                      parent.innerHTML = `<div class="w-full h-full bg-primary/10 rounded-full flex items-center justify-center"><span class="text-xs font-bold text-foreground-muted">${logo.name}</span></div>`;
-                    }
-                  }}
-                />
-              </div>
-            ))}
+          <div className="relative overflow-hidden">
+            <div className="flex gap-6 pb-4 scrollbar-hide" style={{
+              animation: 'scrollLogos 20s linear infinite'
+            }}>
+              {/* First set of logos */}
+              {logos.map((logo, i) => (
+                <div 
+                  key={`first-${i}`}
+                  className="flex-shrink-0 w-20 h-20 rounded-full overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300"
+                >
+                  <img 
+                    src={logo.src} 
+                    alt={logo.alt} 
+                    className="w-full h-full object-cover" 
+                    onLoad={() => console.log(`✅ Mobile logo loaded: ${logo.name}`)}
+                    onError={(e) => {
+                      console.error(`❌ Mobile logo failed to load: ${logo.src}`);
+                      // Fallback to text if image fails to load
+                      const target = e.target as HTMLImageElement;
+                      target.style.display = 'none';
+                      const parent = target.parentElement;
+                      if (parent) {
+                        parent.innerHTML = `<div class="w-full h-full bg-primary/10 rounded-full flex items-center justify-center"><span class="text-xs font-bold text-foreground-muted">${logo.name}</span></div>`;
+                      }
+                    }}
+                  />
+                </div>
+              ))}
+              {/* Duplicate set for seamless loop */}
+              {logos.map((logo, i) => (
+                <div 
+                  key={`second-${i}`}
+                  className="flex-shrink-0 w-20 h-20 rounded-full overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300"
+                >
+                  <img 
+                    src={logo.src} 
+                    alt={logo.alt} 
+                    className="w-full h-full object-cover" 
+                    onLoad={() => console.log(`✅ Mobile logo loaded: ${logo.name}`)}
+                    onError={(e) => {
+                      console.error(`❌ Mobile logo failed to load: ${logo.src}`);
+                      // Fallback to text if image fails to load
+                      const target = e.target as HTMLImageElement;
+                      target.style.display = 'none';
+                      const parent = target.parentElement;
+                      if (parent) {
+                        parent.innerHTML = `<div class="w-full h-full bg-primary/10 rounded-full flex items-center justify-center"><span class="text-xs font-bold text-foreground-muted">${logo.name}</span></div>`;
+                      }
+                    }}
+                  />
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </div>

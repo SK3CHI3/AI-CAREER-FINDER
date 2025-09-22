@@ -71,25 +71,49 @@ const Testimonials = () => {
           ))}
         </div>
 
-        {/* Mobile Horizontal Scroll */}
+        {/* Mobile Horizontal Scroll with Auto-scroll */}
         <div className="md:hidden">
-          <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
-            {testimonials.map((t, i) => (
-              <Card key={i} className="flex-shrink-0 w-80 p-6 border-card-border bg-card hover:shadow-card transition relative">
-                <Quote className="w-5 h-5 text-primary/60 absolute -top-2 -left-2" />
-                <p className="text-lg leading-relaxed tracking-tight pr-2">"{t.quote}"</p>
-                <div className="h-px bg-card-border my-4" />
-                <div className="flex items-center gap-3">
-                  <Avatar className="w-8 h-8">
-                    <AvatarFallback className="text-sm">{t.initials}</AvatarFallback>
-                  </Avatar>
-                  <div>
-                    <div className="font-semibold text-sm">{t.name}</div>
-                    <div className="text-xs text-foreground-muted">{t.role}</div>
+          <div className="relative overflow-hidden">
+            <div className="flex gap-4 pb-4 scrollbar-hide animate-scroll" style={{ 
+              scrollbarWidth: 'none', 
+              msOverflowStyle: 'none',
+              animation: 'scrollTestimonials 30s linear infinite'
+            }}>
+              {/* First set of testimonials */}
+              {testimonials.map((t, i) => (
+                <Card key={`first-${i}`} className="flex-shrink-0 w-80 p-6 border-card-border bg-card hover:shadow-card transition relative">
+                  <Quote className="w-5 h-5 text-primary/60 absolute -top-2 -left-2" />
+                  <p className="text-lg leading-relaxed tracking-tight pr-2">"{t.quote}"</p>
+                  <div className="h-px bg-card-border my-4" />
+                  <div className="flex items-center gap-3">
+                    <Avatar className="w-8 h-8">
+                      <AvatarFallback className="text-sm">{t.initials}</AvatarFallback>
+                    </Avatar>
+                    <div>
+                      <div className="font-semibold text-sm">{t.name}</div>
+                      <div className="text-xs text-foreground-muted">{t.role}</div>
+                    </div>
                   </div>
-                </div>
-              </Card>
-            ))}
+                </Card>
+              ))}
+              {/* Duplicate set for seamless loop */}
+              {testimonials.map((t, i) => (
+                <Card key={`second-${i}`} className="flex-shrink-0 w-80 p-6 border-card-border bg-card hover:shadow-card transition relative">
+                  <Quote className="w-5 h-5 text-primary/60 absolute -top-2 -left-2" />
+                  <p className="text-lg leading-relaxed tracking-tight pr-2">"{t.quote}"</p>
+                  <div className="h-px bg-card-border my-4" />
+                  <div className="flex items-center gap-3">
+                    <Avatar className="w-8 h-8">
+                      <AvatarFallback className="text-sm">{t.initials}</AvatarFallback>
+                    </Avatar>
+                    <div>
+                      <div className="font-semibold text-sm">{t.name}</div>
+                      <div className="text-xs text-foreground-muted">{t.role}</div>
+                    </div>
+                  </div>
+                </Card>
+              ))}
+            </div>
           </div>
         </div>
       </div>
