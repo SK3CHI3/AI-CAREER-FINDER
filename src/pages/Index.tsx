@@ -2,7 +2,6 @@ import Navigation from "@/components/Navigation";
 import Hero from "@/components/Hero";
 import Features from "@/components/Features";
 import CareerPaths from "@/components/CareerPaths";
-import AIChat from "@/components/AIChat";
 import GuestAIChat from "@/components/GuestAIChat";
 import Footer from "@/components/Footer";
 import Explainers from "@/components/Explainers";

@@ -1,9 +1,12 @@
 // Production-Ready Auth Context - Official Supabase Pattern
 import React, { createContext, useContext, useEffect, useState } from 'react'
+
+const isDev = typeof import.meta !== 'undefined' && import.meta.env?.DEV
 import { User, Session, AuthError } from '@supabase/supabase-js'
 import { supabase } from '@/lib/supabase'
+import type { Database } from '@/types/supabase'
 import { getJWTClaims, hasMFAEnabled, validateJWTForSensitiveOperation } from '@/lib/auth-utils'
-import { isSessionValid } from '@/lib/session-utils'
+import { isSessionValid, destroySessionManager } from '@/lib/session-utils'
 
 interface Profile {
   id: string
@@ -34,6 +37,7 @@ interface AuthContextType {
   session: Session | null
   loading: boolean
   profileLoading: boolean
+  profileError: Error | null
   isMFAEnabled: boolean
   signUp: (email: string, password: string, fullName: string) => Promise<{ error: AuthError | null }>
   signIn: (email: string, password: string) => Promise<{ error: AuthError | null }>
@@ -59,12 +63,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [session, setSession] = useState<Session | null>(null)
   const [loading, setLoading] = useState(true)
   const [profileLoading, setProfileLoading] = useState(false)
+  const [profileError, setProfileError] = useState<Error | null>(null)
   const [isMFAEnabled, setIsMFAEnabled] = useState(false)
 
   // Fetch user profile - Simple and fast
   const fetchProfile = async (userId: string, forceRefresh = false) => {
     try {
       setProfileLoading(true)
+      setProfileError(null)
 
       const { data, error } = await supabase
         .from('profiles')
@@ -73,13 +79,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         .single()
 
       if (error) {
-        console.error('Error fetching profile:', error)
+        const err = new Error(error.message)
+        setProfileError(err)
         setProfile(null)
       } else {
         setProfile(data)
+        setProfileError(null)
       }
     } catch (error) {
-      console.error('Error fetching profile:', error)
+      setProfileError(error instanceof Error ? error : new Error(String(error)))
       setProfile(null)
     } finally {
       setProfileLoading(false)
@@ -92,11 +100,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     const initializeAuth = async () => {
       try {
-        console.log('🔐 AuthContext: Starting initialization')
-        
+        if (isDev) console.log('🔐 AuthContext: Starting initialization')
+
         // Get initial session
         const { data: { session } } = await supabase.auth.getSession()
-        console.log('🔐 AuthContext: Got session:', session ? 'exists' : 'null')
+        if (isDev) console.log('🔐 AuthContext: Got session:', session ? 'exists' : 'null')
 
         if (!mounted) return
 
@@ -104,22 +112,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setUser(session?.user ?? null)
 
         if (session?.user) {
-          console.log('🔐 AuthContext: User found, setting MFA and fetching profile')
+          if (isDev) console.log('🔐 AuthContext: User found, setting MFA and fetching profile')
           setIsMFAEnabled(hasMFAEnabled(session.user))
           // Fetch profile in background - don't wait for it
           fetchProfile(session.user.id).catch(error => {
-            console.error('Background profile fetch failed:', error)
+            if (isDev) console.error('Background profile fetch failed:', error)
           })
         } else {
-          console.log('🔐 AuthContext: No user found')
+          if (isDev) console.log('🔐 AuthContext: No user found')
           setIsMFAEnabled(false)
         }
       } catch (error) {
-        console.error('Auth initialization error:', error)
+        if (isDev) console.error('Auth initialization error:', error)
       } finally {
-        // Always set loading to false
         if (mounted) {
-          console.log('🔐 AuthContext: Setting loading to false')
+          if (isDev) console.log('🔐 AuthContext: Setting loading to false')
           setLoading(false)
         }
       }
@@ -144,6 +151,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         })
       } else {
         setProfile(null)
+        setProfileError(null)
         setIsMFAEnabled(false)
       }
     })
@@ -158,18 +166,35 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   useEffect(() => {
     if (!user) return
 
+    let isMounted = true
+
     const sessionCheckInterval = setInterval(async () => {
-      const isValid = await isSessionValid()
-      if (!isValid) {
-        // Session expired after 30 days, sign out user
-        console.log('Session expired after 30 days, signing out user')
+      const stillValid = await isSessionValid()
+      if (stillValid) {
+        return
+      }
+
+      if (isDev) console.log('🔄 Session reported as invalid, attempting silent refresh')
+      const { data, error } = await supabase.auth.refreshSession()
+
+      if (error || !data.session) {
+        if (isDev) console.warn('Session refresh failed, signing user out', error)
+        if (!isMounted) return
         setUser(null)
         setSession(null)
         setProfile(null)
+        return
       }
+
+      if (!isMounted) return
+      setSession(data.session)
+      setUser(data.session.user)
     }, 60000) // Check every minute
 
-    return () => clearInterval(sessionCheckInterval)
+    return () => {
+      isMounted = false
+      clearInterval(sessionCheckInterval)
+    }
   }, [user])
 
   // Sign up with email and password
@@ -198,23 +223,25 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // Sign out
   const signOut = async () => {
     try {
+      destroySessionManager()
       // Clear local state first
       setUser(null)
       setProfile(null)
+      setProfileError(null)
       setSession(null)
-      
+
       // Sign out from Supabase
       const { error } = await supabase.auth.signOut()
       
       if (error) {
-        console.error('Sign out error:', error)
+        if (isDev) console.error('Sign out error:', error)
         return { error }
       }
-      
-      console.log('Successfully signed out')
+
+      if (isDev) console.log('Successfully signed out')
       return { error: null }
     } catch (error) {
-      console.error('Sign out error:', error)
+      if (isDev) console.error('Sign out error:', error)
       return { error: error as AuthError }
     }
   }
@@ -224,9 +251,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       if (!user) throw new Error('No user logged in')
 
+      type ProfileUpdate = Database['public']['Tables']['profiles']['Update']
       const { error } = await supabase
         .from('profiles')
-        .update(updates as any)
+        .update(updates as ProfileUpdate)
         .eq('id', user.id)
 
       if (error) throw error
@@ -243,7 +271,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // Refresh profile from database
   const refreshProfile = async () => {
     if (user) {
-      console.log('Refreshing profile for user:', user.id)
+      if (isDev) console.log('Refreshing profile for user:', user.id)
       await fetchProfile(user.id, true) // Force refresh
     }
   }
@@ -259,6 +287,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     session,
     loading,
     profileLoading,
+    profileError,
     isMFAEnabled,
     signUp,
     signIn,
