@@ -1,9 +1,21 @@
+import { useNavigate, useLocation } from "react-router-dom";
 import { Bot, Mail, Phone, MapPin, Twitter, Linkedin, Github } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 const Footer = () => {
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  const scrollToSection = (id: string) => {
+    if (location.pathname !== "/") {
+      navigate("/", { state: { scrollTo: id } });
+    } else {
+      document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
+    }
+  };
+
   return (
-    <footer className="bg-surface/50 backdrop-blur-sm border-t border-card-border">
+    <footer id="contact" className="bg-surface/50 backdrop-blur-sm border-t border-card-border">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
           {/* Brand */}
@@ -37,11 +49,11 @@ const Footer = () => {
           <div className="space-y-4">
             <h3 className="text-lg font-semibold text-foreground">Product</h3>
             <ul className="space-y-2">
-              <li><a href="#" className="text-foreground-muted hover:text-foreground transition-colors">Features</a></li>
-              <li><a href="#" className="text-foreground-muted hover:text-foreground transition-colors">Career Paths</a></li>
-              <li><a href="#" className="text-foreground-muted hover:text-foreground transition-colors">AI Assessment</a></li>
-              <li><a href="#" className="text-foreground-muted hover:text-foreground transition-colors">Learning Roadmaps</a></li>
-              <li><a href="#" className="text-foreground-muted hover:text-foreground transition-colors">Market Insights</a></li>
+              <li><button onClick={() => scrollToSection('features')} className="text-foreground-muted hover:text-foreground transition-colors text-left">Features</button></li>
+              <li><button onClick={() => scrollToSection('careers')} className="text-foreground-muted hover:text-foreground transition-colors text-left">Career Paths</button></li>
+              <li><button onClick={() => scrollToSection('features')} className="text-foreground-muted hover:text-foreground transition-colors text-left">AI Assessment</button></li>
+              <li><button onClick={() => scrollToSection('about')} className="text-foreground-muted hover:text-foreground transition-colors text-left">Learning Roadmaps</button></li>
+              <li><button onClick={() => scrollToSection('careers')} className="text-foreground-muted hover:text-foreground transition-colors text-left">Market Insights</button></li>
             </ul>
           </div>
           
@@ -49,11 +61,11 @@ const Footer = () => {
           <div className="space-y-4">
             <h3 className="text-lg font-semibold text-foreground">Company</h3>
             <ul className="space-y-2">
-              <li><a href="#" className="text-foreground-muted hover:text-foreground transition-colors">About Us</a></li>
-              <li><a href="#" className="text-foreground-muted hover:text-foreground transition-colors">Our Mission</a></li>
-              <li><a href="#" className="text-foreground-muted hover:text-foreground transition-colors">Blog</a></li>
-              <li><a href="#" className="text-foreground-muted hover:text-foreground transition-colors">Careers</a></li>
-              <li><a href="#" className="text-foreground-muted hover:text-foreground transition-colors">Press Kit</a></li>
+              <li><button onClick={() => scrollToSection('about')} className="text-foreground-muted hover:text-foreground transition-colors text-left">About Us</button></li>
+              <li><button onClick={() => scrollToSection('about')} className="text-foreground-muted hover:text-foreground transition-colors text-left">Our Mission</button></li>
+              <li><button onClick={() => scrollToSection('features')} className="text-foreground-muted hover:text-foreground transition-colors text-left">Blog</button></li>
+              <li><button onClick={() => scrollToSection('contact')} className="text-foreground-muted hover:text-foreground transition-colors text-left">Careers</button></li>
+              <li><button onClick={() => scrollToSection('contact')} className="text-foreground-muted hover:text-foreground transition-colors text-left">Press Kit</button></li>
             </ul>
           </div>
           

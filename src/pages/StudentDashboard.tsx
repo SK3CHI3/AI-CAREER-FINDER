@@ -662,25 +662,24 @@ const StudentDashboard = () => {
       </header>
 
       {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="max-w-7xl w-full mx-auto px-2 sm:px-6 lg:px-8 py-4 sm:py-8">
         {/* Welcome Section */}
-        <div className="mb-8">
-          <div className="flex items-center justify-between">
+        <div className="mb-6 sm:mb-8">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0">
             <div>
-              <h2 className="text-3xl font-bold text-foreground mb-2 flex items-center gap-3">
+              <h2 className="text-2xl sm:text-3xl font-bold text-foreground mb-1 sm:mb-2 flex items-center gap-3">
                 Welcome back, {profile?.full_name?.split(' ')[0] || 'Student'}!
                 <span className="animate-bounce">👋</span>
               </h2>
-              <p className="text-foreground-muted text-lg">
+              <p className="text-foreground-muted text-base sm:text-lg">
                 Continue your career discovery journey and unlock your potential.
               </p>
             </div>
             <div className="hidden md:flex items-center gap-4">
               <div className="text-right">
                 <p className="text-sm text-foreground-muted">Current Streak</p>
-                <p className="text-2xl font-bold text-orange-500 flex items-center gap-1">
-                  <Zap className="w-5 h-5" />
-                  7 days
+                <p className="text-xl sm:text-2xl font-bold text-orange-500 flex items-center gap-1">
+                  <Zap className="w-5 h-5" /> 7 days
                 </p>
               </div>
             </div>
@@ -688,7 +687,7 @@ const StudentDashboard = () => {
         </div>
 
         {/* Tabs Navigation */}
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4 sm:space-y-6">
           <TabsList className="grid w-full grid-cols-4 lg:w-auto lg:grid-cols-4">
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="careers">Top Careers</TabsTrigger>
@@ -697,9 +696,9 @@ const StudentDashboard = () => {
           </TabsList>
 
           {/* Overview Tab */}
-          <TabsContent value="overview" className="space-y-6">
+          <TabsContent value="overview" className="space-y-4 sm:space-y-6">
             {/* Quick Stats */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-6 w-full">
               {isLoadingStats ? (
                 // Loading skeleton for stats
                 Array.from({ length: 4 }).map((_, index) => (
@@ -754,7 +753,7 @@ const StudentDashboard = () => {
             </div>
 
             {/* Main Dashboard Grid */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-2 sm:gap-6 w-full">
               {/* Career Recommendations Chart */}
               <Card className="lg:col-span-2 bg-card border-card-border">
                 <CardHeader>
@@ -894,7 +893,7 @@ const StudentDashboard = () => {
             </div>
 
             {/* Action Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-2 sm:gap-6 w-full">
               <Card className="bg-gradient-to-br from-blue-50 to-indigo-50 border-blue-200 hover:shadow-card transition-all duration-300 cursor-pointer">
                 <CardHeader>
                   <div className="flex items-center gap-3">
@@ -976,8 +975,8 @@ const StudentDashboard = () => {
           </TabsContent>
 
           {/* Careers Tab */}
-          <TabsContent value="careers" className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <TabsContent value="careers" className="space-y-2 sm:space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-6 w-full">
               {careerData.map((career, index) => (
                 <Card key={index} className="bg-card border-card-border hover:shadow-lg transition-all duration-300 cursor-pointer group" onClick={() => handleCareerDetailClick(career)}>
                   <CardHeader className="pb-4">
@@ -1050,15 +1049,15 @@ const StudentDashboard = () => {
           </TabsContent>
 
           {/* Chat Tab */}
-          <TabsContent value="chat" className="space-y-6">
+          <TabsContent value="chat" className="w-full max-w-2xl mx-auto px-2 sm:px-0">
             <AIChat />
           </TabsContent>
 
           {/* Progress Tab */}
-          <TabsContent value="progress" className="space-y-6">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <TabsContent value="progress" className="space-y-2 sm:space-y-6 w-full">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-2 sm:gap-6 w-full">
               {/* Free Courses Card */}
-              <Card className="bg-card border-card-border">
+              <Card className="w-full bg-card border-card-border">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <BookOpen className="w-5 h-5 text-blue-500" />
@@ -1076,7 +1075,7 @@ const StudentDashboard = () => {
               </Card>
 
               {/* Journey Actions Card */}
-              <Card className="bg-card border-card-border">
+              <Card className="w-full bg-card border-card-border">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <Target className="w-5 h-5 text-green-500" />
@@ -1085,22 +1084,22 @@ const StudentDashboard = () => {
                   <CardDescription>Take action to advance your career path</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <div className="space-y-3">
+                  <div className="space-y-2 sm:space-y-3">
                     <div 
-                      className="flex items-center justify-between p-3 rounded-lg bg-blue-50 border border-blue-200 cursor-pointer hover:bg-blue-100 transition-colors"
+                      className="flex flex-col sm:flex-row items-center justify-between p-3 rounded-lg bg-blue-50 border border-blue-200 cursor-pointer hover:bg-blue-100 transition-colors mt-2 sm:mt-0"
                       onClick={() => {
                         setIsGradesModalOpen(true)
                         trackButtonClick('Record Grades', 'Journey Actions')
                       }}
                     >
-                      <div className="flex items-center space-x-3">
+                      <div className="flex items-center space-x-2">
                       <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                        <span className="text-sm font-medium">Record your academic grades</span>
+                        <span className="text-sm sm:text-base font-medium">Record your academic grades</span>
                       </div>
-                      <ArrowRight className="w-4 h-4 text-blue-500" />
+                      <ArrowRight className="w-4 h-4 text-blue-500 mt-2 sm:mt-0" />
                     </div>
                     <div 
-                      className="flex items-center justify-between p-3 rounded-lg bg-green-50 border border-green-200 cursor-pointer hover:bg-green-100 transition-colors"
+                      className="flex flex-col sm:flex-row items-center justify-between p-3 rounded-lg bg-green-50 border border-green-200 cursor-pointer hover:bg-green-100 transition-colors"
                       onClick={() => {
                         setActiveTab('chat')
                         trackButtonClick('Complete Assessment', 'Journey Actions')
@@ -1113,7 +1112,7 @@ const StudentDashboard = () => {
                       <ArrowRight className="w-4 h-4 text-green-500" />
                     </div>
                     <div 
-                      className="flex items-center justify-between p-3 rounded-lg bg-purple-50 border border-purple-200 cursor-pointer hover:bg-purple-100 transition-colors"
+                      className="flex flex-col sm:flex-row items-center justify-between p-3 rounded-lg bg-purple-50 border border-purple-200 cursor-pointer hover:bg-purple-100 transition-colors"
                       onClick={() => {
                         setActiveTab('careers')
                         trackButtonClick('Explore Programs', 'Journey Actions')
@@ -1126,9 +1125,9 @@ const StudentDashboard = () => {
                       <ArrowRight className="w-4 h-4 text-purple-500" />
                   </div>
                   </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3 mt-3 sm:mt-4">
                     <Button 
-                      className="w-full"
+                      className="w-full min-h-[44px]"
                       onClick={() => {
                         setActiveTab('chat')
                         trackButtonClick('Start Assessment', 'Journey Actions')
@@ -1138,7 +1137,7 @@ const StudentDashboard = () => {
                   </Button>
                     <Button
                       variant="outline"
-                      className="w-full"
+                      className="w-full min-h-[44px]"
                       onClick={async () => {
                         const profileData = profile || ({} as any)
                         const html = ReportGenerator.generatePDFReport(
@@ -1165,7 +1164,7 @@ const StudentDashboard = () => {
             </div>
 
             {/* Academic Performance Section */}
-            <Card className="bg-card border-card-border">
+            <Card className="w-full bg-card border-card-border">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <GraduationCap className="w-5 h-5 text-purple-500" />

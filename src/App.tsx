@@ -10,6 +10,8 @@ import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import StudentDashboard from "./pages/StudentDashboard";
 import AdminDashboard from "./pages/AdminDashboard";
+import SchoolDashboard from "./pages/SchoolDashboard";
+import TeacherDashboard from "./pages/TeacherDashboard";
 import Dashboard from "./pages/Dashboard";
 import NotFound from "./pages/NotFound";
 
@@ -40,6 +42,22 @@ const App = () => (
               element={
                 <ProtectedRoute requiredRole="admin">
                   <AdminDashboard />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/school"
+              element={
+                <ProtectedRoute requiredRole="school">
+                  <SchoolDashboard />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/teacher"
+              element={
+                <ProtectedRoute requiredRole="teacher">
+                  <TeacherDashboard />
                 </ProtectedRoute>
               }
             />

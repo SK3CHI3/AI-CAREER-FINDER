@@ -13,7 +13,8 @@ interface Profile {
   email: string
   full_name: string | null
   avatar_url: string | null
-  role: 'student' | 'admin'
+  role: 'student' | 'admin' | 'school' | 'teacher'
+  school_id?: string | null
   school_level?: 'primary' | 'secondary' | 'tertiary'
   current_grade?: string
   cbe_subjects?: string[]

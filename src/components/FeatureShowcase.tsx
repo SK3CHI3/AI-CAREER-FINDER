@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Bot, BookOpen, TrendingUp } from "lucide-react";
+import { ArrowRight, Bot, BookOpen, TrendingUp, Building2 } from "lucide-react";
 
 const items = [
   {
@@ -10,10 +10,17 @@ const items = [
     icon: Bot,
   },
   {
+    eyebrow: "School Integration",
+    title: "For schools and teachers",
+    desc: "Schools onboard, teachers upload grades, and students get verified competency-based career insights.",
+    image: "https://images.unsplash.com/photo-1523580846011-d3a5bc25702b?q=80&w=1600&auto=format&fit=crop",
+    icon: Building2,
+  },
+  {
     eyebrow: "Learning",
     title: "Personalized Senior School & TVET routes",
     desc: "Clear subject choices and TVET options that lead to real roles.",
-    image: "https://images.unsplash.com/photo-1523580846011-d3a5bc25702b?q=80&w=1600&auto=format&fit=crop",
+    image: "https://images.unsplash.com/photo-1556761175-129418cb2dfe?q=80&w=1600&auto=format&fit=crop",
     icon: BookOpen,
   },
   {

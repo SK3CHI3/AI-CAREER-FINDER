@@ -2,10 +2,12 @@ import { Button } from "@/components/ui/button";
 import { ArrowRight, Sparkles } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
+import { getDashboardPathForRole } from "@/types/roles";
 
 const Hero = () => {
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const navigate = useNavigate();
+  const dashboardPath = user && profile ? getDashboardPathForRole(profile.role as 'student' | 'admin' | 'school' | 'teacher') : "/student";
 
   return (
     <section className="min-h-screen flex items-center pt-16">
@@ -16,7 +18,7 @@ const Hero = () => {
             <div className="inline-flex items-center px-4 py-2 bg-surface/50 backdrop-blur-sm rounded-full border border-card-border">
               <Sparkles className="w-4 h-4 text-primary mr-2" />
               <span className="text-sm text-foreground-muted">
-                AI-Powered Career Guidance for Kenya's CBE System
+                For students, schools & educators · Kenya's CBE System
               </span>
             </div>
             
@@ -30,7 +32,7 @@ const Hero = () => {
             
             <p className="text-lg sm:text-xl text-foreground-muted leading-relaxed max-w-2xl">
               Navigate Kenya’s Competency-Based Education (CBE) with intelligent guidance. 
-              Choose Senior School or TVET pathways, understand entry requirements, and build skills for real roles.
+              Students get personalized career insights; schools and teachers manage grades and verify competencies.
             </p>
             
             <div className="flex flex-col sm:flex-row gap-4">
@@ -39,7 +41,7 @@ const Hero = () => {
                 className="bg-gradient-primary hover:opacity-90 text-primary-foreground shadow-glow px-8 py-6 text-lg"
                 onClick={() => {
                   if (user) {
-                    navigate('/student');
+                    navigate(dashboardPath);
                   } else {
                     navigate('/auth');
                   }
@@ -52,8 +54,9 @@ const Hero = () => {
                 variant="outline"
                 size="lg"
                 className="border-card-border hover:bg-surface px-8 py-6 text-lg"
+                onClick={() => document.getElementById('guest-chat')?.scrollIntoView({ behavior: 'smooth' })}
               >
-                Watch Demo
+                Try AI Chat
               </Button>
             </div>
             

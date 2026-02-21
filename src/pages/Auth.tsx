@@ -3,6 +3,7 @@ import { Navigate } from 'react-router-dom'
 import { LoginForm } from '@/components/auth/LoginForm'
 import { SignupForm } from '@/components/auth/SignupForm'
 import { useAuth } from '@/contexts/AuthContext'
+import { getDashboardPathForRole } from '@/types/roles'
 import { Bot } from 'lucide-react'
 
 type AuthMode = 'login' | 'signup'
@@ -27,8 +28,7 @@ const Auth = () => {
 
   // Redirect if already authenticated
   if (user && profile) {
-    const redirectPath = profile.role === 'admin' ? '/admin' : '/student'
-    return <Navigate to={redirectPath} replace />
+    return <Navigate to={getDashboardPathForRole(profile.role)} replace />
   }
 
   const renderForm = () => {

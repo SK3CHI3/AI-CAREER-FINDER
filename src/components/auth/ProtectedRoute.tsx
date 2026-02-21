@@ -3,9 +3,11 @@ import { useAuth } from '@/contexts/AuthContext'
 import { Bot, AlertCircle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 
+import { getDashboardPathForRole, type UserRole } from '@/types/roles'
+
 interface ProtectedRouteProps {
   children: React.ReactNode
-  requiredRole?: 'student' | 'admin'
+  requiredRole?: UserRole
 }
 
 export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ 
@@ -76,8 +78,7 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
 
   // Check role requirement
   if (requiredRole && profile.role !== requiredRole) {
-    // Redirect to appropriate dashboard based on actual role
-    const redirectPath = profile.role === 'admin' ? '/admin' : '/student'
+    const redirectPath = getDashboardPathForRole(profile.role as UserRole)
     return <Navigate to={redirectPath} replace />
   }
 
