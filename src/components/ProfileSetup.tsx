@@ -17,6 +17,7 @@ import { supabase } from '@/lib/supabase'
 import { dashboardService, CbeSubject, CareerInterest } from '@/lib/dashboard-service'
 
 const profileSchema = z.object({
+  phone: z.string().min(10, 'Please enter a valid phone number (e.g. 0712345678)'),
   schoolLevel: z.enum(['primary', 'secondary', 'tertiary']),
   currentGrade: z.string().optional(),
   subjects: z.array(z.string()).min(3, 'Please select at least 3 CBE subjects'),
@@ -105,6 +106,7 @@ export const ProfileSetup: React.FC<ProfileSetupProps> = ({ onComplete }) => {
   } = useForm<ProfileFormData>({
     resolver: zodResolver(profileSchema),
     defaultValues: {
+      phone: user?.user_metadata?.phone || '',
       subjects: [],
       interests: []
     }
@@ -151,6 +153,7 @@ export const ProfileSetup: React.FC<ProfileSetupProps> = ({ onComplete }) => {
         .single()
 
       const profileData = {
+        phone: data.phone,
         school_level: data.schoolLevel,
         current_grade: data.currentGrade || null,
         cbe_subjects: selectedSubjects,
@@ -179,16 +182,16 @@ export const ProfileSetup: React.FC<ProfileSetupProps> = ({ onComplete }) => {
       // Refresh profile in auth context to get latest data
       console.log('Profile saved successfully, refreshing auth context...')
       await refreshProfile()
-      
+
       // Check payment status after profile completion
       const { data: updatedProfile } = await supabase
         .from('profiles')
         .select('payment_status')
         .eq('id', user.id)
         .single()
-      
+
       console.log('Payment status after profile completion:', updatedProfile?.payment_status)
-      
+
       // Call onComplete with payment status
       onComplete(updatedProfile?.payment_status === 'completed')
     } catch (err) {
@@ -202,7 +205,7 @@ export const ProfileSetup: React.FC<ProfileSetupProps> = ({ onComplete }) => {
     const updated = selectedSubjects.includes(subject)
       ? selectedSubjects.filter(s => s !== subject)
       : [...selectedSubjects, subject]
-    
+
     setSelectedSubjects(updated)
     setValue('subjects', updated)
   }
@@ -211,7 +214,7 @@ export const ProfileSetup: React.FC<ProfileSetupProps> = ({ onComplete }) => {
     const updated = selectedInterests.includes(interest)
       ? selectedInterests.filter(i => i !== interest)
       : [...selectedInterests, interest]
-    
+
     setSelectedInterests(updated)
     setValue('interests', updated)
   }
@@ -236,6 +239,23 @@ export const ProfileSetup: React.FC<ProfileSetupProps> = ({ onComplete }) => {
                 <AlertDescription>{error}</AlertDescription>
               </Alert>
             )}
+
+            {/* Phone Number */}
+            <div className="space-y-2">
+              <Label htmlFor="phone">Phone Number</Label>
+              <Input
+                id="phone"
+                type="tel"
+                placeholder="e.g. 0712345678"
+                {...register('phone')}
+              />
+              {errors.phone && (
+                <p className="text-sm text-destructive">{errors.phone.message}</p>
+              )}
+              <p className="text-xs text-foreground-muted">
+                Your phone number is used to link your profile to your school's class enrollments and grades.
+              </p>
+            </div>
 
             {/* Education Level */}
             <div className="space-y-4">
@@ -266,8 +286,8 @@ export const ProfileSetup: React.FC<ProfileSetupProps> = ({ onComplete }) => {
                   id="currentGrade"
                   placeholder={
                     schoolLevel === 'primary' ? 'e.g., Grade 6' :
-                    schoolLevel === 'secondary' ? 'e.g., Grade 8' :
-                    'e.g., Grade 11'
+                      schoolLevel === 'secondary' ? 'e.g., Grade 8' :
+                        'e.g., Grade 11'
                   }
                   {...register('currentGrade')}
                 />
@@ -298,11 +318,10 @@ export const ProfileSetup: React.FC<ProfileSetupProps> = ({ onComplete }) => {
                     <div
                       key={subject.id}
                       onClick={() => handleSubjectToggle(subject.subject_name)}
-                      className={`p-3 rounded-lg border cursor-pointer transition-all ${
-                        selectedSubjects.includes(subject.subject_name)
+                      className={`p-3 rounded-lg border cursor-pointer transition-all ${selectedSubjects.includes(subject.subject_name)
                           ? 'bg-primary text-primary-foreground border-primary'
                           : 'bg-background border-card-border hover:border-primary/50'
-                      }`}
+                        }`}
                     >
                       <span className="text-sm font-medium">{subject.subject_name}</span>
                     </div>
@@ -338,11 +357,10 @@ export const ProfileSetup: React.FC<ProfileSetupProps> = ({ onComplete }) => {
                     <div
                       key={interest.id}
                       onClick={() => handleInterestToggle(interest.interest_name)}
-                      className={`p-3 rounded-lg border cursor-pointer transition-all ${
-                        selectedInterests.includes(interest.interest_name)
+                      className={`p-3 rounded-lg border cursor-pointer transition-all ${selectedInterests.includes(interest.interest_name)
                           ? 'bg-secondary text-secondary-foreground border-secondary'
                           : 'bg-background border-card-border hover:border-secondary/50'
-                      }`}
+                        }`}
                     >
                       <span className="text-sm font-medium">{interest.interest_name}</span>
                     </div>

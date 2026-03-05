@@ -8,6 +8,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Send, Bot, User, Sparkles, Loader2, AlertCircle, RefreshCw } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { aiCareerService, type ChatMessage, type UserContext } from "@/lib/ai-service";
+import { dashboardService } from "@/lib/dashboard-service";
 import { supabase } from "@/lib/supabase";
 import type { Database } from '@/types/supabase';
 
@@ -83,14 +84,22 @@ const AIChat = () => {
         .single();
       const studentProfile = studentProfileRaw as Database['public']['Tables']['profiles']['Row'] | null;
 
+      const academicPerformance = await dashboardService.calculateAcademicPerformance(user?.id || '');
+
       const context: UserContext = {
         name: profile?.full_name || undefined,
-        schoolLevel: studentProfile ? studentProfile.school_level || undefined : undefined,
+        schoolLevel: studentProfile ? (studentProfile.school_level as 'primary' | 'secondary' | 'tertiary') || undefined : undefined,
         currentGrade: studentProfile ? studentProfile.current_grade || undefined : undefined,
-        subjects: studentProfile ? (studentProfile.subjects || undefined) : undefined,
-        interests: studentProfile ? (studentProfile.interests || undefined) : undefined,
+        subjects: studentProfile ? (studentProfile.cbe_subjects || undefined) : undefined,
+        interests: studentProfile ? (studentProfile.career_interests || undefined) : undefined,
         careerGoals: studentProfile ? studentProfile.career_goals || undefined : undefined,
-        assessmentResults: studentProfile ? (studentProfile.assessment_results as any) || undefined : undefined // fallback as any if not typed
+        assessmentResults: undefined,
+        academicPerformance: {
+          overallAverage: academicPerformance.overallAverage,
+          strongSubjects: academicPerformance.strongSubjects,
+          weakSubjects: academicPerformance.weakSubjects,
+          performanceTrend: academicPerformance.performanceTrend
+        }
       };
 
       setUserContext(context);
@@ -134,17 +143,17 @@ What subjects do you enjoy most in your current studies? 🎯`,
       // Clear the conversation
       setConversation([]);
       setError(null);
-      
+
       // Clear localStorage
       if (user?.id) {
         localStorage.removeItem(`ai_chat_${user.id}`);
         console.log('🗑️ Cleared conversation from localStorage');
       }
-      
+
       // Re-initialize the chat
       setIsInitialized(false);
       await initializeChat();
-      
+
       console.log('Chat refreshed - conversation cleared and re-initialized');
     } catch (error) {
       console.error('Failed to refresh chat:', error);
@@ -191,7 +200,7 @@ What subjects do you enjoy most in your current studies? 🎯`,
 
     } catch (error) {
       console.error('Failed to send message:', error);
-      
+
       // Show user-friendly error messages
       let errorMessage = 'Failed to send message. Please try again.';
       if (error instanceof Error) {
@@ -205,7 +214,7 @@ What subjects do you enjoy most in your current studies? 🎯`,
           errorMessage = error.message;
         }
       }
-      
+
       setError(errorMessage);
     } finally {
       setIsLoading(false);
@@ -310,22 +319,20 @@ What subjects do you enjoy most in your current studies? 🎯`,
               {conversation.map((msg) => (
                 <div key={msg.id} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
                   <div className={`flex max-w-[90vw] sm:max-w-[85%] ${msg.role === 'user' ? 'flex-row-reverse' : 'flex-row'} gap-2 sm:gap-3`}>
-                    <div className={`w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
-                      msg.role === 'user'
-                        ? 'bg-primary text-primary-foreground ml-2 sm:ml-3'
-                        : 'bg-gradient-primary text-primary-foreground mr-2 sm:mr-3'
-                    }`}>
+                    <div className={`w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center flex-shrink-0 ${msg.role === 'user'
+                      ? 'bg-primary text-primary-foreground ml-2 sm:ml-3'
+                      : 'bg-gradient-primary text-primary-foreground mr-2 sm:mr-3'
+                      }`}>
                       {msg.role === 'user' ? (
                         <User className="w-4 h-4" />
                       ) : (
                         <Bot className="w-4 h-4" />
                       )}
                     </div>
-                    <div className={`p-3 sm:p-4 rounded-2xl ${
-                      msg.role === 'user'
-                        ? 'bg-primary text-primary-foreground'
-                        : 'bg-background border border-card-border'
-                    }`}>
+                    <div className={`p-3 sm:p-4 rounded-2xl ${msg.role === 'user'
+                      ? 'bg-primary text-primary-foreground'
+                      : 'bg-background border border-card-border'
+                      }`}>
                       <p className="text-sm leading-relaxed whitespace-pre-wrap break-words">{msg.content}</p>
                       <p className="text-xs opacity-70 mt-1 sm:mt-2">
                         {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}

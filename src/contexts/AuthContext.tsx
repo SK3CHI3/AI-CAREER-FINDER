@@ -11,6 +11,7 @@ import { isSessionValid, destroySessionManager } from '@/lib/session-utils'
 interface Profile {
   id: string
   email: string
+  phone: string | null
   full_name: string | null
   avatar_url: string | null
   role: 'student' | 'admin' | 'school' | 'teacher'
@@ -40,7 +41,7 @@ interface AuthContextType {
   profileLoading: boolean
   profileError: Error | null
   isMFAEnabled: boolean
-  signUp: (email: string, password: string, fullName: string) => Promise<{ error: AuthError | null }>
+  signUp: (email: string, password: string, fullName: string, phone: string) => Promise<{ error: AuthError | null }>
   signIn: (email: string, password: string) => Promise<{ error: AuthError | null }>
   signOut: () => Promise<{ error: AuthError | null }>
   updateProfile: (updates: Partial<Profile>) => Promise<{ error: Error | null }>
@@ -84,7 +85,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setProfileError(err)
         setProfile(null)
       } else {
-        setProfile(data)
+        setProfile(data as Profile)
         setProfileError(null)
       }
     } catch (error) {
@@ -199,13 +200,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, [user])
 
   // Sign up with email and password
-  const signUp = async (email: string, password: string, fullName: string) => {
+  const signUp = async (email: string, password: string, fullName: string, phone: string) => {
     const { error } = await supabase.auth.signUp({
       email,
       password,
       options: {
         data: {
           full_name: fullName,
+          phone: phone,
         },
       },
     })
@@ -233,7 +235,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       // Sign out from Supabase
       const { error } = await supabase.auth.signOut()
-      
+
       if (error) {
         if (isDev) console.error('Sign out error:', error)
         return { error }

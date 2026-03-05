@@ -13,6 +13,7 @@ import { useAuth } from '@/contexts/AuthContext'
 const signupSchema = z.object({
   fullName: z.string().min(2, 'Full name must be at least 2 characters'),
   email: z.string().email('Please enter a valid email address'),
+  phone: z.string().min(10, 'Please enter a valid phone number (e.g. 0712345678)'),
   password: z.string().min(6, 'Password must be at least 6 characters'),
   confirmPassword: z.string(),
 }).refine((data) => data.password === data.confirmPassword, {
@@ -48,8 +49,8 @@ export const SignupForm: React.FC<SignupFormProps> = ({ onToggleMode }) => {
     setSuccess(null)
 
     try {
-      const { error } = await signUp(data.email, data.password, data.fullName)
-      
+      const { error } = await signUp(data.email, data.password, data.fullName, data.phone)
+
       if (error) {
         setError(error.message)
       } else {
@@ -109,6 +110,20 @@ export const SignupForm: React.FC<SignupFormProps> = ({ onToggleMode }) => {
             />
             {errors.email && (
               <p className="text-sm text-destructive">{errors.email.message}</p>
+            )}
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="phone">Phone Number</Label>
+            <Input
+              id="phone"
+              type="tel"
+              placeholder="e.g. 0712345678"
+              {...register('phone')}
+              disabled={isLoading}
+            />
+            {errors.phone && (
+              <p className="text-sm text-destructive">{errors.phone.message}</p>
             )}
           </div>
 

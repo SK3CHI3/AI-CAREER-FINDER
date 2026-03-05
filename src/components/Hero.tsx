@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Sparkles } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { getDashboardPathForRole } from "@/types/roles";
@@ -15,26 +15,18 @@ const Hero = () => {
         <div className="grid lg:grid-cols-2 gap-12 items-center">
           {/* Left Content */}
           <div className="space-y-8">
-            <div className="inline-flex items-center px-4 py-2 bg-surface/50 backdrop-blur-sm rounded-full border border-card-border">
-              <Sparkles className="w-4 h-4 text-primary mr-2" />
-              <span className="text-sm text-foreground-muted">
-                For students, schools & educators · Kenya's CBE System
-              </span>
-            </div>
-            
             <h1 className="text-4xl sm:text-6xl lg:text-7xl font-bold leading-tight tracking-tight">
-              Discover Your{" "}
+              Give Your School{" "}
               <span className="bg-gradient-text bg-clip-text text-transparent">
-                Perfect Career
+                AI-Powered Career
               </span>{" "}
-              Path with AI
+              Guidance
             </h1>
-            
+
             <p className="text-lg sm:text-xl text-foreground-muted leading-relaxed max-w-2xl">
-              Navigate Kenya’s Competency-Based Education (CBE) with intelligent guidance. 
-              Students get personalized career insights; schools and teachers manage grades and verify competencies.
+              Onboard your institution, let teachers upload grades, and deliver competency-based career insights to every student. Built for Kenyan schools and aligned with CBE.
             </p>
-            
+
             <div className="flex flex-col sm:flex-row gap-4">
               <Button
                 size="lg"
@@ -47,7 +39,7 @@ const Hero = () => {
                   }
                 }}
               >
-                {user ? 'Go to Dashboard' : 'Start Free Assessment'}
+                {user ? 'Go to Dashboard' : 'Onboard my school'}
                 <ArrowRight className="w-5 h-5 ml-2" />
               </Button>
               <Button
@@ -59,28 +51,12 @@ const Hero = () => {
                 Try AI Chat
               </Button>
             </div>
-            
-            {/* Stats */}
-            <div className="grid grid-cols-3 gap-8 pt-8 border-t border-card-border">
-              <div className="text-center">
-                <div className="text-2xl font-bold text-foreground">5,000+</div>
-                <div className="text-sm text-foreground-muted">Students Guided</div>
-              </div>
-              <div className="text-center">
-                <div className="text-2xl font-bold text-foreground">200+</div>
-                <div className="text-sm text-foreground-muted">Career Paths</div>
-              </div>
-              <div className="text-center">
-                <div className="text-2xl font-bold text-foreground">95%</div>
-                <div className="text-sm text-foreground-muted">Accuracy Rate</div>
-              </div>
-            </div>
           </div>
-          
+
           {/* Right Content - Hero Image */}
           <div className="relative">
             <div className="relative z-10">
-              <img 
+              <img
                 src="/images/hero-interface.png"
                 alt="AI Career Guidance Platform - Mobile App Interface with Career Icons"
                 className="w-full h-auto rounded-2xl shadow-elevated"

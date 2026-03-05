@@ -83,7 +83,7 @@ const Navigation = () => {
                   className="bg-gradient-primary hover:opacity-90 text-primary-foreground shadow-glow"
                   onClick={() => navigate('/auth')}
                 >
-                  Start Free Assessment
+                  Get started
                 </Button>
               </>
             )}
@@ -148,7 +148,7 @@ const Navigation = () => {
                         setIsOpen(false);
                       }}
                     >
-                      Start Free Assessment
+                      Get started
                     </Button>
                   </>
                 )}

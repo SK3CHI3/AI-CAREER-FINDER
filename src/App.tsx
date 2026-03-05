@@ -12,6 +12,8 @@ import StudentDashboard from "./pages/StudentDashboard";
 import AdminDashboard from "./pages/AdminDashboard";
 import SchoolDashboard from "./pages/SchoolDashboard";
 import TeacherDashboard from "./pages/TeacherDashboard";
+import ClassDetail from "./pages/ClassDetail";
+import AcceptInvite from "./pages/AcceptInvite";
 import Dashboard from "./pages/Dashboard";
 import NotFound from "./pages/NotFound";
 
@@ -61,6 +63,15 @@ const App = () => (
                 </ProtectedRoute>
               }
             />
+            <Route
+              path="/teacher/class/:classId"
+              element={
+                <ProtectedRoute requiredRole="teacher">
+                  <ClassDetail />
+                </ProtectedRoute>
+              }
+            />
+            <Route path="/invite" element={<AcceptInvite />} />
             <Route
               path="/dashboard"
               element={
