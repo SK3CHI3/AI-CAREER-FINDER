@@ -288,7 +288,7 @@ What subjects do you enjoy most in your current studies? 🎯`,
 
   if (!user) {
     return (
-      <div className="w-full max-w-2xl px-2 sm:mx-auto sm:p-6 p-2">
+      <div className="w-full max-w-4xl px-2 sm:mx-auto sm:p-6 p-2">
         <Alert>
           <AlertCircle className="h-4 w-4" />
           <AlertDescription>
@@ -302,7 +302,7 @@ What subjects do you enjoy most in your current studies? 🎯`,
   // Fatal init error: show clear message and retry so the UI is not stuck
   if (error && !isInitialized) {
     return (
-      <div className="w-full max-w-2xl px-2 sm:mx-auto sm:p-6 p-2">
+      <div className="w-full max-w-4xl px-2 sm:mx-auto sm:p-6 p-2">
         <Card className="bg-gradient-surface border-card-border shadow-elevated">
           <CardContent className="p-6">
             <Alert variant="destructive" className="mb-4">
@@ -327,7 +327,7 @@ What subjects do you enjoy most in your current studies? 🎯`,
   }
 
   return (
-    <div className="w-full max-w-2xl px-2 sm:mx-auto sm:p-6 p-2">
+    <div className="w-full max-w-5xl px-2 sm:mx-auto sm:p-2 p-1">
       <div className="text-center mb-6 sm:mb-8">
         <h2 className="text-xl sm:text-3xl font-bold mb-3 sm:mb-4">
           Chat with Your{" "}
@@ -384,7 +384,7 @@ What subjects do you enjoy most in your current studies? 🎯`,
 
         {/* Chat Messages */}
         <CardContent className="p-0 sm:p-6 p-3">
-          <ScrollArea className="h-80 sm:h-96 p-2 sm:p-6">
+          <ScrollArea className="h-[450px] sm:h-[600px] p-2 sm:p-6">
             <div className="space-y-4 sm:space-y-6">
               {conversation.map((msg) => (
                 <div key={msg.id} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'} mb-2`}>
