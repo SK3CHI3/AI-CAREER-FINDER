@@ -11,7 +11,7 @@ import { Loader2, Eye, EyeOff } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
 
 const loginSchema = z.object({
-  email: z.string().email('Please enter a valid email address'),
+  identifier: z.string().min(3, 'Please enter your email or phone number'),
   password: z.string().min(6, 'Password must be at least 6 characters'),
 })
 
@@ -40,8 +40,8 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onToggleMode }) => {
     setError(null)
 
     try {
-      const { error } = await signIn(data.email, data.password)
-      
+      const { error } = await signIn(data.identifier, data.password)
+
       if (error) {
         setError(error.message)
       }
@@ -69,16 +69,16 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onToggleMode }) => {
           )}
 
           <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
+            <Label htmlFor="identifier">Email or Phone Number</Label>
             <Input
-              id="email"
-              type="email"
-              placeholder="Enter your email"
-              {...register('email')}
+              id="identifier"
+              type="text"
+              placeholder="Enter your email or phone"
+              {...register('identifier')}
               disabled={isLoading}
             />
-            {errors.email && (
-              <p className="text-sm text-destructive">{errors.email.message}</p>
+            {errors.identifier && (
+              <p className="text-sm text-destructive">{errors.identifier.message}</p>
             )}
           </div>
 

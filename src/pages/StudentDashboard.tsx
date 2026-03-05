@@ -919,14 +919,13 @@ const StudentDashboard = () => {
                             <div className="flex items-center justify-between mt-2">
                               <p className="text-xs text-foreground-muted">{timeAgo}</p>
                               {activity.progress_percentage && activity.progress_percentage > 0 ? (
-                                <div className="flex items-center gap-1">
-                                  <div className="w-16 h-1.5 bg-muted rounded-full overflow-hidden">
-                                    <div
-                                      className="h-full bg-gradient-to-r from-blue-500 to-purple-500 rounded-full transition-all duration-500"
-                                      style={{ width: `${activity.progress_percentage}%` }}
-                                    />
-                                  </div>
-                                  <span className="text-xs font-medium text-foreground-muted">{activity.progress_percentage}%</span>
+                                <div className="flex flex-col gap-1 w-24">
+                                  <Progress
+                                    value={activity.progress_percentage}
+                                    className="h-1.5 bg-muted"
+                                    indicatorClassName="bg-gradient-to-r from-blue-500 to-purple-500"
+                                  />
+                                  <span className="text-[10px] font-medium text-foreground-muted text-right">{activity.progress_percentage}%</span>
                                 </div>
                               ) : (
                                 <div className="text-xs text-foreground-muted">Completed</div>
@@ -1049,22 +1048,26 @@ const StudentDashboard = () => {
                               <Badge variant="secondary" className="text-[10px] h-5">
                                 {career.value}% Match
                               </Badge>
-                              <div className="w-16 h-1.5 bg-muted rounded-full overflow-hidden">
-                                <div
-                                  className="h-full bg-gradient-to-r from-blue-500 to-purple-500 rounded-full transition-all duration-500"
-                                  style={{ width: `${career.value}%` }}
+                              <div className="flex flex-col gap-1 w-20">
+                                <Progress
+                                  value={career.value}
+                                  className="h-1.5 bg-muted"
+                                  indicatorClassName="bg-gradient-to-r from-blue-500 to-purple-500"
                                 />
+                                <span className="text-[10px] font-medium text-foreground-muted text-right">{career.value}% Match</span>
                               </div>
                             </div>
                             <div className="flex items-center gap-2">
                               <Badge variant="outline" className="text-[10px] h-5 border-orange-200 text-orange-700 bg-orange-50">
                                 {career.actionabilityScore || 85}% Actionable
                               </Badge>
-                              <div className="w-16 h-1.5 bg-muted rounded-full overflow-hidden">
-                                <div
-                                  className="h-full bg-orange-400 rounded-full transition-all duration-500"
-                                  style={{ width: `${career.actionabilityScore || 85}%` }}
+                              <div className="flex flex-col gap-1 w-20">
+                                <Progress
+                                  value={career.actionabilityScore || 85}
+                                  className="h-1.5 bg-muted"
+                                  indicatorClassName="bg-orange-400"
                                 />
+                                <span className="text-[10px] font-medium text-foreground-muted text-right">{career.actionabilityScore || 85}% Actionable</span>
                               </div>
                             </div>
                           </div>
