@@ -23,6 +23,11 @@ interface Profile {
   career_interests?: string[]
   interests?: string[]
   career_goals?: string
+  assessment_results?: {
+    riasec_scores: Record<string, number>
+    personality_type: string
+    values: string[]
+  } | null
   payment_status?: 'pending' | 'completed' | 'failed' | 'refunded'
   payment_reference?: string
   payment_date?: string

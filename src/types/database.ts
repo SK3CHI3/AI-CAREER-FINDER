@@ -22,10 +22,20 @@ export interface UserProfile {
   interests?: string[];
   career_goals?: string;
   assessment_results?: {
-    skills: string[];
-    strengths: string[];
-    interests: string[];
-    recommendations: string[];
+    riasec_scores?: {
+      realistic: number;
+      investigative: number;
+      artistic: number;
+      social: number;
+      enterprising: number;
+      conventional: number;
+    };
+    personality_type?: string[]; // e.g., ["Social", "Artistic"]
+    values?: string[];
+    skills?: string[];
+    strengths?: string[];
+    interests?: string[];
+    recommendations?: string[];
   };
   previous_recommendations?: {
     career: string;

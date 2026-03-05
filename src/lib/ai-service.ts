@@ -46,7 +46,25 @@ class AICareerService {
   }
 
   private createSystemPrompt(userContext: UserContext): string {
-    return `You are CareerPath AI, Kenya's friendliest career counselor specializing in the CBE curriculum. Your mission is to guide students through a structured, engaging conversation to discover their perfect career path.
+    const assessment = userContext.assessmentResults;
+    const riasec = assessment?.riasec_scores;
+    const personality = assessment?.personality_type?.join(', ');
+    const values = assessment?.values?.join(', ');
+
+    const assessmentSection = assessment ? `
+ASSESSMENT DATA:
+${riasec ? `- RIASEC Personality: ${personality} (Scores: R:${riasec.realistic}, I:${riasec.investigative}, A:${riasec.artistic}, S:${riasec.social}, E:${riasec.enterprising}, C:${riasec.conventional})` : ''}
+${values ? `- Core Values: ${values}` : ''}
+` : '';
+
+    const academicSection = userContext.academicPerformance ? `
+ACADEMIC PERFORMANCE:
+- Overall: ${userContext.academicPerformance.overallAverage.toFixed(1)}%
+- Strong in: ${userContext.academicPerformance.strongSubjects.join(', ')}
+- Weak in: ${userContext.academicPerformance.weakSubjects.join(', ')}
+` : '';
+
+    return `You are CareerPath AI, Kenya's most advanced career counselor. Your mission is to provide personalized guidance using "Triangulation Logic"—balancing a student's Personality (RIASEC), Academic Performance, and Stated Interests.
 
 CURRENT USER PROFILE:
 ${userContext.name ? `- Name: ${userContext.name}` : '- Name: Not provided'}
@@ -55,56 +73,37 @@ ${userContext.currentGrade ? `- Current Grade: ${userContext.currentGrade}` : '-
 ${userContext.subjects?.length ? `- CBE Subjects: ${userContext.subjects.join(', ')}` : '- CBE Subjects: Not specified'}
 ${userContext.interests?.length ? `- Career Interests: ${userContext.interests.join(', ')}` : '- Career Interests: Not specified'}
 ${userContext.careerGoals ? `- Career Goals: ${userContext.careerGoals}` : '- Career Goals: Not specified'}
+${assessmentSection}
+${academicSection}
 
-CONVERSATION STRUCTURE - ASK ONE QUESTION AT A TIME:
-1. **Greeting & Name** - Start with "Karibu!" and get their name
-2. **Education Level** - What grade/level are they in? (Use CBE structure)
-3. **Interests Discovery** - What activities/fields excite them most?
-4. **Subject Preferences** - Which CBE subjects do they enjoy?
-5. **Work Style** - Practical vs Academic vs Creative vs Business?
-6. **Environment Preference** - Office, Outdoor, Technical, Digital?
-7. **Career Goals** - What's their dream job or aspiration?
-8. **Provide Recommendations** - Give 3 personalized career matches
+GUIDANCE LOGIC:
+1. Personality (RIASEC): Holland Codes are the foundation. Recommend roles aligned with their top 2-3 RIASEC types.
+2. Academic Performance: Align careers with their strong subjects. If a student wants a STEM career but is weak in Math, suggest bridging options or related technical paths.
+3. Stated Interests: Respect their dreams, but use RIASEC and grades to refine which version of a career fits best (e.g., if they love Medicine but are artistic, suggest Medical Illustration or Psychology).
 
-FORMATTING RULES - IMPORTANT:
-- Write in clean, natural text - NO markdown symbols like ** or ##
-- Use emojis naturally in sentences: "Habari yako, John! 👋"
-- Use numbered options with emojis: "1️⃣ Junior Secondary (Grades 7-9)"
-- Use line breaks for structure, not markdown formatting
-- Write "Next question:" instead of "**Next question:**"
-- Write "Habari yako, [Name]!" instead of "**Habari yako, [Name]!**"
-- Keep responses clean and readable without any ** or ## symbols
+CONVERSATION STRUCTURE:
+1. Greeting & Context - Acknowledge their assessment results if they exist.
+2. Dynamic Exploration - Ask one question at a time to dive deeper into one of the three triangulation points.
+3. CBE Pathway Mapping - Explain how their profile fits into STEM, Social Sciences, Arts, or Technical pathways.
+4. Professional Recommendations - Provide 3 precise career matches based on all data.
 
-CBE PATHWAYS TO REFERENCE:
-**Junior Secondary (7-9):** Broad exploration across all learning areas
-**Senior Secondary (10-12):** Choose pathway:
-- 🔬 **STEM**: Math, Sciences, Computer Science
-- 📚 **Social Sciences**: History, Geography, Economics
-- 🎨 **Creative Arts**: Visual Arts, Music, Film
-- 🔧 **Technical**: Engineering, Agriculture, Home Science
-- 🗣️ **Languages**: English, Kiswahili, Literature
+FORMATTING RULES - NO MARKDOWN (** or ##):
+- Clean, natural sentences with line breaks.
+- Use emojis for warmth: "Habari yako, [Name]! 👋"
+- Numbered options clearly: 1️⃣ Choice One
+- Avoid robotic technical jargon; be like a mentor.
 
 KENYAN CAREER CONTEXT:
-- Reference Vision 2030 priorities
-- Mention specific universities (UoN, KU, JKUAT, etc.)
-- Include salary ranges in KES
-- Consider both university and technical college paths
-- Focus on emerging opportunities in Kenya
+- Vision 2030 priorities (Digital Superhighway, Affordable Housing, Healthcare, etc.).
+- University vs. TVET (Technical College) options.
+- Salary ranges in KES.
 
-PERSONALITY:
-- Friendly and encouraging ("Karibu!", "Fantastic choice!", "That's exciting!")
-- Curious and genuinely interested in their responses
-- Supportive but realistic about requirements
-- Use Kenyan context and cultural understanding
-
-CRITICAL RULE: Ask only ONE question per response. Wait for their answer before moving to the next topic. Be conversational, not robotic.
-
-Remember: YOU MUST ALWAYS BE CURIOUS TO KNOW THEM. Make each question feel personal and engaging!`
+CRITICAL: Ask only ONE question per response. Be curious and empathetic. Wait for their answer before proceeding.`
   }
 
   async sendMessage(
-    message: string, 
-    conversationHistory: ChatMessage[], 
+    message: string,
+    conversationHistory: ChatMessage[],
     userContext: UserContext,
     retryCount = 0
   ): Promise<string> {
@@ -113,7 +112,7 @@ Remember: YOU MUST ALWAYS BE CURIOUS TO KNOW THEM. Make each question feel perso
 
     try {
       const systemPrompt = this.createSystemPrompt(userContext)
-      
+
       const messages = [
         { role: 'system', content: systemPrompt },
         ...conversationHistory.map(msg => ({
@@ -203,7 +202,7 @@ Remember: YOU MUST ALWAYS BE CURIOUS TO KNOW THEM. Make each question feel perso
       return fullResponse
     } catch (error) {
       console.error('AI Service Error:', error)
-      
+
       // Retry logic for network errors
       if (retryCount < maxRetries && (
         (error instanceof TypeError && error.message.includes('Failed to fetch')) ||
@@ -213,7 +212,7 @@ Remember: YOU MUST ALWAYS BE CURIOUS TO KNOW THEM. Make each question feel perso
         await new Promise(resolve => setTimeout(resolve, retryDelay))
         return this.sendMessage(message, conversationHistory, userContext, retryCount + 1)
       }
-      
+
       // Handle specific network errors with user-friendly messages
       if (error instanceof TypeError && error.message.includes('Failed to fetch')) {
         throw new Error('Network connection failed. Please check your internet connection and try again.')
@@ -229,7 +228,12 @@ Remember: YOU MUST ALWAYS BE CURIOUS TO KNOW THEM. Make each question feel perso
 
   async generateCareerRecommendations(userContext: UserContext): Promise<any[]> {
     try {
-      // Enhanced prompt with academic performance data
+      const assessmentInfo = userContext.assessmentResults ? `
+Assessment Results:
+- Personality (RIASEC): ${userContext.assessmentResults.personality_type?.join(', ') || 'Not assessed'}
+- Core Values: ${userContext.assessmentResults.values?.join(', ') || 'Not assessed'}
+` : ''
+
       const academicInfo = userContext.academicPerformance ? `
 Academic Performance:
 - Overall Average: ${userContext.academicPerformance.overallAverage.toFixed(1)}%
@@ -238,14 +242,20 @@ Academic Performance:
 - Performance Trend: ${userContext.academicPerformance.performanceTrend}
 ` : ''
 
-      const prompt = `Generate 3 career recommendations for a Kenyan student based on their profile and academic performance. Return ONLY a JSON array:
+      const prompt = `Generate 3 career recommendations for a Kenyan student using "Triangulation Logic" (Personality + Grades + Interests). Return ONLY a JSON array:
 
 Profile: ${userContext.schoolLevel || 'Secondary'} student, Grade ${userContext.currentGrade || '10'}, Subjects: ${userContext.subjects?.slice(0, 3).join(', ') || 'Math, English, Science'}, Interests: ${userContext.interests?.slice(0, 2).join(', ') || 'Technology, Business'}
+${assessmentInfo}
 ${academicInfo}
-Consider their academic strengths and weaknesses when recommending careers. Focus on careers that align with their strong subjects and provide growth opportunities.
+
+Instructions:
+1. Prioritize careers that align with their top RIASEC personality types.
+2. Ensure the careers are academically feasible based on their strong subjects.
+3. Factor in their stated interests but prioritize the psychological fit (RIASEC).
+4. For each career, explain "whyRecommended" using specific data points from their personality and grades.
 
 Return exactly this format:
-[{"title":"Software Engineer","matchPercentage":85,"description":"Develops software applications","salaryRange":"KSh 80,000-200,000","education":"Computer Science degree","whyRecommended":"Matches your strong performance in Mathematics and interest in technology"},{"title":"Data Analyst","matchPercentage":78,"description":"Analyzes data to help businesses make decisions","salaryRange":"KSh 60,000-150,000","education":"Statistics or Mathematics degree","whyRecommended":"Leverages your analytical skills and strong subject performance"},{"title":"Business Manager","matchPercentage":72,"description":"Manages business operations and teams","salaryRange":"KSh 70,000-180,000","education":"Business Administration degree","whyRecommended":"Combines your interests with leadership opportunities"}]`
+[{"title":"Career Name","matchPercentage":85,"description":"Short description","salaryRange":"KSh range","education":"Required path","whyRecommended":"Detailed explanation including RIASEC fit and subject alignment"}]`
 
       const response = await this.sendMessage(prompt, [], userContext)
 

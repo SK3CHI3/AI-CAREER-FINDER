@@ -6,7 +6,8 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
 import { Progress } from '@/components/ui/progress'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts'
+import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar } from 'recharts'
+import { RIASEC_LABELS } from '@/data/riasec-assessment'
 import {
   User,
   BookOpen,
@@ -436,10 +437,10 @@ const StudentDashboard = () => {
       // First, try to get cached recommendations
       console.log('🔍 Checking for cached career recommendations...');
       const cachedRecommendations = await aiCacheService.getCachedCareerRecommendations(user.id);
-      
+
       if (cachedRecommendations && cachedRecommendations.length > 0) {
         console.log('✅ Using cached career recommendations:', cachedRecommendations.length);
-        
+
         // Convert cached data to chart format
         const top3 = cachedRecommendations.slice(0, 3).map((rec, index) => ({
           name: rec.career_name,
@@ -549,6 +550,16 @@ const StudentDashboard = () => {
     }
   }
 
+  // RIASEC Data for Chart
+  const riasecChartData = profile?.assessment_results?.riasec_scores ?
+    Object.entries(profile.assessment_results.riasec_scores).map(([key, value]) => ({
+      subject: RIASEC_LABELS[key] || key,
+      A: value,
+      fullMark: 5, // Assuming max 5 activities selected per type
+    })) : []
+
+  const dominantType = profile?.assessment_results?.personality_type || 'Discovery Pending'
+
 
 
   const handleSignOut = async () => {
@@ -596,7 +607,7 @@ const StudentDashboard = () => {
     if (user?.id && profile) {
       console.log('🔄 Grades updated, invalidating AI caches')
       await aiCacheService.invalidateAllCaches(user.id, 'grades_updated')
-      
+
       // Reload career recommendations with fresh data
       await loadCareerRecommendations(profile)
     }
@@ -728,25 +739,24 @@ const StudentDashboard = () => {
 
                   return (
                     <Card key={stat.id} className="bg-card border-card-border hover:shadow-card transition-all duration-300">
-                  <CardHeader className="pb-3">
-                    <div className="flex items-center justify-between">
-                      <div>
+                      <CardHeader className="pb-3">
+                        <div className="flex items-center justify-between">
+                          <div>
                             <CardDescription className="text-sm font-medium">{statConfig.title}</CardDescription>
                             <CardTitle className="text-3xl font-bold mt-1">{stat.stat_value}</CardTitle>
-                            <p className={`text-xs flex items-center gap-1 mt-1 ${
-                              stat.stat_trend === 'up' ? 'text-green-600' : 
+                            <p className={`text-xs flex items-center gap-1 mt-1 ${stat.stat_trend === 'up' ? 'text-green-600' :
                               stat.stat_trend === 'down' ? 'text-red-600' : 'text-gray-600'
-                            }`}>
+                              }`}>
                               <TrendingUp className={`w-3 h-3 ${stat.stat_trend === 'down' ? 'rotate-180' : ''}`} />
                               {stat.stat_change}
-                        </p>
-                      </div>
+                            </p>
+                          </div>
                           <div className={`w-12 h-12 rounded-xl ${statConfig.bgColor} flex items-center justify-center`}>
                             <IconComponent className={`w-6 h-6 ${statConfig.color}`} />
-                      </div>
-                    </div>
-                  </CardHeader>
-                </Card>
+                          </div>
+                        </div>
+                      </CardHeader>
+                    </Card>
                   );
                 })
               )}
@@ -812,6 +822,46 @@ const StudentDashboard = () => {
                 </CardContent>
               </Card>
 
+              {/* RIASEC Personality Profile Card */}
+              {riasecChartData.length > 0 && (
+                <Card className="lg:col-span-1 bg-card border-card-border overflow-hidden">
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-lg flex items-center gap-2">
+                      <Brain className="w-5 h-5 text-purple-500" />
+                      Personality Profile
+                    </CardTitle>
+                    <CardDescription>Your unique RIASEC mix</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="h-[200px] -mt-4">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <RadarChart cx="50%" cy="50%" outerRadius="70%" data={riasecChartData}>
+                          <PolarGrid stroke="var(--card-border)" />
+                          <PolarAngleAxis
+                            dataKey="subject"
+                            tick={{ fill: 'var(--foreground-muted)', fontSize: 10 }}
+                          />
+                          <Radar
+                            name="Personality"
+                            dataKey="A"
+                            stroke="var(--primary)"
+                            fill="var(--primary)"
+                            fillOpacity={0.6}
+                          />
+                        </RadarChart>
+                      </ResponsiveContainer>
+                    </div>
+                    <div className="mt-4 p-3 rounded-lg bg-primary/5 border border-primary/10">
+                      <p className="text-xs font-semibold text-primary uppercase tracking-wider mb-1">Dominant Type</p>
+                      <p className="text-sm font-bold text-foreground">{dominantType}</p>
+                      <p className="text-xs text-foreground-muted mt-1">
+                        Your profile shows a strong alignment with {dominantType.toLowerCase()} environments.
+                      </p>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
               {/* Recent Activity */}
               <Card className="bg-card border-card-border">
                 <CardHeader>
@@ -852,37 +902,37 @@ const StudentDashboard = () => {
                       const timeAgo = getTimeAgo(activity.created_at);
 
                       return (
-                    <div key={activity.id} className="flex items-start gap-3 p-3 rounded-lg hover:bg-muted/50 transition-colors duration-200">
+                        <div key={activity.id} className="flex items-start gap-3 p-3 rounded-lg hover:bg-muted/50 transition-colors duration-200">
                           <div className={`w-10 h-10 rounded-lg ${activityConfig.bgColor} flex items-center justify-center flex-shrink-0`}>
                             <IconComponent className={`w-5 h-5 ${activityConfig.color}`} />
-                      </div>
-                      <div className="flex-1 min-w-0">
+                          </div>
+                          <div className="flex-1 min-w-0">
                             <p className="font-medium text-sm text-foreground truncate">{activity.activity_title}</p>
                             <p className="text-xs text-foreground-muted mt-1">{activity.activity_description}</p>
-                        <div className="flex items-center justify-between mt-2">
+                            <div className="flex items-center justify-between mt-2">
                               <p className="text-xs text-foreground-muted">{timeAgo}</p>
-                          {activity.progress_percentage && activity.progress_percentage > 0 ? (
-                            <div className="flex items-center gap-1">
-                              <div className="w-16 h-1.5 bg-muted rounded-full overflow-hidden">
-                                <div
-                                  className="h-full bg-gradient-to-r from-blue-500 to-purple-500 rounded-full transition-all duration-500"
-                                  style={{ width: `${activity.progress_percentage}%` }}
-                                />
-                              </div>
-                              <span className="text-xs font-medium text-foreground-muted">{activity.progress_percentage}%</span>
+                              {activity.progress_percentage && activity.progress_percentage > 0 ? (
+                                <div className="flex items-center gap-1">
+                                  <div className="w-16 h-1.5 bg-muted rounded-full overflow-hidden">
+                                    <div
+                                      className="h-full bg-gradient-to-r from-blue-500 to-purple-500 rounded-full transition-all duration-500"
+                                      style={{ width: `${activity.progress_percentage}%` }}
+                                    />
+                                  </div>
+                                  <span className="text-xs font-medium text-foreground-muted">{activity.progress_percentage}%</span>
+                                </div>
+                              ) : (
+                                <div className="text-xs text-foreground-muted">Completed</div>
+                              )}
                             </div>
-                          ) : (
-                            <div className="text-xs text-foreground-muted">Completed</div>
-                          )}
+                          </div>
                         </div>
-                      </div>
-                    </div>
                       );
                     })
                   )}
-                  <Button 
-                    variant="ghost" 
-                    className="w-full mt-4" 
+                  <Button
+                    variant="ghost"
+                    className="w-full mt-4"
                     size="sm"
                     onClick={() => trackButtonClick('View All Activity', 'Recent Activity')}
                   >
@@ -908,7 +958,7 @@ const StudentDashboard = () => {
                 </CardHeader>
                 <CardContent>
                   <p className="text-sm text-foreground-muted mb-4">Complete our comprehensive career assessment to get personalized recommendations.</p>
-                  <Button 
+                  <Button
                     className="w-full bg-blue-600 hover:bg-blue-700"
                     onClick={() => {
                       trackButtonClick('Start Assessment', 'Action Cards')
@@ -934,7 +984,7 @@ const StudentDashboard = () => {
                 </CardHeader>
                 <CardContent>
                   <p className="text-sm text-foreground-muted mb-4">Learn about Senior Secondary pathways and university requirements.</p>
-                  <Button 
+                  <Button
                     className="w-full bg-green-600 hover:bg-green-700"
                     onClick={() => {
                       trackButtonClick('Explore Paths', 'Action Cards')
@@ -960,8 +1010,8 @@ const StudentDashboard = () => {
                 </CardHeader>
                 <CardContent>
                   <p className="text-sm text-foreground-muted mb-4">Get personalized career advice from our AI counselor.</p>
-                  <Button 
-                    className="w-full bg-purple-600 hover:bg-purple-700" 
+                  <Button
+                    className="w-full bg-purple-600 hover:bg-purple-700"
                     onClick={() => {
                       setActiveTab('chat')
                       trackButtonClick('Start Chat', 'Action Cards')
@@ -992,32 +1042,32 @@ const StudentDashboard = () => {
                               {career.value}% Match
                             </Badge>
                             <div className="w-20 h-2 bg-muted rounded-full overflow-hidden">
-                          <div
-                            className="h-full bg-gradient-to-r from-blue-500 to-purple-500 rounded-full transition-all duration-500"
-                            style={{ width: `${career.value}%` }}
-                          />
-                        </div>
+                              <div
+                                className="h-full bg-gradient-to-r from-blue-500 to-purple-500 rounded-full transition-all duration-500"
+                                style={{ width: `${career.value}%` }}
+                              />
+                            </div>
                           </div>
                         </div>
                       </div>
                     </div>
                   </CardHeader>
-                  
+
                   <CardContent className="space-y-4">
                     <p className="text-sm text-foreground-muted leading-relaxed">
                       {career.description || "A promising career path that aligns with your CBE pathway and interests, offering strong growth potential in Kenya's evolving job market."}
                     </p>
-                    
+
                     {/* Key Information Grid */}
                     <div className="grid grid-cols-2 gap-3">
                       <div className="p-3 rounded-lg bg-green-50 border border-green-200">
                         <div className="flex items-center gap-2 mb-1">
                           <DollarSign className="w-4 h-4 text-green-600" />
                           <span className="text-xs font-medium text-green-800">Salary Range</span>
-                    </div>
+                        </div>
                         <p className="text-sm font-semibold text-green-700">{career.salaryRange || 'KSh 60K - 200K'}</p>
-                    </div>
-                      
+                      </div>
+
                       <div className="p-3 rounded-lg bg-blue-50 border border-blue-200">
                         <div className="flex items-center gap-2 mb-1">
                           <TrendingUp className="w-4 h-4 text-blue-600" />
@@ -1026,7 +1076,7 @@ const StudentDashboard = () => {
                         <p className="text-sm font-semibold text-blue-700">{career.growth || 'High Growth'}</p>
                       </div>
                     </div>
-                    
+
                     {/* Education Requirement */}
                     <div className="p-3 rounded-lg bg-purple-50 border border-purple-200">
                       <div className="flex items-center gap-2 mb-1">
@@ -1035,7 +1085,7 @@ const StudentDashboard = () => {
                       </div>
                       <p className="text-sm text-purple-700">{career.education || "Bachelor's Degree Required"}</p>
                     </div>
-                    
+
                     {/* Action Button */}
                     <Button variant="outline" className="w-full group-hover:bg-primary group-hover:text-primary-foreground transition-colors duration-200">
                       <Target className="w-4 h-4 mr-2" />
@@ -1066,7 +1116,7 @@ const StudentDashboard = () => {
                   <CardDescription>AI-curated courses based on your profile and career interests</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <CourseRecommendations 
+                  <CourseRecommendations
                     careerInterests={profile?.career_interests || profile?.interests}
                     cbeSubjects={profile?.cbe_subjects || profile?.subjects}
                     strongSubjects={[]} // This will be populated from grades data
@@ -1085,7 +1135,7 @@ const StudentDashboard = () => {
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="space-y-2 sm:space-y-3">
-                    <div 
+                    <div
                       className="flex flex-col sm:flex-row items-center justify-between p-3 rounded-lg bg-blue-50 border border-blue-200 cursor-pointer hover:bg-blue-100 transition-colors mt-2 sm:mt-0"
                       onClick={() => {
                         setIsGradesModalOpen(true)
@@ -1093,12 +1143,12 @@ const StudentDashboard = () => {
                       }}
                     >
                       <div className="flex items-center space-x-2">
-                      <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                        <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
                         <span className="text-sm sm:text-base font-medium">Record your academic grades</span>
                       </div>
                       <ArrowRight className="w-4 h-4 text-blue-500 mt-2 sm:mt-0" />
                     </div>
-                    <div 
+                    <div
                       className="flex flex-col sm:flex-row items-center justify-between p-3 rounded-lg bg-green-50 border border-green-200 cursor-pointer hover:bg-green-100 transition-colors"
                       onClick={() => {
                         setActiveTab('chat')
@@ -1107,11 +1157,11 @@ const StudentDashboard = () => {
                     >
                       <div className="flex items-center space-x-3">
                         <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                      <span className="text-sm font-medium">Complete Skills Assessment</span>
-                    </div>
+                        <span className="text-sm font-medium">Complete Skills Assessment</span>
+                      </div>
                       <ArrowRight className="w-4 h-4 text-green-500" />
                     </div>
-                    <div 
+                    <div
                       className="flex flex-col sm:flex-row items-center justify-between p-3 rounded-lg bg-purple-50 border border-purple-200 cursor-pointer hover:bg-purple-100 transition-colors"
                       onClick={() => {
                         setActiveTab('careers')
@@ -1121,12 +1171,12 @@ const StudentDashboard = () => {
                       <div className="flex items-center space-x-3">
                         <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
                         <span className="text-sm font-medium">Explore university programs</span>
-                    </div>
+                      </div>
                       <ArrowRight className="w-4 h-4 text-purple-500" />
-                  </div>
+                    </div>
                   </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3 mt-3 sm:mt-4">
-                    <Button 
+                    <Button
                       className="w-full min-h-[44px]"
                       onClick={() => {
                         setActiveTab('chat')
@@ -1134,7 +1184,7 @@ const StudentDashboard = () => {
                       }}
                     >
                       Start Assessment <ArrowRight className="w-4 h-4 ml-1" />
-                  </Button>
+                    </Button>
                     <Button
                       variant="outline"
                       className="w-full min-h-[44px]"
