@@ -25,8 +25,9 @@ interface Profile {
   career_goals?: string
   assessment_results?: {
     riasec_scores: Record<string, number>
-    personality_type: string
+    personality_type: string[]
     values: string[]
+    constraints: string[]
   } | null
   payment_status?: 'pending' | 'completed' | 'failed' | 'refunded'
   payment_reference?: string

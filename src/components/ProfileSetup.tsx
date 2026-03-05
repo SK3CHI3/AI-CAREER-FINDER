@@ -11,11 +11,11 @@ import { Textarea } from '@/components/ui/textarea'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
-import { Loader2, CheckCircle, User, BookOpen, Target, Sparkles, Brain, Briefcase, Heart, Lightbulb, Compass, ChevronRight, ChevronLeft } from 'lucide-react'
+import { Loader2, CheckCircle, User, BookOpen, Target, Sparkles, Brain, Briefcase, Heart, Lightbulb, Compass, ChevronRight, ChevronLeft, Shield, Globe, Coins } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
 import { supabase } from '@/lib/supabase'
 import { dashboardService, CbeSubject, CareerInterest } from '@/lib/dashboard-service'
-import { RIASEC_ACTIVITIES, RIASEC_LABELS } from '@/data/riasec-assessment'
+import { RIASEC_ACTIVITIES, RIASEC_LABELS, CAREER_VALUES, CONTEXTUAL_CONSTRAINTS } from '@/data/riasec-assessment'
 
 const profileSchema = z.object({
   phone: z.string().min(10, 'Please enter a valid phone number (e.g. 0712345678)'),
@@ -95,6 +95,8 @@ export const ProfileSetup: React.FC<ProfileSetupProps> = ({ onComplete }) => {
   const [selectedSubjects, setSelectedSubjects] = useState<string[]>([])
   const [selectedInterests, setSelectedInterests] = useState<string[]>([])
   const [selectedActivities, setSelectedActivities] = useState<string[]>([])
+  const [selectedValues, setSelectedValues] = useState<string[]>([])
+  const [selectedConstraints, setSelectedConstraints] = useState<string[]>([])
   const [currentStep, setCurrentStep] = useState(1)
   const [dynamicSubjects, setDynamicSubjects] = useState<CbeSubject[]>([])
   const [dynamicInterests, setDynamicInterests] = useState<CareerInterest[]>([])
@@ -198,7 +200,9 @@ export const ProfileSetup: React.FC<ProfileSetupProps> = ({ onComplete }) => {
           riasec_scores: scores,
           personality_type: personalityTypes,
           interests: selectedInterests,
-          subjects: selectedSubjects
+          subjects: selectedSubjects,
+          values: selectedValues,
+          constraints: selectedConstraints,
         },
         updated_at: new Date().toISOString()
       }
@@ -260,6 +264,18 @@ export const ProfileSetup: React.FC<ProfileSetupProps> = ({ onComplete }) => {
     setValue('interests', updated)
   }
 
+  const handleValueToggle = (valueId: string) => {
+    setSelectedValues(prev =>
+      prev.includes(valueId) ? prev.filter(v => v !== valueId) : [...prev, valueId]
+    )
+  }
+
+  const handleConstraintToggle = (constraintId: string) => {
+    setSelectedConstraints(prev =>
+      prev.includes(constraintId) ? prev.filter(c => c !== constraintId) : [...prev, constraintId]
+    )
+  }
+
   return (
     <div className="max-w-4xl mx-auto p-6">
       <Card className="bg-gradient-surface border-card-border">
@@ -276,14 +292,14 @@ export const ProfileSetup: React.FC<ProfileSetupProps> = ({ onComplete }) => {
         <CardContent>
           {/* Step Indicator */}
           <div className="flex items-center justify-center gap-3 mb-10">
-            {[1, 2, 3].map((s) => (
+            {[1, 2, 3, 4].map((s) => (
               <div key={s} className="flex items-center">
                 <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold transition-all ${currentStep === s ? 'bg-primary text-primary-foreground scale-110 shadow-lg' :
-                    currentStep > s ? 'bg-green-500 text-white' : 'bg-muted text-foreground-muted'
+                  currentStep > s ? 'bg-green-500 text-white' : 'bg-muted text-foreground-muted'
                   }`}>
                   {currentStep > s ? <CheckCircle className="w-5 h-5" /> : s}
                 </div>
-                {s < 3 && <div className={`h-0.5 w-12 mx-1 rounded-full ${currentStep > s ? 'bg-green-500' : 'bg-muted'}`} />}
+                {s < 4 && <div className={`h-0.5 w-12 mx-1 rounded-full ${currentStep > s ? 'bg-green-500' : 'bg-muted'}`} />}
               </div>
             ))}
           </div>
@@ -333,8 +349,8 @@ export const ProfileSetup: React.FC<ProfileSetupProps> = ({ onComplete }) => {
                         key={level.value}
                         onClick={() => setValue('schoolLevel', level.value as any)}
                         className={`p-4 rounded-xl border-2 cursor-pointer transition-all flex items-center justify-between group ${schoolLevel === level.value
-                            ? 'border-primary bg-primary/5'
-                            : 'border-card-border hover:border-primary/40'
+                          ? 'border-primary bg-primary/5'
+                          : 'border-card-border hover:border-primary/40'
                           }`}
                       >
                         <div>
@@ -386,8 +402,8 @@ export const ProfileSetup: React.FC<ProfileSetupProps> = ({ onComplete }) => {
                         key={s.id}
                         onClick={() => handleSubjectToggle(s.subject_name)}
                         className={`p-3 rounded-lg border text-center cursor-pointer transition-all text-sm font-medium ${selectedSubjects.includes(s.subject_name)
-                            ? 'bg-primary text-primary-foreground border-primary shadow-sm'
-                            : 'bg-background border-card-border hover:border-primary/50'
+                          ? 'bg-primary text-primary-foreground border-primary shadow-sm'
+                          : 'bg-background border-card-border hover:border-primary/50'
                           }`}
                       >
                         {s.subject_name}
@@ -417,8 +433,8 @@ export const ProfileSetup: React.FC<ProfileSetupProps> = ({ onComplete }) => {
                         key={interest.id}
                         onClick={() => handleInterestToggle(interest.interest_name)}
                         className={`p-3 rounded-xl border-2 transition-all cursor-pointer flex items-center justify-between group ${selectedInterests.includes(interest.interest_name)
-                            ? 'bg-secondary/10 border-secondary text-secondary-foreground shadow-sm'
-                            : 'bg-background border-card-border hover:border-secondary/50'
+                          ? 'bg-secondary/10 border-secondary text-secondary-foreground shadow-sm'
+                          : 'bg-background border-card-border hover:border-secondary/50'
                           }`}
                       >
                         <span className="text-sm font-medium">{interest.interest_name}</span>
@@ -430,52 +446,86 @@ export const ProfileSetup: React.FC<ProfileSetupProps> = ({ onComplete }) => {
               </div>
             )}
 
-            {/* STEP 3: Personality Discovery */}
-            {currentStep === 3 && (
-              <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
-                <div className="flex items-center space-x-3 mb-6">
-                  <div className="p-2 bg-purple-500/10 rounded-lg">
-                    <Sparkles className="w-5 h-5 text-purple-500" />
-                  </div>
-                  <div>
-                    <h3 className="text-lg font-semibold">Career Discovery</h3>
-                    <p className="text-sm text-foreground-muted">Select all the activities you enjoy doing</p>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 gap-3 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
-                  {RIASEC_ACTIVITIES.map((activity) => (
-                    <div
-                      key={activity.id}
-                      onClick={() => {
-                        setSelectedActivities(prev =>
-                          prev.includes(activity.id) ? prev.filter(a => a !== activity.id) : [...prev, activity.id]
-                        )
-                      }}
-                      className={`p-4 rounded-xl border-2 flex items-center justify-between cursor-pointer transition-all hover:scale-[1.01] active:scale-95 ${selectedActivities.includes(activity.id)
-                          ? 'bg-gradient-to-r from-purple-500/10 to-blue-500/10 border-purple-500/50 shadow-sm'
-                          : 'bg-background border-card-border hover:border-purple-300'
-                        }`}
-                    >
-                      <span className="text-sm font-medium">{activity.text}</span>
-                      {selectedActivities.includes(activity.id) ? (
-                        <div className="bg-purple-500 text-white rounded-full p-1">
-                          <CheckCircle className="w-4 h-4" />
-                        </div>
-                      ) : (
-                        <div className="w-6 h-6 rounded-full border-2 border-muted" />
-                      )}
+            {/* STEP 4: Values & Real-World Constraints */}
+            {currentStep === 4 && (
+              <div className="space-y-8 animate-in fade-in slide-in-from-right-4 duration-300">
+                <div className="space-y-6">
+                  <div className="flex items-center space-x-3">
+                    <div className="p-2 bg-pink-500/10 rounded-lg">
+                      <Heart className="w-5 h-5 text-pink-500" />
                     </div>
-                  ))}
+                    <div>
+                      <h3 className="text-lg font-semibold">What Matters to You?</h3>
+                      <p className="text-sm text-foreground-muted">Select 3-5 values that define your ideal career</p>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    {CAREER_VALUES.map((value) => (
+                      <div
+                        key={value.id}
+                        onClick={() => handleValueToggle(value.id)}
+                        className={`p-4 rounded-xl border-2 transition-all cursor-pointer flex items-center justify-between group ${selectedValues.includes(value.id)
+                          ? 'bg-pink-500/10 border-pink-500/50 shadow-sm'
+                          : 'bg-background border-card-border hover:border-pink-300'
+                          }`}
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className={`p-2 rounded-lg ${selectedValues.includes(value.id) ? 'bg-pink-500 text-white' : 'bg-muted'}`}>
+                            {value.id === 'v1' && <User className="w-4 h-4" />}
+                            {value.id === 'v2' && <Shield className="w-4 h-4" />}
+                            {value.id === 'v3' && <Globe className="w-4 h-4" />}
+                            {value.id === 'v4' && <Lightbulb className="w-4 h-4" />}
+                            {value.id === 'v5' && <Coins className="w-4 h-4" />}
+                            {value.id === 'v6' && <Heart className="w-4 h-4" />}
+                            {value.id === 'v7' && <Target className="w-4 h-4" />}
+                          </div>
+                          <div>
+                            <p className="text-sm font-semibold">{value.text}</p>
+                            <p className="text-xs text-foreground-muted">{value.description}</p>
+                          </div>
+                        </div>
+                        {selectedValues.includes(value.id) && <CheckCircle className="w-4 h-4 text-pink-500" />}
+                      </div>
+                    ))}
+                  </div>
                 </div>
 
-                <div className="space-y-2 mt-8">
+                <div className="space-y-6">
+                  <div className="flex items-center space-x-3">
+                    <div className="p-2 bg-orange-500/10 rounded-lg">
+                      <Compass className="w-5 h-5 text-orange-500" />
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-semibold">Real-World Context</h3>
+                      <p className="text-sm text-foreground-muted">Any specific constraints or needs we should know about?</p>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-wrap gap-2">
+                    {CONTEXTUAL_CONSTRAINTS.map((c) => (
+                      <Badge
+                        key={c.id}
+                        variant={selectedConstraints.includes(c.id) ? 'default' : 'outline'}
+                        className={`cursor-pointer py-2 px-4 text-sm font-medium transition-all ${selectedConstraints.includes(c.id)
+                          ? 'bg-orange-500 text-white hover:bg-orange-600'
+                          : 'hover:border-orange-500 hover:text-orange-500'
+                          }`}
+                        onClick={() => handleConstraintToggle(c.id)}
+                      >
+                        {c.text}
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="space-y-2">
                   <Label htmlFor="careerGoals" className="flex items-center gap-2">
                     <Lightbulb className="w-4 h-4 text-primary" /> Career Aspirations (Optional)
                   </Label>
                   <Textarea
                     id="careerGoals"
-                    placeholder="Tell us about your dreams..."
+                    placeholder="Tell us about your dreams, challenges, or specific goals..."
                     {...register('careerGoals')}
                     className="bg-background/50"
                     rows={3}
@@ -499,7 +549,7 @@ export const ProfileSetup: React.FC<ProfileSetupProps> = ({ onComplete }) => {
                 <div /> // Spacer
               )}
 
-              {currentStep < 3 ? (
+              {currentStep < 4 ? (
                 <Button
                   type="button"
                   className="bg-gradient-primary text-primary-foreground min-w-[120px]"
@@ -512,6 +562,10 @@ export const ProfileSetup: React.FC<ProfileSetupProps> = ({ onComplete }) => {
                       setError('Please select the required subjects and interests');
                       return;
                     }
+                    if (currentStep === 3 && selectedActivities.length === 0) {
+                      setError('Please select at least a few activities you enjoy');
+                      return;
+                    }
                     setError(null);
                     setCurrentStep(prev => prev + 1);
                   }}
@@ -521,13 +575,13 @@ export const ProfileSetup: React.FC<ProfileSetupProps> = ({ onComplete }) => {
               ) : (
                 <Button
                   type="submit"
-                  disabled={isLoading}
+                  disabled={isLoading || selectedValues.length < 1}
                   className="bg-gradient-primary hover:opacity-90 text-primary-foreground px-8 shadow-lg shadow-primary/20"
                 >
                   {isLoading ? (
-                    <><Loader2 className="mr-2 h-5 w-5 animate-spin" /> Analyzing...</>
+                    <><Loader2 className="mr-2 h-5 w-5 animate-spin" /> Analyzing Realities...</>
                   ) : (
-                    <><Sparkles className="mr-2 h-5 w-5" /> Discover My Career</>
+                    <><Sparkles className="mr-2 h-5 w-5" /> Generate Actionable Guidance</>
                   )}
                 </Button>
               )}

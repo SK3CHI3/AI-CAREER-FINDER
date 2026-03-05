@@ -32,6 +32,7 @@ export interface UserProfile {
     };
     personality_type?: string[]; // e.g., ["Social", "Artistic"]
     values?: string[];
+    constraints?: string[];
     skills?: string[];
     strengths?: string[];
     interests?: string[];

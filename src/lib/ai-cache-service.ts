@@ -9,6 +9,7 @@ export interface CachedCareerRecommendation {
   salary_range?: string
   education?: string
   growth?: string
+  actionability_score?: number
   why_recommended?: string
   created_at?: string
   updated_at?: string
@@ -67,7 +68,7 @@ class AICacheService {
         const invalidatedAt = new Date(invalidation.invalidated_at)
         const now = new Date()
         const hoursSinceInvalidation = (now.getTime() - invalidatedAt.getTime()) / (1000 * 60 * 60)
-        
+
         // If invalidated within the last 24 hours, cache is not valid
         if (hoursSinceInvalidation < this.CACHE_DURATION_HOURS) {
           return false
@@ -92,7 +93,7 @@ class AICacheService {
           cache_type: cacheType,
           reason: reason
         })
-      
+
       if (error) {
         console.warn('Error invalidating cache:', error)
       } else {
@@ -156,10 +157,10 @@ class AICacheService {
         why_recommended: rec.whyRecommended
       }))
 
-      // @ts-ignore - Database types not fully generated
+      // @ts-ignore
       const { error } = await supabase
         .from('cached_career_recommendations')
-        .insert(recommendationsToSave)
+        .insert(recommendationsToSave as any)
 
       if (error) {
         console.warn('Error saving career recommendations:', error)
@@ -193,7 +194,7 @@ class AICacheService {
         return null
       }
 
-      return data?.details ?? null
+      return (data?.details as Record<string, unknown>) ?? null
     } catch (error) {
       console.error('Error getting cached career details:', error)
       return null
@@ -202,13 +203,13 @@ class AICacheService {
 
   async saveCareerDetails(userId: string, careerName: string, details: Record<string, unknown>): Promise<void> {
     try {
-      // @ts-ignore - Database types not fully generated
+      // @ts-ignore
       const { error } = await supabase
         .from('cached_career_details')
         .upsert({
           user_id: userId,
           career_name: careerName,
-          details: details
+          details: details as any
         })
 
       if (error) {
@@ -242,7 +243,7 @@ class AICacheService {
         return null
       }
 
-      return data?.courses ?? null
+      return (data?.courses as Record<string, unknown>[]) ?? null
     } catch (error) {
       console.error('Error getting cached course recommendations:', error)
       return null
@@ -251,12 +252,12 @@ class AICacheService {
 
   async saveCourseRecommendations(userId: string, courses: Record<string, unknown>[]): Promise<void> {
     try {
-      // @ts-ignore - Database types not fully generated
+      // @ts-ignore
       const { error } = await supabase
         .from('cached_course_recommendations')
         .upsert({
           user_id: userId,
-          courses: courses
+          courses: courses as any
         })
 
       if (error) {
@@ -272,11 +273,11 @@ class AICacheService {
   // Invalidate all caches for a user (useful when profile or grades change)
   async invalidateAllCaches(userId: string, reason: string = 'profile_updated'): Promise<void> {
     const cacheTypes = ['career_recommendations', 'career_details', 'course_recommendations']
-    
+
     for (const cacheType of cacheTypes) {
       await this.invalidateCache(userId, cacheType, reason)
     }
-    
+
     console.log(`Invalidated all caches for user ${userId}, reason: ${reason}`)
   }
 
@@ -290,14 +291,14 @@ class AICacheService {
         supabase.from('cached_course_recommendations').delete().eq('user_id', userId),
         supabase.from('cache_invalidation').delete().eq('user_id', userId)
       ])
-      
+
       // Check for any errors
       results.forEach((result, index) => {
         if (result.status === 'rejected') {
           console.warn(`Error clearing cache ${index}:`, result.reason)
         }
       })
-      
+
       console.log(`Cleared all caches for user ${userId}`)
     } catch (error) {
       console.error('Error clearing caches:', error)

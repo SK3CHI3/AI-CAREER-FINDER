@@ -61,6 +61,7 @@ interface CareerDataItem {
   salaryRange?: string
   growth?: string
   education?: string
+  actionabilityScore?: number
 }
 
 const defaultCareerData: CareerDataItem[] = [
@@ -449,7 +450,8 @@ const StudentDashboard = () => {
           description: rec.description || getCareerDescription(rec.career_name),
           salaryRange: rec.salary_range || getCareerSalary(rec.career_name),
           growth: rec.growth || getCareerGrowth(rec.career_name),
-          education: rec.education || getCareerEducation(rec.career_name)
+          education: rec.education || getCareerEducation(rec.career_name),
+          actionabilityScore: rec.actionability_score || 85
         }));
 
         setCareerData(top3);
@@ -496,7 +498,8 @@ const StudentDashboard = () => {
           description: getCareerDescription(rec.title),
           salaryRange: getCareerSalary(rec.title),
           growth: getCareerGrowth(rec.title),
-          education: getCareerEducation(rec.title)
+          education: getCareerEducation(rec.title),
+          actionabilityScore: rec.actionabilityScore || 80
         }));
 
         setCareerData(top3);
@@ -853,9 +856,11 @@ const StudentDashboard = () => {
                     </div>
                     <div className="mt-4 p-3 rounded-lg bg-primary/5 border border-primary/10">
                       <p className="text-xs font-semibold text-primary uppercase tracking-wider mb-1">Dominant Type</p>
-                      <p className="text-sm font-bold text-foreground">{dominantType}</p>
+                      <p className="text-sm font-bold text-foreground">
+                        {Array.isArray(dominantType) ? dominantType.join(' / ') : dominantType}
+                      </p>
                       <p className="text-xs text-foreground-muted mt-1">
-                        Your profile shows a strong alignment with {dominantType.toLowerCase()} environments.
+                        Your profile shows a strong alignment with {Array.isArray(dominantType) ? dominantType.join(', ').toLowerCase() : dominantType.toLowerCase()} environments.
                       </p>
                     </div>
                   </CardContent>
@@ -1037,15 +1042,28 @@ const StudentDashboard = () => {
                         </div>
                         <div className="flex-1">
                           <CardTitle className="text-xl font-bold mb-1">{career.name}</CardTitle>
-                          <div className="flex items-center gap-2">
-                            <Badge variant="secondary" className="text-xs">
-                              {career.value}% Match
-                            </Badge>
-                            <div className="w-20 h-2 bg-muted rounded-full overflow-hidden">
-                              <div
-                                className="h-full bg-gradient-to-r from-blue-500 to-purple-500 rounded-full transition-all duration-500"
-                                style={{ width: `${career.value}%` }}
-                              />
+                          <div className="flex flex-col gap-2">
+                            <div className="flex items-center gap-2">
+                              <Badge variant="secondary" className="text-[10px] h-5">
+                                {career.value}% Match
+                              </Badge>
+                              <div className="w-16 h-1.5 bg-muted rounded-full overflow-hidden">
+                                <div
+                                  className="h-full bg-gradient-to-r from-blue-500 to-purple-500 rounded-full transition-all duration-500"
+                                  style={{ width: `${career.value}%` }}
+                                />
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <Badge variant="outline" className="text-[10px] h-5 border-orange-200 text-orange-700 bg-orange-50">
+                                {career.actionabilityScore || 85}% Actionable
+                              </Badge>
+                              <div className="w-16 h-1.5 bg-muted rounded-full overflow-hidden">
+                                <div
+                                  className="h-full bg-orange-400 rounded-full transition-all duration-500"
+                                  style={{ width: `${career.actionabilityScore || 85}%` }}
+                                />
+                              </div>
                             </div>
                           </div>
                         </div>
