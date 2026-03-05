@@ -231,6 +231,64 @@ CRITICAL: Ask only ONE question per response. Be curious, realistic, and empathe
     }
   }
 
+  async generateTeacherInsights(userContext: UserContext): Promise<string> {
+    try {
+      const assessmentInfo = userContext.assessmentResults ? `
+ASSESSMENT DATA:
+- Personality (RIASEC): ${userContext.assessmentResults.personality_type?.join(', ') || 'Not assessed'}
+- Core Values: ${userContext.assessmentResults.values?.join(', ') || 'Not assessed'}
+- Constraints: ${userContext.assessmentResults.constraints?.join(', ') || 'None stated'}
+` : ''
+
+      const academicInfo = userContext.academicPerformance ? `
+ACADEMIC PERFORMANCE:
+- Overall Average: ${userContext.academicPerformance.overallAverage.toFixed(1)}%
+- Strong Subjects: ${userContext.academicPerformance.strongSubjects.join(', ') || 'None identified'}
+- Weak Subjects: ${userContext.academicPerformance.weakSubjects.join(', ') || 'None identified'}
+- Performance Trend: ${userContext.academicPerformance.performanceTrend}
+` : ''
+
+      const prompt = `You are a Senior Pedagogical Consultant & Career Mentor. Your task is to provide a Teacher with specific, actionable guidance strategies for a student named ${userContext.name || 'this student'}.
+
+STUDENT PROFILE:
+${userContext.schoolLevel ? `- Level: ${userContext.schoolLevel}` : ''} ${userContext.currentGrade ? `(Grade ${userContext.currentGrade})` : ''}
+- Career Interests: ${userContext.interests?.join(', ') || 'Not specified'}
+${assessmentInfo}
+${academicInfo}
+
+TASK:
+Provide a strategic "Teacher Guidance Report" that is realistic and tactical.
+
+STRUCTURE YOUR RESPONSE IN THESE SECTIONS (NO MARKDOWN ** or ##):
+
+1. STUDENT TRIANGULATION SUMMARY
+A one-sentence summary of who this student is based on the intersection of their personality, academics, and practical constraints.
+
+2. PEDAGOGICAL TACTICS
+Provide 3 concrete classroom or school-level actions the teacher can take to support this student's specific career trajectory.
+If they are weak in a subject core to their goal, suggest a specific remedial approach.
+If they have financial/geographical constraints, suggest specific resources (TVET, bursaries, digital skills).
+
+3. MENTORSHIP TALKING POINTS
+Provide 2-3 specific questions or topics the teacher should bring up in a 1-on-1 mentorship session.
+
+4. REAL-WORLD REALITY CHECK
+Highlight one major opportunity or hurdle the teacher should prepare the student for (e.g., automation risk, market demand in Kenya).
+
+FORMATTING:
+- Use clear headings in ALL CAPS.
+- No markdown bolding or subheadings.
+- Use emojis for readability.
+- Keep sentences professional but warm.`
+
+      const response = await this.sendMessage(prompt, [], userContext)
+      return response
+    } catch (error) {
+      console.error('Failed to generate teacher insights:', error)
+      return "I'm sorry, I couldn't generate insights for this student right now. Please check if the student has completed their profile and grades are uploaded."
+    }
+  }
+
   async generateCareerRecommendations(userContext: UserContext): Promise<any[]> {
     try {
       const assessmentInfo = userContext.assessmentResults ? `
@@ -258,11 +316,12 @@ Instructions:
 1. High Value Fit: Ensure the career matches their core values (e.g., stability vs. autonomy).
 2. Feasibility Check: Filter careers based on constraints (e.g., if they need scholarships, prioritize TVET or high-grant fields).
 3. Market Reality: Recommend careers with strong growth in Kenya (Vision 2030 pillars).
-4. For each career, explain "whyRecommended" by explaining the specific alignment with their RIASEC types AND their core values.
-5. Provide an "actionabilityScore" (1-100) reflecting how easily they can pursue this given their constraints.
+4. Growth Trajectory: Evaluate if the career offers long-term growth and transition paths as the person evolves.
+5. For each career, explain "whyRecommended" by explaining the specific alignment with their RIASEC types AND their core values.
+6. Provide an "actionabilityScore" (1-100) reflecting how easily they can pursue this given their constraints.
 
 Return exactly this format:
-[{"title":"Career Name","matchPercentage":85,"actionabilityScore":90,"description":"Short description","salaryRange":"KSh range","education":"Required path","whyRecommended":"Detailed explanation including RIASEC fit, Value alignment, and Market feasibility"}]`
+[{"title":"Career Name","matchPercentage":85,"actionabilityScore":90,"description":"Short description","salaryRange":"KSh range","education":"Required path","whyRecommended":"Detailed explanation including RIASEC fit, Value alignment, Growth Trajectory, and Market feasibility"}]`
 
       const response = await this.sendMessage(prompt, [], userContext)
 

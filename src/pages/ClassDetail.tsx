@@ -4,6 +4,7 @@ import { useAuth } from '@/contexts/AuthContext'
 import { classService, type ClassRecord, type StudentInClass } from '@/lib/class-service'
 import { gradeUploadService } from '@/lib/grade-upload-service'
 import GradeUpload from '@/components/teacher/GradeUpload'
+import StudentInsightDialog from '@/components/teacher/StudentInsightDialog'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -17,7 +18,7 @@ import { Textarea } from '@/components/ui/textarea'
 import {
     Bot, ArrowLeft, Users, Upload, UserPlus, Trash2,
     Loader2, CheckCircle2, FileSpreadsheet, PencilLine,
-    BookOpen, RefreshCw, AlertCircle
+    BookOpen, RefreshCw, AlertCircle, Sparkles
 } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
 
@@ -57,6 +58,11 @@ const ClassDetail: React.FC = () => {
     })
     const [gradeLoading, setGradeLoading] = useState(false)
     const [editingGradeId, setEditingGradeId] = useState<string | null>(null)
+
+    // AI Insight state
+    const [insightDialogOpen, setInsightDialogOpen] = useState(false)
+    const [insightStudentId, setInsightStudentId] = useState('')
+    const [insightStudentName, setInsightStudentName] = useState('')
 
     const loadData = useCallback(async () => {
         if (!classId) return
@@ -114,6 +120,12 @@ const ClassDetail: React.FC = () => {
         setGradeForm({ subject_name: '', term: 'Term 1', academic_year: CURRENT_YEAR, grade_value: '', max_marks: '100', exam_type: 'End Term', teacher_comment: '' })
         setEditingGradeId(null)
         setGradeDialogOpen(true)
+    }
+
+    const openInsightDialog = (student: StudentInClass) => {
+        setInsightStudentId(student.user_id || '')
+        setInsightStudentName(student.full_name ?? student.phone ?? student.email ?? 'Unknown Student')
+        setInsightDialogOpen(true)
     }
 
     const openEditGrade = (grade: any) => {
@@ -284,7 +296,16 @@ const ClassDetail: React.FC = () => {
                                                 </div>
                                                 <div className="flex items-center gap-2">
                                                     <Badge variant="outline" className="text-xs">{s.source}</Badge>
-                                                    <Button variant="ghost" size="sm" className="gap-1 text-primary" onClick={() => openGradeDialog(s)}>
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="sm"
+                                                        className="gap-1 text-primary hover:text-primary hover:bg-primary/10"
+                                                        onClick={() => openInsightDialog(s)}
+                                                        disabled={!s.user_id}
+                                                    >
+                                                        <Sparkles className="w-3.5 h-3.5" /> AI Insights
+                                                    </Button>
+                                                    <Button variant="ghost" size="sm" className="gap-1 text-foreground-muted" onClick={() => openGradeDialog(s)}>
                                                         <PencilLine className="w-3.5 h-3.5" /> Add Grade
                                                     </Button>
                                                     <Button variant="ghost" size="icon" className="w-8 h-8 text-destructive" onClick={() => handleRemoveStudent(s.id, s.full_name ?? s.phone ?? '')}>
@@ -471,6 +492,13 @@ const ClassDetail: React.FC = () => {
                     </div>
                 </DialogContent>
             </Dialog>
+
+            <StudentInsightDialog
+                isOpen={insightDialogOpen}
+                onClose={() => setInsightDialogOpen(false)}
+                studentId={insightStudentId}
+                studentName={insightStudentName}
+            />
         </div>
     )
 }

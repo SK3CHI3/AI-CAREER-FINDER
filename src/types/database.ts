@@ -16,11 +16,17 @@ export interface UserProfile {
   id: string;
   user_id: string;
   name?: string;
+  full_name?: string;
+  phone?: string;
+  email?: string;
+  avatar_url?: string;
   school_level?: 'primary' | 'secondary' | 'tertiary';
   current_grade?: string;
   subjects?: string[];
   interests?: string[];
   career_goals?: string;
+  strengths?: string[];
+  challenges?: string[];
   assessment_results?: {
     riasec_scores?: {
       realistic: number;

@@ -473,7 +473,7 @@ const StudentDashboard = () => {
         subjects: profileData.cbe_subjects || profileData.subjects || undefined,
         interests: profileData.career_interests || profileData.interests || undefined,
         careerGoals: profileData.career_goals || undefined,
-        assessmentResults: profileData.assessment_scores,
+        assessmentResults: profileData.assessment_results,
         academicPerformance: {
           overallAverage: academicPerformance.overallAverage,
           strongSubjects: academicPerformance.strongSubjects,
