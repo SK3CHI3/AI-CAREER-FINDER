@@ -13,7 +13,7 @@ const blocks = [
   {
     title: "Learn with purpose",
     desc: "Choose Senior School or TVET routes that map directly to real roles.",
-    image: "https://images.unsplash.com/photo-1529336953121-4ca0ddbca6c1?q=80&w=1600&auto=format&fit=crop",
+    image: "https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?q=80&w=1600&auto=format&fit=crop",
     icon: GraduationCap,
     cta: "View learning paths",
   },

@@ -15,12 +15,11 @@ const Hero = () => {
         <div className="grid lg:grid-cols-2 gap-12 items-center">
           {/* Left Content */}
           <div className="space-y-8">
-            <h1 className="text-4xl sm:text-6xl lg:text-7xl font-bold leading-tight tracking-tight">
+            <h1 className="text-4xl sm:text-6xl lg:text-7xl font-bold leading-tight tracking-tight max-w-4xl">
               Give Your School{" "}
               <span className="bg-gradient-text bg-clip-text text-transparent">
-                AI-Powered Career
-              </span>{" "}
-              Guidance
+                AI-Powered Career Guidance
+              </span>
             </h1>
 
             <p className="text-lg sm:text-xl text-foreground-muted leading-relaxed max-w-2xl">
@@ -57,9 +56,9 @@ const Hero = () => {
           <div className="relative">
             <div className="relative z-10">
               <img
-                src="/images/hero-interface.png"
-                alt="AI Career Guidance Platform - Mobile App Interface with Career Icons"
-                className="w-full h-auto rounded-2xl shadow-elevated"
+                src="/images/hero-dashboard.png"
+                alt="CareerPath AI Platform - Advanced Student Dashboard Mockup showing RIASEC scores and career pathing"
+                className="w-full h-auto rounded-2xl shadow-elevated border border-card-border/50"
               />
             </div>
             {/* Decorative Elements */}

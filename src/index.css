@@ -7,13 +7,13 @@
 @layer base {
   :root {
     /* Core Brand Colors */
-    --primary: 228 94% 67%; /* Vibrant blue for AI/tech */
-    --primary-foreground: 0 0% 100%;
-    --primary-glow: 228 100% 80%;
+    --primary: 221.2 83.2% 53.3%; /* Professional Blue */
+    --primary-foreground: 210 40% 98%;
+    --primary-glow: 221.2 83.2% 70%;
     
     /* Secondary - Kenyan inspired accent */
-    --secondary: 142 69% 58%; /* Professional green */
-    --secondary-foreground: 0 0% 100%;
+    --secondary: 142.1 76.2% 36.3%; /* Professional Deep Green */
+    --secondary-foreground: 355.7 100% 97.3%;
     
     /* Backgrounds */
     --background: 240 10% 4%; /* Deep dark for modern feel */
@@ -47,12 +47,12 @@
     --ring: 228 94% 67%;
     
     /* Gradients */
-    --gradient-primary: linear-gradient(135deg, hsl(210 100% 56%) 0%, hsl(195 100% 50%) 35%, hsl(142 69% 58%) 100%);
-    --gradient-surface: linear-gradient(135deg, hsl(240 8% 12%) 0%, hsl(240 6% 16%) 50%, hsl(228 94% 67% / 0.05) 100%);
-    --gradient-hero: linear-gradient(135deg, hsl(240 10% 4%) 0%, hsl(228 94% 67% / 0.08) 25%, hsl(270 95% 75% / 0.05) 50%, hsl(142 69% 58% / 0.03) 75%, hsl(240 8% 12%) 100%);
-    --gradient-page-subtle: linear-gradient(135deg, hsl(240 10% 4%) 0%, hsl(228 94% 67% / 0.06) 20%, hsl(142 69% 58% / 0.04) 40%, hsl(228 94% 67% / 0.05) 60%, hsl(142 69% 58% / 0.03) 80%, hsl(240 8% 12%) 100%);
-    --gradient-homepage: linear-gradient(135deg, hsl(240 10% 4%) 0%, hsl(142 69% 58% / 0.20) 20%, hsl(228 94% 67% / 0.25) 40%, hsl(142 69% 58% / 0.18) 60%, hsl(228 94% 67% / 0.15) 80%, hsl(240 8% 12%) 100%);
-    --gradient-text: linear-gradient(135deg, hsl(210 100% 65%) 0%, hsl(142 69% 65%) 100%);
+    --gradient-primary: linear-gradient(135deg, hsl(221.2 83.2% 53.3%) 0%, hsl(221.2 83.2% 43.3%) 100%);
+    --gradient-surface: linear-gradient(135deg, hsl(240 8% 12%) 0%, hsl(240 6% 16%) 50%, hsl(221.2 83.2% 53.3% / 0.05) 100%);
+    --gradient-hero: linear-gradient(135deg, hsl(240 10% 4%) 0%, hsl(221.2 83.2% 53.3% / 0.1) 25%, hsl(142.1 76.2% 36.3% / 0.05) 50%, hsl(221.2 83.2% 53.3% / 0.05) 75%, hsl(240 8% 12%) 100%);
+    --gradient-page-subtle: linear-gradient(135deg, hsl(240 10% 4%) 0%, hsl(221.2 83.2% 53.3% / 0.06) 20%, hsl(142.1 76.2% 36.3% / 0.04) 40%, hsl(221.2 83.2% 53.3% / 0.05) 60%, hsl(142.1 76.2% 36.3% / 0.03) 80%, hsl(240 8% 12%) 100%);
+    --gradient-homepage: linear-gradient(135deg, hsl(240 10% 4%) 0%, hsl(142.1 76.2% 36.3% / 0.15) 20%, hsl(221.2 83.2% 53.3% / 0.2) 40%, hsl(142.1 76.2% 36.3% / 0.12) 60%, hsl(221.2 83.2% 53.3% / 0.1) 80%, hsl(240 8% 12%) 100%);
+    --gradient-text: linear-gradient(135deg, hsl(221.2 83.2% 63.3%) 0%, hsl(142.1 76.2% 46.3%) 100%);
 
     /* Shadows */
     --shadow-glow: 0 0 50px hsl(228 94% 67% / 0.3);

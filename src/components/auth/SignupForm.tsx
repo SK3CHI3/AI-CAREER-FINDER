@@ -99,8 +99,8 @@ export const SignupForm: React.FC<SignupFormProps> = ({ onToggleMode }) => {
               <div
                 onClick={() => setValue('role', 'student')}
                 className={`cursor-pointer rounded-xl border-2 p-4 transition-all duration-200 flex flex-col items-center gap-2 group ${selectedRole === 'student'
-                    ? 'border-primary bg-primary/5'
-                    : 'border-card-border hover:border-primary/40 text-muted-foreground'
+                  ? 'border-primary bg-primary/5'
+                  : 'border-card-border hover:border-primary/40 text-muted-foreground'
                   }`}
               >
                 <div className={`w-10 h-10 rounded-full flex items-center justify-center transition-colors ${selectedRole === 'student' ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground group-hover:bg-primary/20'
@@ -121,8 +121,8 @@ export const SignupForm: React.FC<SignupFormProps> = ({ onToggleMode }) => {
               <div
                 onClick={() => setValue('role', 'school')}
                 className={`cursor-pointer rounded-xl border-2 p-4 transition-all duration-200 flex flex-col items-center gap-2 group relative ${selectedRole === 'school'
-                    ? 'border-primary bg-primary/5'
-                    : 'border-card-border hover:border-primary/40 text-muted-foreground'
+                  ? 'border-primary bg-primary/5'
+                  : 'border-card-border hover:border-primary/40 text-muted-foreground'
                   }`}
               >
                 <div className={`w-10 h-10 rounded-full flex items-center justify-center transition-colors ${selectedRole === 'school' ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground group-hover:bg-primary/20'
@@ -143,11 +143,11 @@ export const SignupForm: React.FC<SignupFormProps> = ({ onToggleMode }) => {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="fullName">Full Name</Label>
+            <Label htmlFor="name">{selectedRole === 'school' ? 'School Name' : 'Full Name'}</Label>
             <Input
-              id="fullName"
+              id="name"
               type="text"
-              placeholder="Enter your full name"
+              placeholder={selectedRole === 'school' ? 'Enter the name of your school' : 'Enter your full name'}
               {...register('fullName')}
               disabled={isLoading}
             />

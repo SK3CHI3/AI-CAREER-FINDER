@@ -8,26 +8,25 @@ const logos = [
 
 const LogosBand = () => {
   return (
-    <section className="py-12 border-t border-card-border bg-surface/50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center text-sm text-foreground-muted mb-8">
-          Recognised by learners and institutions across Kenya
+    <section className="py-16 border-y border-card-border bg-surface/80 relative">
+      <div className="absolute inset-0 bg-primary/5 pointer-events-none"></div>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+        <div className="text-center text-sm font-semibold text-primary uppercase tracking-widest mb-10">
+          Aligned with Kenya’s National Curriculum Framework (CBE)
         </div>
-        
+
         {/* Desktop Grid */}
         <div className="hidden sm:grid grid-cols-2 md:grid-cols-4 gap-8 items-center justify-items-center">
           {logos.map((logo, i) => (
-            <div 
-              key={i} 
+            <div
+              key={i}
               className="group w-24 h-24 rounded-full overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-110"
             >
-              <img 
-                src={logo.src} 
-                alt={logo.alt} 
-                className="w-full h-full object-cover transition-all duration-300" 
-                onLoad={() => console.log(`✅ Logo loaded: ${logo.name}`)}
+              <img
+                src={logo.src}
+                alt={logo.alt}
+                className="w-full h-full object-cover transition-all duration-300"
                 onError={(e) => {
-                  console.error(`❌ Logo failed to load: ${logo.src}`);
                   // Fallback to text if image fails to load
                   const target = e.target as HTMLImageElement;
                   target.style.display = 'none';
@@ -49,17 +48,15 @@ const LogosBand = () => {
             }}>
               {/* First set of logos */}
               {logos.map((logo, i) => (
-                <div 
+                <div
                   key={`first-${i}`}
                   className="flex-shrink-0 w-20 h-20 rounded-full overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300"
                 >
-                  <img 
-                    src={logo.src} 
-                    alt={logo.alt} 
-                    className="w-full h-full object-cover" 
-                    onLoad={() => console.log(`✅ Mobile logo loaded: ${logo.name}`)}
+                  <img
+                    src={logo.src}
+                    alt={logo.alt}
+                    className="w-full h-full object-cover"
                     onError={(e) => {
-                      console.error(`❌ Mobile logo failed to load: ${logo.src}`);
                       // Fallback to text if image fails to load
                       const target = e.target as HTMLImageElement;
                       target.style.display = 'none';
@@ -73,17 +70,15 @@ const LogosBand = () => {
               ))}
               {/* Duplicate set for seamless loop */}
               {logos.map((logo, i) => (
-                <div 
+                <div
                   key={`second-${i}`}
                   className="flex-shrink-0 w-20 h-20 rounded-full overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300"
                 >
-                  <img 
-                    src={logo.src} 
-                    alt={logo.alt} 
-                    className="w-full h-full object-cover" 
-                    onLoad={() => console.log(`✅ Mobile logo loaded: ${logo.name}`)}
+                  <img
+                    src={logo.src}
+                    alt={logo.alt}
+                    className="w-full h-full object-cover"
                     onError={(e) => {
-                      console.error(`❌ Mobile logo failed to load: ${logo.src}`);
                       // Fallback to text if image fails to load
                       const target = e.target as HTMLImageElement;
                       target.style.display = 'none';
