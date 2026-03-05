@@ -22,6 +22,7 @@ index.html
 | `/auth`   | Auth (login/signup)                | None                    |
 | `/student`| StudentDashboard                   | ProtectedRoute (student) + PaymentGate |
 | `/admin`  | AdminDashboard                     | ProtectedRoute (admin)  |
+| `/class/:id`| ClassDetail (Teacher)            | ProtectedRoute (teacher)|
 | `*`       | NotFound                           | None                    |
 
 **Note:** There is **no route** for `/dashboard`. The file `Dashboard.tsx` exists but is never used in routing.
@@ -35,9 +36,10 @@ index.html
 
 | File               | Used by / uses |
 |--------------------|----------------|
-| **AIChat.tsx**     | **Used in:** StudentDashboard only. **Imported but not rendered:** Index.tsx (dead import). Uses: AuthContext, ai-service, supabase. |
+| **AIChat.tsx**     | **Used in:** StudentDashboard only. Uses: AuthContext, ai-service, supabase. |
 | **AuthContext.tsx**| **Used in:** App (AuthProvider), ProtectedRoute, PaymentGate, LoginForm, SignupForm, Navigation, Hero, ProfileSetup, PaymentWall, GradesManager, CourseRecommendations, AIChat, StudentDashboard, Dashboard, AdminDashboard, Auth, useActivityTracking. **Uses:** session-utils (`isSessionValid`). |
-| **session-utils.ts**| **Used in:** AuthContext only (`isSessionValid`). Exports: `SESSION_CONFIG`, `isSessionValid`, default `getSessionManager` (default never imported). |
+| **ai-service.ts**  | Primary AI logic provider. Exports `aiCareerService`. Used by: StudentDashboard, AIChat, StudentInsightDialog. |
+| **StudentInsightDialog.tsx** | **New Component:** Provides AI reports for teachers in `ClassDetail.tsx`. Uses: ai-service, dashboard-service, supabase. |
 | **StudentDashboard.tsx** | **Used in:** App.tsx at route `/student`. Imports: useAuth, AIChat, ReportGenerator, ProfileSetup, GradesManager, CareerDetailModal, CourseRecommendations, GradesModal, supabase, aiCareerService, aiCacheService, dashboardService, useActivityTracking. |
 
 ---

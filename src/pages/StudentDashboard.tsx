@@ -425,12 +425,14 @@ const StudentDashboard = () => {
   const loadCareerRecommendations = async (profileData: any) => {
     if (!user) return;
 
-    console.log('🤖 loadCareerRecommendations started with profile:', {
-      school_level: profileData.school_level,
-      current_grade: profileData.current_grade,
-      subjects: profileData.cbe_subjects || profileData.subjects,
-      interests: profileData.career_interests || profileData.interests
-    });
+    if (import.meta.env.DEV) {
+      console.log('🤖 loadCareerRecommendations started with profile:', {
+        school_level: profileData.school_level,
+        current_grade: profileData.current_grade,
+        subjects: profileData.cbe_subjects || profileData.subjects,
+        interests: profileData.career_interests || profileData.interests
+      });
+    }
 
     setIsLoadingRecommendations(true);
 

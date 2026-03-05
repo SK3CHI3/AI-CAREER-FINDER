@@ -34,12 +34,14 @@ class AICareerService {
     this.modelName = MODEL_NAME
     this.baseUrl = 'https://api.deepseek.com'
 
-    console.log('AI Service initialized:', {
-      hasApiKey: !!this.apiKey,
-      apiKeyLength: this.apiKey?.length,
-      modelName: this.modelName,
-      baseUrl: this.baseUrl
-    });
+    if (import.meta.env.DEV) {
+      console.log('AI Service initialized:', {
+        hasApiKey: !!this.apiKey,
+        apiKeyLength: this.apiKey?.length,
+        modelName: this.modelName,
+        baseUrl: this.baseUrl
+      });
+    }
 
     if (!this.apiKey) {
       throw new Error('DeepSeek API key is not configured. Please add VITE_DEEPSEEK_API_KEY to your environment variables.')
@@ -127,14 +129,16 @@ CRITICAL: Ask only ONE question per response. Be curious, realistic, and empathe
         { role: 'user', content: message }
       ]
 
-      console.log('Making AI API call to:', `${this.baseUrl}/chat/completions`);
-      console.log('API Key available:', !!this.apiKey);
-      console.log('Request payload:', {
-        model: this.modelName,
-        messageCount: messages.length,
-        temperature: 0.7,
-        streaming: true
-      });
+      if (import.meta.env.DEV) {
+        console.log('Making AI API call to:', `${this.baseUrl}/chat/completions`);
+        console.log('API Key available:', !!this.apiKey);
+        console.log('Request payload:', {
+          model: this.modelName,
+          messageCount: messages.length,
+          temperature: 0.7,
+          streaming: true
+        });
+      }
 
       const response = await fetch(`${this.baseUrl}/chat/completions`, {
         method: 'POST',

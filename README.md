@@ -9,10 +9,11 @@ This is why I created CareerPath AI - to ensure no student has to navigate Kenya
 ## What CareerPath AI Does 🚀
 
 CareerPath AI helps CBE students make informed career decisions by:
-- 📊 Analyzing their interests, strengths, and academic performance
-- 🎯 Providing personalized career recommendations aligned with CBE pathways
-- 📈 Offering real-time insights into job market trends and opportunities
-- 🗺️ Creating customized learning roadmaps for chosen career paths
+- 📊 **Realistic Triangulation**: Analyzing the intersection of Personality (RIASEC), Academic Performance, and Stated Interests.
+- 🎯 **Contexual Guidance**: Factoring in real-world constraints (financial, geographical) and personal values.
+- 📈 **Market Intelligence**: Aligning recommendations with Kenyan Vision 2030 priorities and labor market demand.
+- 🏫 **Teacher Empowerment**: Providing teachers with AI-driven pedagogical insights for student mentorship.
+- 🗺️ **Actionable Roadmaps**: Creating feasible learning pathways with associated "Actionability Scores."
 
 ## Key Features ✨
 
@@ -25,11 +26,11 @@ CareerPath AI helps CBE students make informed career decisions by:
    - Basic pathway guidance
 
 2. **Comprehensive Analysis Mode**
-   - In-depth personality and skill assessment
-   - Detailed academic performance analysis
-   - Long-term career planning
-   - Custom learning pathway creation
-   - Regular progress tracking and adjustments
+   - In-depth **RIASEC Personality Discovery**
+   - Detailed academic performance analysis from school records
+   - Socio-economic constraint mapping (Financial/Geographical)
+   - Value-alignment checks (Autonomy, Impact, Stability, Income)
+   - **Teacher Guidance Reports** for classroom intervention
 
 ## Technology Stack 💻
 

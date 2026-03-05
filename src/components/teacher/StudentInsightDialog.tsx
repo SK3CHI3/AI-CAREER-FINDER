@@ -60,10 +60,10 @@ const StudentInsightDialog: React.FC<StudentInsightDialogProps> = ({
             // 3. Generate insight using AI service
             const result = await aiCareerService.generateTeacherInsights({
                 name: profile.full_name || profile.name,
-                schoolLevel: profile.school_level as any,
+                schoolLevel: profile.school_level,
                 currentGrade: profile.current_grade,
-                subjects: profile.subjects || (profile as any).cbe_subjects,
-                interests: profile.interests || (profile as any).career_interests,
+                subjects: profile.subjects,
+                interests: profile.interests,
                 assessmentResults: profile.assessment_results,
                 academicPerformance: {
                     overallAverage: academicPerformance.overallAverage,
