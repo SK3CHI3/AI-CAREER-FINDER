@@ -13,10 +13,10 @@ const GradesModal: React.FC<GradesModalProps> = ({ isOpen, onClose }) => {
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="text-2xl font-bold">Record Your Academic Grades</DialogTitle>
+          <DialogTitle className="text-2xl font-bold">Your Academic Performance</DialogTitle>
         </DialogHeader>
         <div className="mt-4">
-          <GradesManager />
+          <GradesManager readOnly={true} />
         </div>
         <div className="flex justify-end gap-2 pt-4 border-t">
           <Button variant="outline" onClick={onClose}>

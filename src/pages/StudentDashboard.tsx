@@ -1161,13 +1161,13 @@ const StudentDashboard = () => {
                     <div
                       className="flex flex-col sm:flex-row items-center justify-between p-3 rounded-lg bg-blue-50 border border-blue-200 cursor-pointer hover:bg-blue-100 transition-colors mt-2 sm:mt-0"
                       onClick={() => {
-                        setIsGradesModalOpen(true)
-                        trackButtonClick('Record Grades', 'Journey Actions')
+                        setActiveTab('progress')
+                        trackButtonClick('View Academic Insights', 'Journey Actions')
                       }}
                     >
                       <div className="flex items-center space-x-2">
                         <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                        <span className="text-sm sm:text-base font-medium">Record your academic grades</span>
+                        <span className="text-sm sm:text-base font-medium">View your academic insights</span>
                       </div>
                       <ArrowRight className="w-4 h-4 text-blue-500 mt-2 sm:mt-0" />
                     </div>
@@ -1236,17 +1236,16 @@ const StudentDashboard = () => {
               </Card>
             </div>
 
-            {/* Academic Performance Section */}
             <Card className="w-full bg-card border-card-border">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <GraduationCap className="w-5 h-5 text-purple-500" />
-                  Academic Performance
+                  Academic Insights
                 </CardTitle>
-                <CardDescription>Record and track your academic grades to get better career recommendations</CardDescription>
+                <CardDescription>View your academic performance and progress as verified by your school</CardDescription>
               </CardHeader>
               <CardContent>
-                <GradesManager onGradesUpdated={handleGradesUpdated} />
+                <GradesManager readOnly={true} onGradesUpdated={handleGradesUpdated} />
               </CardContent>
             </Card>
           </TabsContent>
