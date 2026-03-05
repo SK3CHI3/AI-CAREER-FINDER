@@ -7,13 +7,14 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Alert, AlertDescription } from '@/components/ui/alert'
-import { Loader2, Eye, EyeOff } from 'lucide-react'
+import { Loader2, Eye, EyeOff, Building2, User, Check } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
 
 const signupSchema = z.object({
   fullName: z.string().min(2, 'Full name must be at least 2 characters'),
   email: z.string().email('Please enter a valid email address'),
   phone: z.string().min(10, 'Please enter a valid phone number (e.g. 0712345678)'),
+  role: z.enum(['student', 'school']),
   password: z.string().min(6, 'Password must be at least 6 characters'),
   confirmPassword: z.string(),
 }).refine((data) => data.password === data.confirmPassword, {
@@ -38,10 +39,17 @@ export const SignupForm: React.FC<SignupFormProps> = ({ onToggleMode }) => {
   const {
     register,
     handleSubmit,
+    setValue,
+    watch,
     formState: { errors },
   } = useForm<SignupFormData>({
     resolver: zodResolver(signupSchema),
+    defaultValues: {
+      role: 'student'
+    }
   })
+
+  const selectedRole = watch('role')
 
   const onSubmit = async (data: SignupFormData) => {
     setIsLoading(true)
@@ -49,7 +57,7 @@ export const SignupForm: React.FC<SignupFormProps> = ({ onToggleMode }) => {
     setSuccess(null)
 
     try {
-      const { error } = await signUp(data.email, data.password, data.fullName, data.phone)
+      const { error } = await signUp(data.email, data.password, data.fullName, data.phone, data.role)
 
       if (error) {
         setError(error.message)
@@ -80,10 +88,59 @@ export const SignupForm: React.FC<SignupFormProps> = ({ onToggleMode }) => {
           )}
 
           {success && (
-            <Alert>
+            <Alert className="bg-green-500/10 border-green-500/50 text-green-500">
               <AlertDescription>{success}</AlertDescription>
             </Alert>
           )}
+
+          <div className="space-y-3">
+            <Label>Register as</Label>
+            <div className="grid grid-cols-2 gap-4">
+              <div
+                onClick={() => setValue('role', 'student')}
+                className={`cursor-pointer rounded-xl border-2 p-4 transition-all duration-200 flex flex-col items-center gap-2 group ${selectedRole === 'student'
+                    ? 'border-primary bg-primary/5'
+                    : 'border-card-border hover:border-primary/40 text-muted-foreground'
+                  }`}
+              >
+                <div className={`w-10 h-10 rounded-full flex items-center justify-center transition-colors ${selectedRole === 'student' ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground group-hover:bg-primary/20'
+                  }`}>
+                  <User size={20} />
+                </div>
+                <div className="text-center">
+                  <p className={`font-semibold text-sm ${selectedRole === 'student' ? 'text-primary' : 'text-foreground'}`}>Student</p>
+                  <p className="text-[10px] opacity-70">Seek career guidance</p>
+                </div>
+                {selectedRole === 'student' && (
+                  <div className="absolute top-2 right-2 flex items-center justify-center bg-primary text-primary-foreground rounded-full w-4 h-4">
+                    <Check size={10} />
+                  </div>
+                )}
+              </div>
+
+              <div
+                onClick={() => setValue('role', 'school')}
+                className={`cursor-pointer rounded-xl border-2 p-4 transition-all duration-200 flex flex-col items-center gap-2 group relative ${selectedRole === 'school'
+                    ? 'border-primary bg-primary/5'
+                    : 'border-card-border hover:border-primary/40 text-muted-foreground'
+                  }`}
+              >
+                <div className={`w-10 h-10 rounded-full flex items-center justify-center transition-colors ${selectedRole === 'school' ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground group-hover:bg-primary/20'
+                  }`}>
+                  <Building2 size={20} />
+                </div>
+                <div className="text-center">
+                  <p className={`font-semibold text-sm ${selectedRole === 'school' ? 'text-primary' : 'text-foreground'}`}>School</p>
+                  <p className="text-[10px] opacity-70">Register your institution</p>
+                </div>
+                {selectedRole === 'school' && (
+                  <div className="absolute top-2 right-2 flex items-center justify-center bg-primary text-primary-foreground rounded-full w-4 h-4">
+                    <Check size={10} />
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
 
           <div className="space-y-2">
             <Label htmlFor="fullName">Full Name</Label>
