@@ -1,6 +1,10 @@
 import React, { useState, useEffect } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
-import { supabase } from '@/lib/supabase'
+import { useNavigate, Link } from 'react-router-dom'
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { CheckCircle2, ShieldCheck, GraduationCap, Building2 } from 'lucide-react'
+import { schoolService } from '@/lib/school-service'
 import PaymentWall from './PaymentWall'
 import { ProfileSetup } from './ProfileSetup'
 import { Loader2 } from 'lucide-react'
@@ -10,14 +14,16 @@ interface PaymentGateProps {
 }
 
 const PaymentGate: React.FC<PaymentGateProps> = ({ children }) => {
-  const { user, profile, loading } = useAuth()
+  const { user, profile, loading: authLoading } = useAuth() // Renamed to avoid conflict
   const [isProfileComplete, setIsProfileComplete] = useState(false)
   const [isPaymentComplete, setIsPaymentComplete] = useState(false)
+  const [isSchoolSubscribed, setIsSchoolSubscribed] = useState<boolean>(false) // New state
   const [isChecking, setIsChecking] = useState(true)
+  const [isPaid, setIsPaid] = useState<boolean | null>(null) // New state, for individual payment
 
   useEffect(() => {
     const checkUserStatus = async () => {
-      if (!user || !profile || loading) {
+      if (!user || !profile || authLoading) { // Use authLoading here
         setIsChecking(false)
         return
       }
@@ -25,18 +31,31 @@ const PaymentGate: React.FC<PaymentGateProps> = ({ children }) => {
       try {
         // Check if profile is complete - this should be a one-time check
         const profileComplete = checkProfileCompletion(profile)
-        
-        // Once profile is complete, it stays complete
+        setIsProfileComplete(profileComplete)
+
         if (profileComplete) {
-          setIsProfileComplete(true)
-          
-          // Check payment status
+          // Check individual payment status (lowercase correctly matches Profile type)
           const paymentComplete = profile.payment_status === 'completed'
           setIsPaymentComplete(paymentComplete)
+          setIsPaid(paymentComplete || profile.role === 'admin' || profile.role === 'school')
+
+          // Check school subscription if applicable
+          if (profile.school_id) {
+            try {
+              const hasSub = await schoolService.hasActiveSubscription(profile.school_id)
+              setIsSchoolSubscribed(hasSub)
+            } catch (err) {
+              console.error('Error checking school subscription:', err)
+              setIsSchoolSubscribed(false) // Assume no subscription on error
+            }
+          } else {
+            setIsSchoolSubscribed(false)
+          }
         } else {
-          // Profile is not complete, show profile setup
-          setIsProfileComplete(false)
+          // Profile is not complete, reset payment and subscription states
           setIsPaymentComplete(false)
+          setIsPaid(false)
+          setIsSchoolSubscribed(false)
         }
 
       } catch (error) {
@@ -47,7 +66,7 @@ const PaymentGate: React.FC<PaymentGateProps> = ({ children }) => {
     }
 
     checkUserStatus()
-  }, [user?.id, profile?.id, loading]) // Only depend on IDs and loading state
+  }, [user?.id, profile?.id, authLoading]) // Depend on IDs and authLoading state
 
   const checkProfileCompletion = (profile: any): boolean => {
     // Required fields (current_grade is optional)
@@ -68,13 +87,13 @@ const PaymentGate: React.FC<PaymentGateProps> = ({ children }) => {
     })
 
     // Additional validation for CBE subjects
-    const cbeSubjectsComplete = profile.cbe_subjects && 
-      Array.isArray(profile.cbe_subjects) && 
+    const cbeSubjectsComplete = profile.cbe_subjects &&
+      Array.isArray(profile.cbe_subjects) &&
       profile.cbe_subjects.length >= 3 // Minimum 3 CBE subjects required
 
     // Additional validation for career interests
-    const careerInterestsComplete = profile.career_interests && 
-      Array.isArray(profile.career_interests) && 
+    const careerInterestsComplete = profile.career_interests &&
+      Array.isArray(profile.career_interests) &&
       profile.career_interests.length >= 2 // Minimum 2 career interests required
 
     console.log('Profile completion check details:', {
@@ -88,18 +107,33 @@ const PaymentGate: React.FC<PaymentGateProps> = ({ children }) => {
     return basicFieldsComplete && cbeSubjectsComplete && careerInterestsComplete
   }
 
-  const handleProfileComplete = (isPaymentComplete: boolean) => {
-    console.log('Profile completion callback triggered with payment status:', isPaymentComplete)
+  const handleProfileComplete = (paymentStatus: boolean) => {
+    console.log('Profile completion callback triggered with payment status:', paymentStatus)
     setIsProfileComplete(true)
-    setIsPaymentComplete(isPaymentComplete)
+    setIsPaymentComplete(paymentStatus)
+    setIsPaid(paymentStatus || profile?.role === 'admin' || profile?.role === 'school') // Update isPaid based on callback
+    // Re-check school subscription if profile was just completed and school_id exists
+    if (profile?.school_id) {
+      const recheckSchoolSubscription = async () => {
+        try {
+          const hasSub = await schoolService.hasActiveSubscription(profile.school_id)
+          setIsSchoolSubscribed(hasSub)
+        } catch (err) {
+          console.error('Error re-checking school subscription:', err)
+          setIsSchoolSubscribed(false)
+        }
+      }
+      recheckSchoolSubscription()
+    }
   }
 
   const handlePaymentSuccess = () => {
     setIsPaymentComplete(true)
+    setIsPaid(true) // Individual payment is now complete
   }
 
   // Show loading while checking user status
-  if (loading || isChecking) {
+  if (authLoading || isChecking) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100">
         <div className="text-center">

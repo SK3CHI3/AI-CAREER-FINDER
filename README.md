@@ -1,10 +1,9 @@
-﻿# CareerPath AI - Your CBE Career Guide 🎓
+﻿# CareerGuide AI - Your CBE Career Guide 🎓
 
 ## My Story 📚
 
 When I was in primary class 8, transitioning to high school under the old education system, I faced a crucial decision point in my academic journey. Without proper guidance or someone to turn to for career advice, I made choices that would impact my future path. I dropped physics - a decision I later regretted when I discovered my passion for software engineering. Having experienced these challenges in the simpler old system, I can't help but think how much more daunting it must be for students navigating today's complex CBE curriculum with its multiple pathways and competency requirements.
 
-This is why I created CareerPath AI - to ensure no student has to navigate Kenya's intricate Competency-Based Education (CBE) curriculum blindly. The CBE system, while offering more opportunities and flexibility, can be overwhelming with its various career pathways, learning areas, and competency assessments. Our platform transforms this complexity into clarity.
 
 ## What CareerPath AI Does 🚀
 

@@ -649,7 +649,7 @@ const StudentDashboard = () => {
                 <Bot className="w-5 h-5 text-primary-foreground" />
               </div>
               <h1 className="text-xl font-bold bg-gradient-text bg-clip-text text-transparent">
-                CareerPath AI
+                CareerGuide AI
               </h1>
             </div>
 

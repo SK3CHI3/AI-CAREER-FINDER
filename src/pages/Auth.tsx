@@ -5,11 +5,16 @@ import { SignupForm } from '@/components/auth/SignupForm'
 import { useAuth } from '@/contexts/AuthContext'
 import { getDashboardPathForRole } from '@/types/roles'
 import { Bot } from 'lucide-react'
+import { useSearchParams } from 'react-router-dom'
 
 type AuthMode = 'login' | 'signup'
 
 const Auth = () => {
-  const [mode, setMode] = useState<AuthMode>('login')
+  const [searchParams] = useSearchParams()
+  const initialMode = (searchParams.get('mode') as AuthMode) || 'login'
+  const defaultRole = searchParams.get('role') as 'student' | 'school' | null
+
+  const [mode, setMode] = useState<AuthMode>(initialMode)
   const { user, profile, loading } = useAuth()
 
   // Show loading state
@@ -39,7 +44,10 @@ const Auth = () => {
         )
       case 'signup':
         return (
-          <SignupForm onToggleMode={() => setMode('login')} />
+          <SignupForm
+            onToggleMode={() => setMode('login')}
+            defaultRole={defaultRole || 'student'}
+          />
         )
       default:
         return null
@@ -56,7 +64,7 @@ const Auth = () => {
               <Bot className="w-6 h-6 text-primary-foreground" />
             </div>
             <h1 className="text-2xl font-bold bg-gradient-text bg-clip-text text-transparent">
-              CareerPath AI
+              CareerGuide AI
             </h1>
           </div>
           <p className="text-foreground-muted">

@@ -65,7 +65,7 @@ const TeacherDashboard: React.FC = () => {
               <div className="w-8 h-8 bg-gradient-primary rounded-lg flex items-center justify-center">
                 <Bot className="w-5 h-5 text-primary-foreground" />
               </div>
-              <span className="text-xl font-bold bg-gradient-text bg-clip-text text-transparent">CareerPath AI</span>
+              <span className="text-xl font-bold bg-gradient-text bg-clip-text text-transparent">CareerGuide AI</span>
               {school && (
                 <>
                   <span className="text-foreground-muted">·</span>

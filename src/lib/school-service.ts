@@ -1,5 +1,19 @@
 import { supabase } from './supabase'
 
+export const PRICE_PER_STUDENT_PER_TERM = 10
+
+export const SUBSCRIPTION_PLAN = {
+  name: 'Institutional Plan',
+  description: 'Full access for all teachers and students',
+  features: [
+    'Unlimited Teacher Accounts',
+    'Unlimited Classes',
+    'Institutional Analytics',
+    'Priority Support',
+    'Custom AI Guidance Roster'
+  ]
+}
+
 export interface School {
   id: string
   name: string
@@ -7,9 +21,8 @@ export interface School {
   region: string | null
   subscription_tier: string | null
   status: string | null
-  settings: Record<string, unknown> | null
-  created_at: string
   updated_at: string
+  settings?: any
 }
 
 export interface SchoolMember {
@@ -122,7 +135,7 @@ class SchoolService {
     return data
   }
 
-  async updateSchool(schoolId: string, updates: Partial<Pick<School, 'name' | 'region' | 'status' | 'settings'>>): Promise<School> {
+  async updateSchool(schoolId: string, updates: any): Promise<School> {
     const { data, error } = await supabase
       .from('schools')
       .update(updates)
@@ -223,8 +236,8 @@ class SchoolService {
     const token = crypto.randomUUID()
     const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString() // 7 days
 
-    const { data, error } = await supabase
-      .from('teacher_invites')
+    const { data, error } = await (supabase
+      .from('teacher_invites' as any) as any)
       .upsert(
         {
           school_id: schoolId,
@@ -244,8 +257,8 @@ class SchoolService {
   }
 
   async getInviteByToken(token: string): Promise<TeacherInvite | null> {
-    const { data, error } = await supabase
-      .from('teacher_invites')
+    const { data, error } = await (supabase
+      .from('teacher_invites' as any) as any)
       .select('*')
       .eq('token', token)
       .maybeSingle()
@@ -285,15 +298,15 @@ class SchoolService {
     if (profileError) throw new Error(profileError.message)
 
     // 4. Mark invite as accepted
-    await supabase
-      .from('teacher_invites')
+    await (supabase
+      .from('teacher_invites' as any) as any)
       .update({ accepted_at: new Date().toISOString() })
       .eq('token', token)
   }
 
   async getPendingInvites(schoolId: string): Promise<TeacherInvite[]> {
-    const { data, error } = await supabase
-      .from('teacher_invites')
+    const { data, error } = await (supabase
+      .from('teacher_invites' as any) as any)
       .select('*')
       .eq('school_id', schoolId)
       .is('accepted_at', null)
@@ -316,6 +329,20 @@ class SchoolService {
 
     if (error) return null
     return data
+  }
+
+  async hasActiveSubscription(schoolId: string): Promise<boolean> {
+    const sub = await this.getSubscription(schoolId)
+    if (!sub) return false
+
+    // Check if tier is not null and not expired
+    if (!sub.tier || sub.tier === 'FREE') return false
+
+    if (sub.expires_at && new Date(sub.expires_at) < new Date()) {
+      return false
+    }
+
+    return true
   }
 }
 

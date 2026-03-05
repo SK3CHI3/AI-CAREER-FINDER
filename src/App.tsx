@@ -10,8 +10,10 @@ import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import StudentDashboard from "./pages/StudentDashboard";
 import AdminDashboard from "./pages/AdminDashboard";
-import SchoolDashboard from "./pages/SchoolDashboard";
-import TeacherDashboard from "./pages/TeacherDashboard";
+import SchoolDashboard from "./pages/SchoolDashboard"
+import SchoolTeachers from "./pages/SchoolTeachers"
+import SchoolClasses from "./pages/SchoolClasses"
+import TeacherDashboard from "./pages/TeacherDashboard"
 import ClassDetail from "./pages/ClassDetail";
 import AcceptInvite from "./pages/AcceptInvite";
 import Dashboard from "./pages/Dashboard";
@@ -52,6 +54,22 @@ const App = () => (
               element={
                 <ProtectedRoute requiredRole="school">
                   <SchoolDashboard />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/school/teachers"
+              element={
+                <ProtectedRoute requiredRole="school">
+                  <SchoolTeachers />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/school/classes"
+              element={
+                <ProtectedRoute requiredRole="school">
+                  <SchoolClasses />
                 </ProtectedRoute>
               }
             />

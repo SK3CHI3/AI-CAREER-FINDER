@@ -60,7 +60,7 @@ const GuestAIChat = () => {
     const welcomeMessage: ChatMessage = {
       id: crypto.randomUUID(),
       role: 'assistant',
-      content: `Karibu to CareerPath AI! 🎉
+      content: `Karibu to CareerGuide AI! 🎉
 
 I'm your friendly career counselor, here to help you discover your perfect career path through Kenya's CBE system!
 
@@ -79,12 +79,12 @@ Let's start with the basics - what's your name? 😊`,
   }, []);
 
   const createGuestSystemPrompt = (): string => {
-    return `You are CareerPath AI, Kenya's most engaging career counselor! You're conducting a FREE quick assessment to help students discover their perfect career path through Kenya's CBE system.
+    return `You are CareerGuide AI, Kenya's most engaging career counselor! You're conducting a FREE quick assessment to help students discover their perfect career path through Kenya's CBE system.
 
 CURRENT GUEST PROFILE:
 ${Object.entries(guestProfile).map(([key, value]) =>
-  value ? `- ${key}: ${Array.isArray(value) ? value.join(', ') : value}` : ''
-).filter(Boolean).join('\n')}
+      value ? `- ${key}: ${Array.isArray(value) ? value.join(', ') : value}` : ''
+    ).filter(Boolean).join('\n')}
 
 YOUR MISSION: Guide them through a structured, fun conversation to build their career profile.
 
@@ -255,7 +255,7 @@ Remember: YOU MUST ALWAYS BE CURIOUS TO KNOW THEM. Make this the most engaging c
 
   const handleSend = async () => {
     if (!message.trim() || isLoading) return;
-    
+
     const userMessage: ChatMessage = {
       id: crypto.randomUUID(),
       role: 'user',
@@ -267,7 +267,7 @@ Remember: YOU MUST ALWAYS BE CURIOUS TO KNOW THEM. Make this the most engaging c
     setMessage("");
     setIsLoading(true);
     setError(null);
-    
+
     // Scroll to bottom immediately when user sends message
     setTimeout(scrollToBottom, 50);
 
@@ -304,7 +304,7 @@ Remember: YOU MUST ALWAYS BE CURIOUS TO KNOW THEM. Make this the most engaging c
 
       // Extract profile information from the conversation
       extractProfileInfo(userMessage.content, response);
-      
+
       // Scroll to bottom when AI response is received
       setTimeout(scrollToBottom, 100);
 
@@ -356,11 +356,11 @@ Keep tone professional, clear, and actionable.`;
         timestamp: new Date()
       };
       setConversation(prev => [...prev, assistantMessage]);
-      
+
       // Scroll to bottom when report summary is added
       setTimeout(scrollToBottom, 100);
 
-    setShowReport(true);
+      setShowReport(true);
     } catch (e) {
       setError('Could not generate summary. Please try again.');
     } finally {
@@ -397,7 +397,7 @@ Keep tone professional, clear, and actionable.`;
   };
 
   const downloadReport = async () => {
-    const reportName = `CareerPath-AI-Assessment-${guestProfile.name || 'Report'}-${new Date().toISOString().split('T')[0]}`;
+    const reportName = `CareerGuide-AI-Assessment-${guestProfile.name || 'Report'}-${new Date().toISOString().split('T')[0]}`;
     const htmlReport = ReportGenerator.generatePDFReport(guestProfile, conversation);
     await ReportGenerator.downloadPDF(htmlReport, `${reportName}.pdf`);
   };
@@ -415,7 +415,7 @@ Keep tone professional, clear, and actionable.`;
           Get instant career guidance based on your interests and goals. No signup required!
         </p>
       </div>
-      
+
       <Card className="bg-gradient-surface border-card-border shadow-elevated">
         {/* Chat Header */}
         <CardHeader className="border-b border-card-border p-3 sm:p-6">
@@ -425,7 +425,7 @@ Keep tone professional, clear, and actionable.`;
                 <Bot className="w-4 h-4 sm:w-5 sm:h-5 text-primary-foreground" />
               </div>
               <div>
-                <CardTitle className="text-base sm:text-lg">Career Assessment AI</CardTitle>
+                <CardTitle className="text-base sm:text-lg">CareerGuide AI Assessment</CardTitle>
                 <CardDescription className="text-xs sm:text-sm">Quick assessment • No signup required</CardDescription>
               </div>
             </div>
@@ -440,7 +440,7 @@ Keep tone professional, clear, and actionable.`;
             </div>
           </div>
         </CardHeader>
-        
+
         {/* Chat Messages */}
         <CardContent className="p-0">
           <ScrollArea ref={scrollAreaRef} className="h-[60vh] sm:h-[500px] p-3 sm:p-6 overflow-y-auto">
@@ -448,22 +448,20 @@ Keep tone professional, clear, and actionable.`;
               {conversation.map((msg) => (
                 <div key={msg.id} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
                   <div className={`flex max-w-[90%] sm:max-w-[85%] ${msg.role === 'user' ? 'flex-row-reverse' : 'flex-row'} space-x-2 sm:space-x-3`}>
-                    <div className={`w-6 h-6 sm:w-8 sm:h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
-                      msg.role === 'user' 
-                        ? 'bg-primary text-primary-foreground ml-2 sm:ml-3' 
-                        : 'bg-gradient-primary text-primary-foreground mr-2 sm:mr-3'
-                    }`}>
+                    <div className={`w-6 h-6 sm:w-8 sm:h-8 rounded-full flex items-center justify-center flex-shrink-0 ${msg.role === 'user'
+                      ? 'bg-primary text-primary-foreground ml-2 sm:ml-3'
+                      : 'bg-gradient-primary text-primary-foreground mr-2 sm:mr-3'
+                      }`}>
                       {msg.role === 'user' ? (
                         <User className="w-3 h-3 sm:w-4 sm:h-4" />
                       ) : (
                         <Bot className="w-3 h-3 sm:w-4 sm:h-4" />
                       )}
                     </div>
-                    <div className={`p-3 sm:p-4 rounded-2xl ${
-                      msg.role === 'user'
-                        ? 'bg-primary text-primary-foreground'
-                        : 'bg-background border border-card-border'
-                    }`}>
+                    <div className={`p-3 sm:p-4 rounded-2xl ${msg.role === 'user'
+                      ? 'bg-primary text-primary-foreground'
+                      : 'bg-background border border-card-border'
+                      }`}>
                       <p className="text-xs sm:text-sm leading-relaxed whitespace-pre-wrap">{msg.content}</p>
                       <p className="text-[10px] sm:text-xs opacity-70 mt-1 sm:mt-2">
                         {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
@@ -472,7 +470,7 @@ Keep tone professional, clear, and actionable.`;
                   </div>
                 </div>
               ))}
-              
+
               {isLoading && (
                 <div className="flex justify-start">
                   <div className="flex space-x-2 sm:space-x-3">
@@ -488,12 +486,12 @@ Keep tone professional, clear, and actionable.`;
                   </div>
                 </div>
               )}
-              
+
               <div ref={messagesEndRef} />
             </div>
           </ScrollArea>
         </CardContent>
-        
+
         {/* Finish Assessment CTA - Subtle */}
         {showFinishCTA && !assessmentComplete && !isLoading && !showReport && (
           <div className="p-4 border-t border-card-border bg-gradient-surface/30">
@@ -501,9 +499,9 @@ Keep tone professional, clear, and actionable.`;
               <p className="text-sm text-foreground-muted">
                 You've answered enough questions! Ready to finish your assessment?
               </p>
-              <Button 
-                onClick={finishAssessment} 
-                disabled={isGeneratingReport} 
+              <Button
+                onClick={finishAssessment}
+                disabled={isGeneratingReport}
                 variant="outline"
                 size="sm"
                 className="text-xs"
@@ -534,7 +532,7 @@ Keep tone professional, clear, and actionable.`;
                 {isGeneratingReport ? (
                   <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                 ) : (
-                <Download className="w-4 h-4 mr-2" />
+                  <Download className="w-4 h-4 mr-2" />
                 )}
                 {isGeneratingReport ? 'Preparing…' : 'Generate My Career Report'}
               </Button>
@@ -566,7 +564,7 @@ Keep tone professional, clear, and actionable.`;
             </div>
           </div>
         )}
-        
+
         {/* Chat Input */}
         {!showReport && !assessmentComplete && (
           <div className="p-6 border-t border-card-border">
@@ -581,7 +579,7 @@ Keep tone professional, clear, and actionable.`;
                 <AlertDescription>{error}</AlertDescription>
               </Alert>
             )}
-            
+
             <div className="flex space-x-4">
               <Input
                 placeholder="Type your response here..."
@@ -591,7 +589,7 @@ Keep tone professional, clear, and actionable.`;
                 disabled={isLoading}
                 className="bg-background border-card-border"
               />
-              <Button 
+              <Button
                 onClick={handleSend}
                 disabled={isLoading || !message.trim()}
                 className="bg-gradient-primary hover:opacity-90 text-primary-foreground px-6"
@@ -603,7 +601,7 @@ Keep tone professional, clear, and actionable.`;
                 )}
               </Button>
             </div>
-            
+
             <div className="flex items-center justify-between mt-3">
               <p className="text-xs text-foreground-muted flex items-center">
                 <Sparkles className="w-3 h-3 mr-1" />

@@ -26,9 +26,10 @@ type SignupFormData = z.infer<typeof signupSchema>
 
 interface SignupFormProps {
   onToggleMode: () => void
+  defaultRole?: 'student' | 'school'
 }
 
-export const SignupForm: React.FC<SignupFormProps> = ({ onToggleMode }) => {
+export const SignupForm: React.FC<SignupFormProps> = ({ onToggleMode, defaultRole = 'student' }) => {
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
@@ -45,7 +46,7 @@ export const SignupForm: React.FC<SignupFormProps> = ({ onToggleMode }) => {
   } = useForm<SignupFormData>({
     resolver: zodResolver(signupSchema),
     defaultValues: {
-      role: 'student'
+      role: defaultRole
     }
   })
 
@@ -76,7 +77,7 @@ export const SignupForm: React.FC<SignupFormProps> = ({ onToggleMode }) => {
       <CardHeader className="space-y-1">
         <CardTitle className="text-2xl font-bold text-center">Create Account</CardTitle>
         <CardDescription className="text-center">
-          Join CareerPath AI to discover your future
+          Join CareerGuide AI to discover your future
         </CardDescription>
       </CardHeader>
       <CardContent>

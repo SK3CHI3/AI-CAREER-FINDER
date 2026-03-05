@@ -25,12 +25,11 @@ const Footer = () => {
                 <Bot className="w-5 h-5 text-primary-foreground" />
               </div>
               <span className="text-xl font-bold bg-gradient-text bg-clip-text text-transparent">
-                CareerPath AI
+                CareerGuide AI
               </span>
             </div>
-            <p className="text-foreground-muted leading-relaxed">
-              Empowering Kenyan students with AI-driven career guidance 
-              tailored for the Competency-Based Education system.
+            <p className="text-foreground-muted text-sm leading-relaxed">
+              Empowering Kenya's next generation with AI-driven career guidance aligned with the CBE framework.
             </p>
             <div className="flex space-x-3">
               <Button variant="ghost" size="sm" className="text-foreground-muted hover:text-primary">
@@ -44,7 +43,7 @@ const Footer = () => {
               </Button>
             </div>
           </div>
-          
+
           {/* Product */}
           <div className="space-y-4">
             <h3 className="text-lg font-semibold text-foreground">Product</h3>
@@ -56,7 +55,7 @@ const Footer = () => {
               <li><button onClick={() => scrollToSection('careers')} className="text-foreground-muted hover:text-foreground transition-colors text-left">Market Insights</button></li>
             </ul>
           </div>
-          
+
           {/* Company */}
           <div className="space-y-4">
             <h3 className="text-lg font-semibold text-foreground">Company</h3>
@@ -68,15 +67,15 @@ const Footer = () => {
               <li><button onClick={() => scrollToSection('contact')} className="text-foreground-muted hover:text-foreground transition-colors text-left">Press Kit</button></li>
             </ul>
           </div>
-          
+
           {/* Contact */}
           <div className="space-y-4">
             <h3 className="text-lg font-semibold text-foreground">Contact</h3>
             <ul className="space-y-3">
               <li className="flex items-center space-x-3">
                 <Mail className="w-4 h-4 text-foreground-muted" />
-                <a href="mailto:hello@careerpathai.co.ke" className="text-foreground-muted hover:text-foreground transition-colors">
-                  hello@careerpathai.co.ke
+                <a href="mailto:hello@careerguideai.co.ke" className="text-foreground-muted hover:text-foreground transition-colors">
+                  hello@careerguideai.co.ke
                 </a>
               </li>
               <li className="flex items-center space-x-3">
@@ -94,11 +93,11 @@ const Footer = () => {
             </ul>
           </div>
         </div>
-        
+
         <div className="border-t border-card-border mt-12 pt-8">
           <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
             <p className="text-foreground-muted text-sm">
-              © {new Date().getFullYear()} CareerPath AI. All rights reserved.
+              © {new Date().getFullYear()} CareerGuide AI. All rights reserved.
             </p>
             <div className="flex space-x-6">
               <a href="#" className="text-foreground-muted hover:text-foreground text-sm transition-colors">

@@ -4,12 +4,12 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
-import { 
-  User, 
-  BookOpen, 
-  Target, 
-  TrendingUp, 
-  Settings, 
+import {
+  User,
+  BookOpen,
+  Target,
+  TrendingUp,
+  Settings,
   LogOut,
   Bot,
   BarChart3,
@@ -76,7 +76,7 @@ const Dashboard = () => {
                 <Bot className="w-5 h-5 text-primary-foreground" />
               </div>
               <h1 className="text-xl font-bold bg-gradient-text bg-clip-text text-transparent">
-                CareerPath AI
+                CareerGuide AI
               </h1>
             </div>
 
@@ -190,8 +190,7 @@ const Dashboard = () => {
                       <User className="w-4 h-4 text-primary" />
                     </div>
                     <div className="flex-1">
-                      <p className="text-sm font-medium">Profile created</p>
-                      <p className="text-xs text-foreground-muted">Welcome to CareerPath AI!</p>
+                      <p className="text-xs text-foreground-muted">Welcome to CareerGuide AI!</p>
                     </div>
                     <span className="text-xs text-foreground-muted">Just now</span>
                   </div>

@@ -34,7 +34,7 @@ const Hero = () => {
                   if (user) {
                     navigate(dashboardPath);
                   } else {
-                    navigate('/auth');
+                    navigate('/auth?mode=signup&role=school');
                   }
                 }}
               >
@@ -57,7 +57,7 @@ const Hero = () => {
             <div className="relative z-10">
               <img
                 src="/images/hero-dashboard.png"
-                alt="CareerPath AI Platform - Advanced Student Dashboard Mockup showing RIASEC scores and career pathing"
+                alt="CareerGuide AI Platform - Advanced Student Dashboard Mockup showing RIASEC scores and career pathing"
                 className="w-full h-auto rounded-2xl shadow-elevated border border-card-border/50"
               />
             </div>

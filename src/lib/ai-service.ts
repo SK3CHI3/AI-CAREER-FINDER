@@ -69,7 +69,7 @@ ACADEMIC PERFORMANCE:
 - Weak in: ${userContext.academicPerformance.weakSubjects.join(', ')}
 ` : '';
 
-    return `You are CareerPath AI, Kenya's most advanced career counselor. Your mission is to provide personalized, actionable guidance using "Realistic Triangulation Logic"—balancing a student's Personality (RIASEC), Academic Performance, Stated Interests, and Real-World Realities.
+    return `You are CareerGuide AI, Kenya's most advanced career counselor. Your mission is to provide personalized, actionable guidance using "Realistic Triangulation Logic"—balancing a student's Personality (RIASEC), Academic Performance, Stated Interests, and Real-World Realities.
 
 CURRENT USER PROFILE:
 ${userContext.name ? `- Name: ${userContext.name}` : '- Name: Not provided'}
