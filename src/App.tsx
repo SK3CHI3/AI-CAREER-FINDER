@@ -10,6 +10,12 @@ import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import StudentDashboard from "./pages/StudentDashboard";
 import AdminDashboard from "./pages/AdminDashboard";
+import SchoolDashboard from "./pages/SchoolDashboard"
+import SchoolTeachers from "./pages/SchoolTeachers"
+import SchoolClasses from "./pages/SchoolClasses"
+import TeacherDashboard from "./pages/TeacherDashboard"
+import ClassDetail from "./pages/ClassDetail";
+import AcceptInvite from "./pages/AcceptInvite";
 import Dashboard from "./pages/Dashboard";
 import NotFound from "./pages/NotFound";
 
@@ -43,6 +49,47 @@ const App = () => (
                 </ProtectedRoute>
               }
             />
+            <Route
+              path="/school"
+              element={
+                <ProtectedRoute requiredRole="school">
+                  <SchoolDashboard />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/school/teachers"
+              element={
+                <ProtectedRoute requiredRole="school">
+                  <SchoolTeachers />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/school/classes"
+              element={
+                <ProtectedRoute requiredRole="school">
+                  <SchoolClasses />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/teacher"
+              element={
+                <ProtectedRoute requiredRole="teacher">
+                  <TeacherDashboard />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/teacher/class/:classId"
+              element={
+                <ProtectedRoute requiredRole="teacher">
+                  <ClassDetail />
+                </ProtectedRoute>
+              }
+            />
+            <Route path="/invite" element={<AcceptInvite />} />
             <Route
               path="/dashboard"
               element={

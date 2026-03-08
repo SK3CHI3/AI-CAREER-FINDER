@@ -34,6 +34,7 @@ export interface CareerRecommendation {
   growth_prospect: string
   education_required: string
   skills_required: string[]
+  actionability_score?: number
   created_at: string
   expires_at: string
 }
@@ -152,7 +153,10 @@ class DashboardService {
       .order('calculated_at', { ascending: false })
 
     if (error) throw error
-    return data || []
+    return (data || []).map(stat => ({
+      ...stat,
+      stat_trend: stat.stat_trend as 'up' | 'down' | 'stable'
+    }))
   }
 
   async upsertUserStat(stat: Omit<UserStat, 'id' | 'calculated_at'>): Promise<UserStat> {
@@ -163,7 +167,10 @@ class DashboardService {
       .single()
 
     if (error) throw error
-    return data
+    return {
+      ...data,
+      stat_trend: data.stat_trend as 'up' | 'down' | 'stable'
+    }
   }
 
   // Career Recommendations - Now uses caching
@@ -171,7 +178,7 @@ class DashboardService {
     try {
       // First try to get from cache
       const cachedRecommendations = await aiCacheService.getCachedCareerRecommendations(userId)
-      
+
       if (cachedRecommendations && cachedRecommendations.length > 0) {
         console.log(`Using cached career recommendations for user ${userId}`)
         return cachedRecommendations.map(rec => ({
@@ -214,7 +221,7 @@ class DashboardService {
     try {
       // Save to cache first (primary storage)
       await aiCacheService.saveCareerRecommendations(userId, recommendations)
-      
+
       // Also save to old table for backward compatibility
       await supabase
         .from('career_recommendations')
@@ -409,7 +416,7 @@ class DashboardService {
     performanceTrend: 'improving' | 'declining' | 'stable'
   }> {
     const grades = await this.getUserGrades(userId)
-    
+
     if (grades.length === 0) {
       return {
         overallAverage: 0,
@@ -450,10 +457,10 @@ class DashboardService {
     // Calculate performance trend (simplified)
     const recentGrades = grades.slice(0, Math.min(5, grades.length))
     const olderGrades = grades.slice(-Math.min(5, grades.length))
-    
+
     const recentAverage = recentGrades.reduce((sum, grade) => sum + grade.grade_value, 0) / recentGrades.length
     const olderAverage = olderGrades.reduce((sum, grade) => sum + grade.grade_value, 0) / olderGrades.length
-    
+
     let performanceTrend: 'improving' | 'declining' | 'stable' = 'stable'
     if (recentAverage > olderAverage + 5) performanceTrend = 'improving'
     else if (recentAverage < olderAverage - 5) performanceTrend = 'declining'
@@ -509,8 +516,8 @@ class DashboardService {
       stat_type: 'academic_performance',
       stat_value: `${academicPerformance.overallAverage.toFixed(1)}%`,
       stat_change: `${academicPerformance.performanceTrend}`,
-      stat_trend: academicPerformance.performanceTrend === 'improving' ? 'up' : 
-                  academicPerformance.performanceTrend === 'declining' ? 'down' : 'stable'
+      stat_trend: academicPerformance.performanceTrend === 'improving' ? 'up' :
+        academicPerformance.performanceTrend === 'declining' ? 'down' : 'stable'
     })
 
     // Save all stats

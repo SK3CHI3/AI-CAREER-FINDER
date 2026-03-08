@@ -5,7 +5,14 @@ const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
 
 if (!supabaseUrl || !supabaseAnonKey) {
-  throw new Error('Missing Supabase environment variables')
+  const missing = [
+    !supabaseUrl && 'VITE_SUPABASE_URL',
+    !supabaseAnonKey && 'VITE_SUPABASE_ANON_KEY',
+  ].filter(Boolean)
+  throw new Error(
+    `Missing Supabase environment variables: ${missing.join(', ')}. ` +
+    `Add them to .env or .env.local in the project root (use VITE_ prefix), then restart the dev server.`
+  )
 }
 
 // Official Supabase pattern - production ready with security config

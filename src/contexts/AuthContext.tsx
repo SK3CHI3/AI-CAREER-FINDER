@@ -11,9 +11,11 @@ import { isSessionValid, destroySessionManager } from '@/lib/session-utils'
 interface Profile {
   id: string
   email: string
+  phone: string | null
   full_name: string | null
   avatar_url: string | null
-  role: 'student' | 'admin'
+  role: 'student' | 'admin' | 'school' | 'teacher'
+  school_id?: string | null
   school_level?: 'primary' | 'secondary' | 'tertiary'
   current_grade?: string
   cbe_subjects?: string[]
@@ -21,6 +23,12 @@ interface Profile {
   career_interests?: string[]
   interests?: string[]
   career_goals?: string
+  assessment_results?: {
+    riasec_scores: Record<string, number>
+    personality_type: string[]
+    values: string[]
+    constraints: string[]
+  } | null
   payment_status?: 'pending' | 'completed' | 'failed' | 'refunded'
   payment_reference?: string
   payment_date?: string
@@ -39,8 +47,8 @@ interface AuthContextType {
   profileLoading: boolean
   profileError: Error | null
   isMFAEnabled: boolean
-  signUp: (email: string, password: string, fullName: string) => Promise<{ error: AuthError | null }>
-  signIn: (email: string, password: string) => Promise<{ error: AuthError | null }>
+  signUp: (email: string, password: string, fullName: string, phone: string, role?: Profile['role']) => Promise<{ error: AuthError | null }>
+  signIn: (identifier: string, password: string) => Promise<{ error: AuthError | null }>
   signOut: () => Promise<{ error: AuthError | null }>
   updateProfile: (updates: Partial<Profile>) => Promise<{ error: Error | null }>
   refreshProfile: () => Promise<void>
@@ -83,7 +91,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setProfileError(err)
         setProfile(null)
       } else {
-        setProfile(data)
+        setProfile(data as Profile)
         setProfileError(null)
       }
     } catch (error) {
@@ -198,26 +206,63 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, [user])
 
   // Sign up with email and password
-  const signUp = async (email: string, password: string, fullName: string) => {
+  const signUp = async (email: string, password: string, fullName: string, phone: string, role: Profile['role'] = 'student') => {
     const { error } = await supabase.auth.signUp({
       email,
       password,
       options: {
         data: {
           full_name: fullName,
+          phone: phone,
+          role: role,
         },
       },
     })
     return { error }
   }
 
-  // Sign in with email and password
-  const signIn = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    })
-    return { error }
+  // Unified Sign In (Email or Phone)
+  const signIn = async (identifier: string, password: string) => {
+    try {
+      let email = identifier;
+
+      // Check if identifier is a phone number (simple check)
+      const isPhone = /^\+?[\d\s-]{10,}$/.test(identifier);
+
+      if (isPhone) {
+        if (isDev) console.log('📱 AuthContext: Identifier looks like a phone, resolving email...');
+        const cleanPhone = identifier.replace(/[\s-]/g, '');
+
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('email')
+          .eq('phone', cleanPhone)
+          .single();
+
+        if (error || !data?.email) {
+          if (isDev) console.error('Failed to resolve email from phone:', error);
+          return { error: { message: 'No account found with this phone number.', name: 'AuthError' } as any };
+        }
+
+        email = data.email;
+        if (isDev) console.log('📱 AuthContext: Resolved email:', email);
+      }
+
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      })
+
+      if (error) throw error
+
+      setSession(data.session)
+      setUser(data.user)
+
+      return { error: null }
+    } catch (error) {
+      if (isDev) console.error('Sign in error:', error)
+      return { error: error as AuthError }
+    }
   }
 
   // Sign out
@@ -232,7 +277,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       // Sign out from Supabase
       const { error } = await supabase.auth.signOut()
-      
+
       if (error) {
         if (isDev) console.error('Sign out error:', error)
         return { error }

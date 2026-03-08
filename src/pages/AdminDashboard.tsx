@@ -8,12 +8,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Input } from '@/components/ui/input'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from 'recharts'
-import { 
-  Users, 
-  BookOpen, 
-  Target, 
-  TrendingUp, 
-  Settings, 
+import {
+  Users,
+  BookOpen,
+  Target,
+  TrendingUp,
+  Settings,
   LogOut,
   Bot,
   BarChart3,
@@ -190,7 +190,7 @@ const AdminDashboard = () => {
                 <Bot className="w-5 h-5 text-primary-foreground" />
               </div>
               <h1 className="text-xl font-bold bg-gradient-text bg-clip-text text-transparent">
-                CareerPath AI Admin
+                CareerGuide AI Admin
               </h1>
             </div>
 

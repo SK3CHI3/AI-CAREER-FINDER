@@ -6,7 +6,8 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
 import { Progress } from '@/components/ui/progress'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts'
+import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar } from 'recharts'
+import { RIASEC_LABELS } from '@/data/riasec-assessment'
 import {
   User,
   BookOpen,
@@ -60,6 +61,7 @@ interface CareerDataItem {
   salaryRange?: string
   growth?: string
   education?: string
+  actionabilityScore?: number
 }
 
 const defaultCareerData: CareerDataItem[] = [
@@ -423,12 +425,14 @@ const StudentDashboard = () => {
   const loadCareerRecommendations = async (profileData: any) => {
     if (!user) return;
 
-    console.log('🤖 loadCareerRecommendations started with profile:', {
-      school_level: profileData.school_level,
-      current_grade: profileData.current_grade,
-      subjects: profileData.cbe_subjects || profileData.subjects,
-      interests: profileData.career_interests || profileData.interests
-    });
+    if (import.meta.env.DEV) {
+      console.log('🤖 loadCareerRecommendations started with profile:', {
+        school_level: profileData.school_level,
+        current_grade: profileData.current_grade,
+        subjects: profileData.cbe_subjects || profileData.subjects,
+        interests: profileData.career_interests || profileData.interests
+      });
+    }
 
     setIsLoadingRecommendations(true);
 
@@ -436,10 +440,10 @@ const StudentDashboard = () => {
       // First, try to get cached recommendations
       console.log('🔍 Checking for cached career recommendations...');
       const cachedRecommendations = await aiCacheService.getCachedCareerRecommendations(user.id);
-      
+
       if (cachedRecommendations && cachedRecommendations.length > 0) {
         console.log('✅ Using cached career recommendations:', cachedRecommendations.length);
-        
+
         // Convert cached data to chart format
         const top3 = cachedRecommendations.slice(0, 3).map((rec, index) => ({
           name: rec.career_name,
@@ -448,7 +452,8 @@ const StudentDashboard = () => {
           description: rec.description || getCareerDescription(rec.career_name),
           salaryRange: rec.salary_range || getCareerSalary(rec.career_name),
           growth: rec.growth || getCareerGrowth(rec.career_name),
-          education: rec.education || getCareerEducation(rec.career_name)
+          education: rec.education || getCareerEducation(rec.career_name),
+          actionabilityScore: rec.actionability_score || 85
         }));
 
         setCareerData(top3);
@@ -470,7 +475,7 @@ const StudentDashboard = () => {
         subjects: profileData.cbe_subjects || profileData.subjects || undefined,
         interests: profileData.career_interests || profileData.interests || undefined,
         careerGoals: profileData.career_goals || undefined,
-        assessmentResults: profileData.assessment_scores,
+        assessmentResults: profileData.assessment_results,
         academicPerformance: {
           overallAverage: academicPerformance.overallAverage,
           strongSubjects: academicPerformance.strongSubjects,
@@ -495,7 +500,8 @@ const StudentDashboard = () => {
           description: getCareerDescription(rec.title),
           salaryRange: getCareerSalary(rec.title),
           growth: getCareerGrowth(rec.title),
-          education: getCareerEducation(rec.title)
+          education: getCareerEducation(rec.title),
+          actionabilityScore: rec.actionabilityScore || 80
         }));
 
         setCareerData(top3);
@@ -549,6 +555,16 @@ const StudentDashboard = () => {
     }
   }
 
+  // RIASEC Data for Chart
+  const riasecChartData = profile?.assessment_results?.riasec_scores ?
+    Object.entries(profile.assessment_results.riasec_scores).map(([key, value]) => ({
+      subject: RIASEC_LABELS[key] || key,
+      A: value,
+      fullMark: 5, // Assuming max 5 activities selected per type
+    })) : []
+
+  const dominantType = profile?.assessment_results?.personality_type || 'Discovery Pending'
+
 
 
   const handleSignOut = async () => {
@@ -596,7 +612,7 @@ const StudentDashboard = () => {
     if (user?.id && profile) {
       console.log('🔄 Grades updated, invalidating AI caches')
       await aiCacheService.invalidateAllCaches(user.id, 'grades_updated')
-      
+
       // Reload career recommendations with fresh data
       await loadCareerRecommendations(profile)
     }
@@ -633,7 +649,7 @@ const StudentDashboard = () => {
                 <Bot className="w-5 h-5 text-primary-foreground" />
               </div>
               <h1 className="text-xl font-bold bg-gradient-text bg-clip-text text-transparent">
-                CareerPath AI
+                CareerGuide AI
               </h1>
             </div>
 
@@ -662,25 +678,24 @@ const StudentDashboard = () => {
       </header>
 
       {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="max-w-7xl w-full mx-auto px-2 sm:px-6 lg:px-8 py-4 sm:py-8">
         {/* Welcome Section */}
-        <div className="mb-8">
-          <div className="flex items-center justify-between">
+        <div className="mb-6 sm:mb-8">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0">
             <div>
-              <h2 className="text-3xl font-bold text-foreground mb-2 flex items-center gap-3">
+              <h2 className="text-2xl sm:text-3xl font-bold text-foreground mb-1 sm:mb-2 flex items-center gap-3">
                 Welcome back, {profile?.full_name?.split(' ')[0] || 'Student'}!
                 <span className="animate-bounce">👋</span>
               </h2>
-              <p className="text-foreground-muted text-lg">
+              <p className="text-foreground-muted text-base sm:text-lg">
                 Continue your career discovery journey and unlock your potential.
               </p>
             </div>
             <div className="hidden md:flex items-center gap-4">
               <div className="text-right">
                 <p className="text-sm text-foreground-muted">Current Streak</p>
-                <p className="text-2xl font-bold text-orange-500 flex items-center gap-1">
-                  <Zap className="w-5 h-5" />
-                  7 days
+                <p className="text-xl sm:text-2xl font-bold text-orange-500 flex items-center gap-1">
+                  <Zap className="w-5 h-5" /> 7 days
                 </p>
               </div>
             </div>
@@ -688,7 +703,7 @@ const StudentDashboard = () => {
         </div>
 
         {/* Tabs Navigation */}
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4 sm:space-y-6">
           <TabsList className="grid w-full grid-cols-4 lg:w-auto lg:grid-cols-4">
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="careers">Top Careers</TabsTrigger>
@@ -697,9 +712,9 @@ const StudentDashboard = () => {
           </TabsList>
 
           {/* Overview Tab */}
-          <TabsContent value="overview" className="space-y-6">
+          <TabsContent value="overview" className="space-y-4 sm:space-y-6">
             {/* Quick Stats */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-6 w-full">
               {isLoadingStats ? (
                 // Loading skeleton for stats
                 Array.from({ length: 4 }).map((_, index) => (
@@ -729,32 +744,31 @@ const StudentDashboard = () => {
 
                   return (
                     <Card key={stat.id} className="bg-card border-card-border hover:shadow-card transition-all duration-300">
-                  <CardHeader className="pb-3">
-                    <div className="flex items-center justify-between">
-                      <div>
+                      <CardHeader className="pb-3">
+                        <div className="flex items-center justify-between">
+                          <div>
                             <CardDescription className="text-sm font-medium">{statConfig.title}</CardDescription>
                             <CardTitle className="text-3xl font-bold mt-1">{stat.stat_value}</CardTitle>
-                            <p className={`text-xs flex items-center gap-1 mt-1 ${
-                              stat.stat_trend === 'up' ? 'text-green-600' : 
+                            <p className={`text-xs flex items-center gap-1 mt-1 ${stat.stat_trend === 'up' ? 'text-green-600' :
                               stat.stat_trend === 'down' ? 'text-red-600' : 'text-gray-600'
-                            }`}>
+                              }`}>
                               <TrendingUp className={`w-3 h-3 ${stat.stat_trend === 'down' ? 'rotate-180' : ''}`} />
                               {stat.stat_change}
-                        </p>
-                      </div>
+                            </p>
+                          </div>
                           <div className={`w-12 h-12 rounded-xl ${statConfig.bgColor} flex items-center justify-center`}>
                             <IconComponent className={`w-6 h-6 ${statConfig.color}`} />
-                      </div>
-                    </div>
-                  </CardHeader>
-                </Card>
+                          </div>
+                        </div>
+                      </CardHeader>
+                    </Card>
                   );
                 })
               )}
             </div>
 
             {/* Main Dashboard Grid */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-2 sm:gap-6 w-full">
               {/* Career Recommendations Chart */}
               <Card className="lg:col-span-2 bg-card border-card-border">
                 <CardHeader>
@@ -813,6 +827,48 @@ const StudentDashboard = () => {
                 </CardContent>
               </Card>
 
+              {/* RIASEC Personality Profile Card */}
+              {riasecChartData.length > 0 && (
+                <Card className="lg:col-span-1 bg-card border-card-border overflow-hidden">
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-lg flex items-center gap-2">
+                      <Brain className="w-5 h-5 text-purple-500" />
+                      Personality Profile
+                    </CardTitle>
+                    <CardDescription>Your unique RIASEC mix</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="h-[200px] -mt-4">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <RadarChart cx="50%" cy="50%" outerRadius="70%" data={riasecChartData}>
+                          <PolarGrid stroke="var(--card-border)" />
+                          <PolarAngleAxis
+                            dataKey="subject"
+                            tick={{ fill: 'var(--foreground-muted)', fontSize: 10 }}
+                          />
+                          <Radar
+                            name="Personality"
+                            dataKey="A"
+                            stroke="var(--primary)"
+                            fill="var(--primary)"
+                            fillOpacity={0.6}
+                          />
+                        </RadarChart>
+                      </ResponsiveContainer>
+                    </div>
+                    <div className="mt-4 p-3 rounded-lg bg-primary/5 border border-primary/10">
+                      <p className="text-xs font-semibold text-primary uppercase tracking-wider mb-1">Dominant Type</p>
+                      <p className="text-sm font-bold text-foreground">
+                        {Array.isArray(dominantType) ? dominantType.join(' / ') : dominantType}
+                      </p>
+                      <p className="text-xs text-foreground-muted mt-1">
+                        Your profile shows a strong alignment with {Array.isArray(dominantType) ? dominantType.join(', ').toLowerCase() : dominantType.toLowerCase()} environments.
+                      </p>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
               {/* Recent Activity */}
               <Card className="bg-card border-card-border">
                 <CardHeader>
@@ -853,37 +909,36 @@ const StudentDashboard = () => {
                       const timeAgo = getTimeAgo(activity.created_at);
 
                       return (
-                    <div key={activity.id} className="flex items-start gap-3 p-3 rounded-lg hover:bg-muted/50 transition-colors duration-200">
+                        <div key={activity.id} className="flex items-start gap-3 p-3 rounded-lg hover:bg-muted/50 transition-colors duration-200">
                           <div className={`w-10 h-10 rounded-lg ${activityConfig.bgColor} flex items-center justify-center flex-shrink-0`}>
                             <IconComponent className={`w-5 h-5 ${activityConfig.color}`} />
-                      </div>
-                      <div className="flex-1 min-w-0">
+                          </div>
+                          <div className="flex-1 min-w-0">
                             <p className="font-medium text-sm text-foreground truncate">{activity.activity_title}</p>
                             <p className="text-xs text-foreground-muted mt-1">{activity.activity_description}</p>
-                        <div className="flex items-center justify-between mt-2">
+                            <div className="flex items-center justify-between mt-2">
                               <p className="text-xs text-foreground-muted">{timeAgo}</p>
-                          {activity.progress_percentage && activity.progress_percentage > 0 ? (
-                            <div className="flex items-center gap-1">
-                              <div className="w-16 h-1.5 bg-muted rounded-full overflow-hidden">
-                                <div
-                                  className="h-full bg-gradient-to-r from-blue-500 to-purple-500 rounded-full transition-all duration-500"
-                                  style={{ width: `${activity.progress_percentage}%` }}
-                                />
-                              </div>
-                              <span className="text-xs font-medium text-foreground-muted">{activity.progress_percentage}%</span>
+                              {activity.progress_percentage && activity.progress_percentage > 0 ? (
+                                <div className="flex flex-col gap-1 w-24">
+                                  <Progress
+                                    value={activity.progress_percentage}
+                                    className="h-1.5 bg-muted"
+                                    indicatorClassName="bg-gradient-to-r from-blue-500 to-purple-500"
+                                  />
+                                  <span className="text-[10px] font-medium text-foreground-muted text-right">{activity.progress_percentage}%</span>
+                                </div>
+                              ) : (
+                                <div className="text-xs text-foreground-muted">Completed</div>
+                              )}
                             </div>
-                          ) : (
-                            <div className="text-xs text-foreground-muted">Completed</div>
-                          )}
+                          </div>
                         </div>
-                      </div>
-                    </div>
                       );
                     })
                   )}
-                  <Button 
-                    variant="ghost" 
-                    className="w-full mt-4" 
+                  <Button
+                    variant="ghost"
+                    className="w-full mt-4"
                     size="sm"
                     onClick={() => trackButtonClick('View All Activity', 'Recent Activity')}
                   >
@@ -894,7 +949,7 @@ const StudentDashboard = () => {
             </div>
 
             {/* Action Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-2 sm:gap-6 w-full">
               <Card className="bg-gradient-to-br from-blue-50 to-indigo-50 border-blue-200 hover:shadow-card transition-all duration-300 cursor-pointer">
                 <CardHeader>
                   <div className="flex items-center gap-3">
@@ -909,7 +964,7 @@ const StudentDashboard = () => {
                 </CardHeader>
                 <CardContent>
                   <p className="text-sm text-foreground-muted mb-4">Complete our comprehensive career assessment to get personalized recommendations.</p>
-                  <Button 
+                  <Button
                     className="w-full bg-blue-600 hover:bg-blue-700"
                     onClick={() => {
                       trackButtonClick('Start Assessment', 'Action Cards')
@@ -935,7 +990,7 @@ const StudentDashboard = () => {
                 </CardHeader>
                 <CardContent>
                   <p className="text-sm text-foreground-muted mb-4">Learn about Senior Secondary pathways and university requirements.</p>
-                  <Button 
+                  <Button
                     className="w-full bg-green-600 hover:bg-green-700"
                     onClick={() => {
                       trackButtonClick('Explore Paths', 'Action Cards')
@@ -961,8 +1016,8 @@ const StudentDashboard = () => {
                 </CardHeader>
                 <CardContent>
                   <p className="text-sm text-foreground-muted mb-4">Get personalized career advice from our AI counselor.</p>
-                  <Button 
-                    className="w-full bg-purple-600 hover:bg-purple-700" 
+                  <Button
+                    className="w-full bg-purple-600 hover:bg-purple-700"
                     onClick={() => {
                       setActiveTab('chat')
                       trackButtonClick('Start Chat', 'Action Cards')
@@ -976,8 +1031,8 @@ const StudentDashboard = () => {
           </TabsContent>
 
           {/* Careers Tab */}
-          <TabsContent value="careers" className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <TabsContent value="careers" className="space-y-2 sm:space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-6 w-full">
               {careerData.map((career, index) => (
                 <Card key={index} className="bg-card border-card-border hover:shadow-lg transition-all duration-300 cursor-pointer group" onClick={() => handleCareerDetailClick(career)}>
                   <CardHeader className="pb-4">
@@ -988,37 +1043,54 @@ const StudentDashboard = () => {
                         </div>
                         <div className="flex-1">
                           <CardTitle className="text-xl font-bold mb-1">{career.name}</CardTitle>
-                          <div className="flex items-center gap-2">
-                            <Badge variant="secondary" className="text-xs">
-                              {career.value}% Match
-                            </Badge>
-                            <div className="w-20 h-2 bg-muted rounded-full overflow-hidden">
-                          <div
-                            className="h-full bg-gradient-to-r from-blue-500 to-purple-500 rounded-full transition-all duration-500"
-                            style={{ width: `${career.value}%` }}
-                          />
-                        </div>
+                          <div className="flex flex-col gap-2">
+                            <div className="flex items-center gap-2">
+                              <Badge variant="secondary" className="text-[10px] h-5">
+                                {career.value}% Match
+                              </Badge>
+                              <div className="flex flex-col gap-1 w-20">
+                                <Progress
+                                  value={career.value}
+                                  className="h-1.5 bg-muted"
+                                  indicatorClassName="bg-gradient-to-r from-blue-500 to-purple-500"
+                                />
+                                <span className="text-[10px] font-medium text-foreground-muted text-right">{career.value}% Match</span>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <Badge variant="outline" className="text-[10px] h-5 border-orange-200 text-orange-700 bg-orange-50">
+                                {career.actionabilityScore || 85}% Actionable
+                              </Badge>
+                              <div className="flex flex-col gap-1 w-20">
+                                <Progress
+                                  value={career.actionabilityScore || 85}
+                                  className="h-1.5 bg-muted"
+                                  indicatorClassName="bg-orange-400"
+                                />
+                                <span className="text-[10px] font-medium text-foreground-muted text-right">{career.actionabilityScore || 85}% Actionable</span>
+                              </div>
+                            </div>
                           </div>
                         </div>
                       </div>
                     </div>
                   </CardHeader>
-                  
+
                   <CardContent className="space-y-4">
                     <p className="text-sm text-foreground-muted leading-relaxed">
                       {career.description || "A promising career path that aligns with your CBE pathway and interests, offering strong growth potential in Kenya's evolving job market."}
                     </p>
-                    
+
                     {/* Key Information Grid */}
                     <div className="grid grid-cols-2 gap-3">
                       <div className="p-3 rounded-lg bg-green-50 border border-green-200">
                         <div className="flex items-center gap-2 mb-1">
                           <DollarSign className="w-4 h-4 text-green-600" />
                           <span className="text-xs font-medium text-green-800">Salary Range</span>
-                    </div>
+                        </div>
                         <p className="text-sm font-semibold text-green-700">{career.salaryRange || 'KSh 60K - 200K'}</p>
-                    </div>
-                      
+                      </div>
+
                       <div className="p-3 rounded-lg bg-blue-50 border border-blue-200">
                         <div className="flex items-center gap-2 mb-1">
                           <TrendingUp className="w-4 h-4 text-blue-600" />
@@ -1027,7 +1099,7 @@ const StudentDashboard = () => {
                         <p className="text-sm font-semibold text-blue-700">{career.growth || 'High Growth'}</p>
                       </div>
                     </div>
-                    
+
                     {/* Education Requirement */}
                     <div className="p-3 rounded-lg bg-purple-50 border border-purple-200">
                       <div className="flex items-center gap-2 mb-1">
@@ -1036,7 +1108,7 @@ const StudentDashboard = () => {
                       </div>
                       <p className="text-sm text-purple-700">{career.education || "Bachelor's Degree Required"}</p>
                     </div>
-                    
+
                     {/* Action Button */}
                     <Button variant="outline" className="w-full group-hover:bg-primary group-hover:text-primary-foreground transition-colors duration-200">
                       <Target className="w-4 h-4 mr-2" />
@@ -1050,15 +1122,15 @@ const StudentDashboard = () => {
           </TabsContent>
 
           {/* Chat Tab */}
-          <TabsContent value="chat" className="space-y-6">
+          <TabsContent value="chat" className="w-full mx-auto px-2 sm:px-0">
             <AIChat />
           </TabsContent>
 
           {/* Progress Tab */}
-          <TabsContent value="progress" className="space-y-6">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <TabsContent value="progress" className="space-y-2 sm:space-y-6 w-full">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-2 sm:gap-6 w-full">
               {/* Free Courses Card */}
-              <Card className="bg-card border-card-border">
+              <Card className="w-full bg-card border-card-border">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <BookOpen className="w-5 h-5 text-blue-500" />
@@ -1067,7 +1139,7 @@ const StudentDashboard = () => {
                   <CardDescription>AI-curated courses based on your profile and career interests</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <CourseRecommendations 
+                  <CourseRecommendations
                     careerInterests={profile?.career_interests || profile?.interests}
                     cbeSubjects={profile?.cbe_subjects || profile?.subjects}
                     strongSubjects={[]} // This will be populated from grades data
@@ -1076,7 +1148,7 @@ const StudentDashboard = () => {
               </Card>
 
               {/* Journey Actions Card */}
-              <Card className="bg-card border-card-border">
+              <Card className="w-full bg-card border-card-border">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <Target className="w-5 h-5 text-green-500" />
@@ -1085,22 +1157,22 @@ const StudentDashboard = () => {
                   <CardDescription>Take action to advance your career path</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <div className="space-y-3">
-                    <div 
-                      className="flex items-center justify-between p-3 rounded-lg bg-blue-50 border border-blue-200 cursor-pointer hover:bg-blue-100 transition-colors"
+                  <div className="space-y-2 sm:space-y-3">
+                    <div
+                      className="flex flex-col sm:flex-row items-center justify-between p-3 rounded-lg bg-blue-50 border border-blue-200 cursor-pointer hover:bg-blue-100 transition-colors mt-2 sm:mt-0"
                       onClick={() => {
-                        setIsGradesModalOpen(true)
-                        trackButtonClick('Record Grades', 'Journey Actions')
+                        setActiveTab('progress')
+                        trackButtonClick('View Academic Insights', 'Journey Actions')
                       }}
                     >
-                      <div className="flex items-center space-x-3">
-                      <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                        <span className="text-sm font-medium">Record your academic grades</span>
+                      <div className="flex items-center space-x-2">
+                        <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                        <span className="text-sm sm:text-base font-medium">View your academic insights</span>
                       </div>
-                      <ArrowRight className="w-4 h-4 text-blue-500" />
+                      <ArrowRight className="w-4 h-4 text-blue-500 mt-2 sm:mt-0" />
                     </div>
-                    <div 
-                      className="flex items-center justify-between p-3 rounded-lg bg-green-50 border border-green-200 cursor-pointer hover:bg-green-100 transition-colors"
+                    <div
+                      className="flex flex-col sm:flex-row items-center justify-between p-3 rounded-lg bg-green-50 border border-green-200 cursor-pointer hover:bg-green-100 transition-colors"
                       onClick={() => {
                         setActiveTab('chat')
                         trackButtonClick('Complete Assessment', 'Journey Actions')
@@ -1108,12 +1180,12 @@ const StudentDashboard = () => {
                     >
                       <div className="flex items-center space-x-3">
                         <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                      <span className="text-sm font-medium">Complete Skills Assessment</span>
-                    </div>
+                        <span className="text-sm font-medium">Complete Skills Assessment</span>
+                      </div>
                       <ArrowRight className="w-4 h-4 text-green-500" />
                     </div>
-                    <div 
-                      className="flex items-center justify-between p-3 rounded-lg bg-purple-50 border border-purple-200 cursor-pointer hover:bg-purple-100 transition-colors"
+                    <div
+                      className="flex flex-col sm:flex-row items-center justify-between p-3 rounded-lg bg-purple-50 border border-purple-200 cursor-pointer hover:bg-purple-100 transition-colors"
                       onClick={() => {
                         setActiveTab('careers')
                         trackButtonClick('Explore Programs', 'Journey Actions')
@@ -1122,23 +1194,23 @@ const StudentDashboard = () => {
                       <div className="flex items-center space-x-3">
                         <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
                         <span className="text-sm font-medium">Explore university programs</span>
-                    </div>
+                      </div>
                       <ArrowRight className="w-4 h-4 text-purple-500" />
+                    </div>
                   </div>
-                  </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-4">
-                    <Button 
-                      className="w-full"
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3 mt-3 sm:mt-4">
+                    <Button
+                      className="w-full min-h-[44px]"
                       onClick={() => {
                         setActiveTab('chat')
                         trackButtonClick('Start Assessment', 'Journey Actions')
                       }}
                     >
                       Start Assessment <ArrowRight className="w-4 h-4 ml-1" />
-                  </Button>
+                    </Button>
                     <Button
                       variant="outline"
-                      className="w-full"
+                      className="w-full min-h-[44px]"
                       onClick={async () => {
                         const profileData = profile || ({} as any)
                         const html = ReportGenerator.generatePDFReport(
@@ -1164,17 +1236,16 @@ const StudentDashboard = () => {
               </Card>
             </div>
 
-            {/* Academic Performance Section */}
-            <Card className="bg-card border-card-border">
+            <Card className="w-full bg-card border-card-border">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <GraduationCap className="w-5 h-5 text-purple-500" />
-                  Academic Performance
+                  Academic Insights
                 </CardTitle>
-                <CardDescription>Record and track your academic grades to get better career recommendations</CardDescription>
+                <CardDescription>View your academic performance and progress as verified by your school</CardDescription>
               </CardHeader>
               <CardContent>
-                <GradesManager onGradesUpdated={handleGradesUpdated} />
+                <GradesManager readOnly={true} onGradesUpdated={handleGradesUpdated} />
               </CardContent>
             </Card>
           </TabsContent>
