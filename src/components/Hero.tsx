@@ -82,7 +82,7 @@ const Hero = () => {
                         ?.scrollIntoView({ behavior: "smooth" })
                     }
                   >
-                    Try AI Chat
+                    Quick Assessment.
                   </Button>
                 </>
               ) : (
