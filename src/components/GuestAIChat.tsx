@@ -1,15 +1,24 @@
 import { useState, useEffect, useRef } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Send, Bot, User, Sparkles, Loader2, AlertCircle, Download, ArrowRight, RefreshCw } from "lucide-react";
+import { Send, Bot, User, Sparkles, Loader2, AlertCircle, Download, ArrowRight, RefreshCw, Hand, Target } from "lucide-react";
 import { aiCareerService, type ChatMessage } from "@/lib/ai-service";
 import { ReportGenerator, type GuestProfile } from "@/lib/report-generator";
 
 // GuestProfile is now imported from report-generator
+
+const MOCK_CHAT_SEQUENCE = [
+  { role: 'bot', text: "Karibu! I'm CareerGuide AI. Let's find your perfect CBE pathway. What subjects do you enjoy most at school?" },
+  { role: 'user', text: "I really enjoy Computer Science and Art & Design." },
+  { role: 'bot', text: "That's a powerful combination! You could explore Software Engineering, Digital Design, or Animation." },
+  { role: 'user', text: "Digital Design sounds interesting! What grades do I need?" },
+  { role: 'bot', text: "For Digital Design, focus on excelling in Mathematics, Art, and Computer Studies. Would you like to see a full pathway map?" }
+];
 
 const GuestAIChat = () => {
   const [message, setMessage] = useState("");
@@ -56,6 +65,24 @@ const GuestAIChat = () => {
   };
 
   const [isAssessmentStarted, setIsAssessmentStarted] = useState(false);
+  const [mockStep, setMockStep] = useState(0);
+
+  // Auto-play the mock chat
+  useEffect(() => {
+    if (isAssessmentStarted) return;
+    
+    const timer = setInterval(() => {
+      setMockStep((prev) => {
+        // Reset to beginning after showing all messages + a pause
+        if (prev >= MOCK_CHAT_SEQUENCE.length) {
+          return 0;
+        }
+        return prev + 1;
+      });
+    }, 2500); // 2.5 seconds per message
+
+    return () => clearInterval(timer);
+  }, [isAssessmentStarted]);
 
   // Function to initialize or reset the chat
   const startAssessment = () => {
@@ -455,24 +482,117 @@ Keep tone professional, clear, and actionable.`;
 
         {/* Start Assessment Screen */}
         {!isAssessmentStarted && (
-          <div className="p-8 sm:p-12 text-center space-y-6">
-            <div className="w-16 h-16 sm:w-20 sm:h-20 bg-gradient-primary rounded-full flex items-center justify-center mx-auto shadow-glow">
-              <Bot className="w-8 h-8 sm:w-10 sm:h-10 text-primary-foreground" />
+          <div className="p-8 sm:p-12 overflow-hidden bg-[#faf8f5] rounded-t-xl relative">
+            <div className="grid lg:grid-cols-2 gap-12 items-center relative z-10">
+              
+              <div className="order-2 lg:order-1 space-y-8">
+                <div className="inline-flex items-center space-x-2 bg-orange-100 text-orange-700 px-3 py-1 rounded-full text-sm font-medium">
+                  <Sparkles className="w-4 h-4" />
+                  <span>Free Quick Assessment</span>
+                </div>
+                
+                <h2 className="text-4xl md:text-5xl font-bold font-serif leading-tight text-slate-900">
+                  Discover paths your <br className="hidden md:block" />
+                  <span className="text-[#df7b64] italic">future self</span> will thank you for.
+                </h2>
+                
+                <p className="text-lg text-slate-600 leading-relaxed max-w-md font-serif">
+                  Take a 2-minute chat-based assessment to uncover careers that match your unique personality and CBE learning areas.
+                </p>
+
+                <ul className="space-y-4">
+                  <li className="flex items-center gap-3 text-slate-800 font-medium">
+                    <div className="w-5 h-5 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center text-xs">✓</div>
+                    Clear CBE pathway recommendations
+                  </li>
+                  <li className="flex items-center gap-3 text-slate-800 font-medium">
+                    <div className="w-5 h-5 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center text-xs">✓</div>
+                    Downloadable personalized career PDF
+                  </li>
+                  <li className="flex items-center gap-3 text-slate-800 font-medium">
+                    <div className="w-5 h-5 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center text-xs">✓</div>
+                    No sign-up required to see top matches
+                  </li>
+                </ul>
+                
+                <div className="pt-4">
+                  <Button 
+                    onClick={startAssessment} 
+                    size="lg" 
+                    className="bg-[#df7b64] hover:bg-[#c96a55] text-white text-lg px-8 py-6 rounded-full shadow-lg shadow-orange-900/10 hover:-translate-y-1 transition-all w-full sm:w-auto font-medium"
+                  >
+                    <Sparkles className="w-5 h-5 mr-2" />
+                    Start Chatting Now
+                  </Button>
+                </div>
+              </div>
+
+              {/* Mock Chat Preview */}
+              <div className="order-1 lg:order-2">
+                <div className="w-full max-w-md mx-auto bg-[#faf8f5] rounded-3xl p-6 shadow-2xl shadow-stone-200/50 border border-stone-200 overflow-hidden relative">
+                  {/* Decorative compass icon from screenshot */}
+                  <div className="absolute top-4 right-4 text-orange-200/50 w-24 h-24 opacity-50 pointer-events-none stroke-[0.5]">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                      <circle cx="12" cy="12" r="10" />
+                      <polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76" />
+                    </svg>
+                  </div>
+
+                  <div className="flex items-center gap-3 mb-8 pb-4 border-b border-stone-200/70 relative z-10">
+                    <div className="w-10 h-10 rounded-full bg-gradient-primary text-white shadow-sm flex items-center justify-center border border-stone-100">
+                      <Bot className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <h4 className="font-semibold text-slate-900 leading-tight">CareerGuide AI</h4>
+                      <p className="text-xs text-primary">Always here to help</p>
+                    </div>
+                  </div>
+
+                  <div className="space-y-5 relative z-10 min-h-[300px] flex flex-col justify-end">
+                    <AnimatePresence mode="popLayout">
+                      {MOCK_CHAT_SEQUENCE.slice(0, mockStep === 0 ? 0 : mockStep).map((msg, idx) => (
+                        <motion.div
+                          key={`mock-${idx}`}
+                          initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                          animate={{ opacity: 1, y: 0, scale: 1 }}
+                          exit={{ opacity: 0, scale: 0.95, transition: { duration: 0.2 } }}
+                          transition={{ duration: 0.4, type: "spring", bounce: 0.3 }}
+                          className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
+                        >
+                          <div 
+                            className={`p-4 text-sm shadow-sm max-w-[85%] leading-relaxed ${
+                              msg.role === 'user' 
+                                ? 'bg-primary text-primary-foreground rounded-2xl rounded-br-sm' 
+                                : 'bg-background border border-card-border rounded-2xl rounded-tl-sm text-foreground'
+                            }`}
+                          >
+                            {msg.text}
+                          </div>
+                        </motion.div>
+                      ))}
+                      
+                      {/* Typing indicator when waiting for next bot message, or initial state */}
+                      {((mockStep < MOCK_CHAT_SEQUENCE.length && MOCK_CHAT_SEQUENCE[mockStep]?.role === 'bot') || mockStep === 0) && (
+                        <motion.div
+                          key="typing"
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          exit={{ opacity: 0 }}
+                          className="flex justify-start pt-2"
+                        >
+                          <div className="bg-background border border-card-border rounded-2xl rounded-tl-sm p-4 text-sm shadow-sm w-16 h-10 flex items-center justify-center gap-1">
+                            <motion.div animate={{ y: [0, -5, 0] }} transition={{ duration: 1, repeat: Infinity, delay: 0 }} className="w-1.5 h-1.5 bg-foreground-muted rounded-full" />
+                            <motion.div animate={{ y: [0, -5, 0] }} transition={{ duration: 1, repeat: Infinity, delay: 0.2 }} className="w-1.5 h-1.5 bg-foreground-muted rounded-full" />
+                            <motion.div animate={{ y: [0, -5, 0] }} transition={{ duration: 1, repeat: Infinity, delay: 0.4 }} className="w-1.5 h-1.5 bg-foreground-muted rounded-full" />
+                          </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
+                </div>
+              </div>
+
             </div>
-            <div>
-              <h3 className="text-xl sm:text-2xl font-bold text-foreground mb-2">Ready to find your path?</h3>
-              <p className="text-foreground-muted max-w-md mx-auto">
-                Take a 2-minute chat-based assessment to uncover careers that match your unique personality and CBE learning areas.
-              </p>
-            </div>
-            <Button 
-              onClick={startAssessment} 
-              size="lg" 
-              className="bg-gradient-primary hover:opacity-90 text-primary-foreground text-lg px-8 py-6 rounded-full shadow-elevated transition-transform hover:scale-105"
-            >
-              <Sparkles className="w-5 h-5 mr-2" />
-              Start Quick Assessment
-            </Button>
           </div>
         )}
 
