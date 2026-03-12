@@ -34,12 +34,11 @@ const Navigation = () => {
           {/* Logo */}
           <div className="flex items-center">
             <div className="flex-shrink-0 flex items-center space-x-2">
-              <div className="w-8 h-8 bg-gradient-primary rounded-lg flex items-center justify-center">
-                <Bot className="w-5 h-5 text-primary-foreground" />
-              </div>
-              <span className="text-xl font-bold bg-gradient-text bg-clip-text text-transparent">
-                CareerGuide AI
-              </span>
+              <img
+                src="/logos/CareerGuide_Logo.png"
+                alt="CareerGuide AI"
+                className="h-10 w-auto"
+              />
             </div>
           </div>
 

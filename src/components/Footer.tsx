@@ -20,17 +20,19 @@ const Footer = () => {
         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
           {/* Brand */}
           <div className="space-y-4">
-            <div className="flex items-center space-x-2">
-              <div className="w-8 h-8 bg-gradient-primary rounded-lg flex items-center justify-center">
-                <Bot className="w-5 h-5 text-primary-foreground" />
-              </div>
-              <span className="text-xl font-bold bg-gradient-text bg-clip-text text-transparent">
-                CareerGuide AI
-              </span>
+            {/* Container with smaller height to cut off the padding */}
+            <div className="flex items-center h-[40px] overflow-visible">
+              <img
+                src="/logos/CareerGuide_Logo.png"
+                alt="CareerGuide AI"
+                className="h-[60px] w-auto -mt-2 -ml-2"  // Adjust these until it looks right
+              />
             </div>
+
             <p className="text-foreground-muted text-sm leading-relaxed">
               Empowering Kenya's next generation with AI-driven career guidance aligned with the CBE framework.
             </p>
+
             <div className="flex space-x-3">
               <Button variant="ghost" size="sm" className="text-foreground-muted hover:text-primary">
                 <Twitter className="w-4 h-4" />

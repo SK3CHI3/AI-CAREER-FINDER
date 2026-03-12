@@ -13,7 +13,7 @@ import { useAuth } from '@/contexts/AuthContext'
 const signupSchema = z.object({
   fullName: z.string().min(2, 'Full name must be at least 2 characters'),
   email: z.string().email('Please enter a valid email address'),
-  phone: z.string().min(10, 'Please enter a valid phone number (e.g. 0712345678)'),
+  upiOrPhone: z.string().min(4, 'Please enter your UPI number or phone number'),
   role: z.enum(['student', 'school']),
   password: z.string().min(6, 'Password must be at least 6 characters'),
   confirmPassword: z.string(),
@@ -58,7 +58,7 @@ export const SignupForm: React.FC<SignupFormProps> = ({ onToggleMode, defaultRol
     setSuccess(null)
 
     try {
-      const { error } = await signUp(data.email, data.password, data.fullName, data.phone, data.role)
+      const { error } = await signUp(data.email, data.password, data.fullName, data.upiOrPhone, data.role)
 
       if (error) {
         setError(error.message)
@@ -171,17 +171,35 @@ export const SignupForm: React.FC<SignupFormProps> = ({ onToggleMode, defaultRol
             )}
           </div>
 
+          {/* UPI (students) or Phone (schools) */}
           <div className="space-y-2">
-            <Label htmlFor="phone">Phone Number</Label>
-            <Input
-              id="phone"
-              type="tel"
-              placeholder="e.g. 0712345678"
-              {...register('phone')}
-              disabled={isLoading}
-            />
-            {errors.phone && (
-              <p className="text-sm text-destructive">{errors.phone.message}</p>
+            {selectedRole === 'student' ? (
+              <>
+                <Label htmlFor="upiOrPhone">NEMIS UPI Number</Label>
+                <Input
+                  id="upiOrPhone"
+                  type="text"
+                  placeholder="e.g. A1B2C3 (from your NEMIS record)"
+                  {...register('upiOrPhone')}
+                  disabled={isLoading}
+                  className="uppercase"
+                />
+                <p className="text-xs text-muted-foreground">Your 4–12 character Unique Personal Identifier from Kenya's NEMIS system.</p>
+              </>
+            ) : (
+              <>
+                <Label htmlFor="upiOrPhone">Phone Number</Label>
+                <Input
+                  id="upiOrPhone"
+                  type="tel"
+                  placeholder="e.g. 0712345678"
+                  {...register('upiOrPhone')}
+                  disabled={isLoading}
+                />
+              </>
+            )}
+            {errors.upiOrPhone && (
+              <p className="text-sm text-destructive">{errors.upiOrPhone.message}</p>
             )}
           </div>
 

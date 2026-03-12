@@ -11,6 +11,7 @@ import { isSessionValid, destroySessionManager } from '@/lib/session-utils'
 interface Profile {
   id: string
   email: string
+  upi_number: string | null
   phone: string | null
   full_name: string | null
   avatar_url: string | null
@@ -47,7 +48,7 @@ interface AuthContextType {
   profileLoading: boolean
   profileError: Error | null
   isMFAEnabled: boolean
-  signUp: (email: string, password: string, fullName: string, phone: string, role?: Profile['role']) => Promise<{ error: AuthError | null }>
+  signUp: (email: string, password: string, fullName: string, upiOrPhone: string, role?: Profile['role']) => Promise<{ error: AuthError | null }>
   signIn: (identifier: string, password: string) => Promise<{ error: AuthError | null }>
   signOut: () => Promise<{ error: AuthError | null }>
   updateProfile: (updates: Partial<Profile>) => Promise<{ error: Error | null }>
@@ -206,46 +207,74 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, [user])
 
   // Sign up with email and password
-  const signUp = async (email: string, password: string, fullName: string, phone: string, role: Profile['role'] = 'student') => {
+  // upiOrPhone: UPI number for students (6-char NEMIS code), phone for schools
+  const signUp = async (email: string, password: string, fullName: string, upiOrPhone: string, role: Profile['role'] = 'student') => {
+    const isStudent = role === 'student'
     const { error } = await supabase.auth.signUp({
       email,
       password,
       options: {
         data: {
           full_name: fullName,
-          phone: phone,
+          // Store UPI for students, phone for schools/teachers
+          ...(isStudent ? { upi_number: upiOrPhone } : { phone: upiOrPhone }),
           role: role,
         },
       },
     })
+    // If signup succeeded, also save UPI/phone to profiles
+    if (!error) {
+      const { data: { user: newUser } } = await supabase.auth.getUser()
+      if (newUser) {
+        if (isStudent) {
+          await supabase.from('profiles').update({ upi_number: upiOrPhone }).eq('id', newUser.id)
+        } else {
+          await supabase.from('profiles').update({ phone: upiOrPhone }).eq('id', newUser.id)
+        }
+      }
+    }
     return { error }
   }
 
-  // Unified Sign In (Email or Phone)
+  // Unified Sign In (Email, UPI, or Phone)
   const signIn = async (identifier: string, password: string) => {
     try {
       let email = identifier;
 
-      // Check if identifier is a phone number (simple check)
-      const isPhone = /^\+?[\d\s-]{10,}$/.test(identifier);
+      // Check if identifier is NOT an email — try resolving from UPI or phone
+      const isEmail = identifier.includes('@');
 
-      if (isPhone) {
-        if (isDev) console.log('📱 AuthContext: Identifier looks like a phone, resolving email...');
-        const cleanPhone = identifier.replace(/[\s-]/g, '');
+      if (!isEmail) {
+        if (isDev) console.log('🔍 AuthContext: Non-email identifier, resolving email...');
+        const cleanIdentifier = identifier.replace(/[\s-]/g, '');
 
-        const { data, error } = await supabase
-          .from('profiles')
-          .select('email')
-          .eq('phone', cleanPhone)
-          .single();
+        // Try UPI first (6-char alphanumeric NEMIS code)
+        const isUPI = /^[A-Za-z0-9]{4,12}$/.test(cleanIdentifier) && !cleanIdentifier.startsWith('07') && !cleanIdentifier.startsWith('+');
 
-        if (error || !data?.email) {
-          if (isDev) console.error('Failed to resolve email from phone:', error);
-          return { error: { message: 'No account found with this phone number.', name: 'AuthError' } as any };
+        if (isUPI) {
+          const { data, error } = await supabase
+            .from('profiles')
+            .select('email')
+            .eq('upi_number', cleanIdentifier.toUpperCase())
+            .single();
+          if (!error && data?.email) {
+            email = data.email;
+            if (isDev) console.log('🎓 AuthContext: Resolved email from UPI:', email);
+          } else {
+            return { error: { message: 'No account found with this UPI number. Please check your NEMIS UPI and try again.', name: 'AuthError' } as any };
+          }
+        } else {
+          // Phone number fallback
+          const { data, error } = await supabase
+            .from('profiles')
+            .select('email')
+            .eq('phone', cleanIdentifier)
+            .single();
+          if (error || !data?.email) {
+            return { error: { message: 'No account found with this identifier. Please use your email, UPI number, or phone.', name: 'AuthError' } as any };
+          }
+          email = data.email;
         }
-
-        email = data.email;
-        if (isDev) console.log('📱 AuthContext: Resolved email:', email);
       }
 
       const { data, error } = await supabase.auth.signInWithPassword({

@@ -17,6 +17,7 @@ import TeacherDashboard from "./pages/TeacherDashboard"
 import ClassDetail from "./pages/ClassDetail";
 import AcceptInvite from "./pages/AcceptInvite";
 import Dashboard from "./pages/Dashboard";
+import SchoolInsightsPage from "./pages/SchoolInsightsPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -70,6 +71,14 @@ const App = () => (
               element={
                 <ProtectedRoute requiredRole="school">
                   <SchoolClasses />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/school/insights"
+              element={
+                <ProtectedRoute requiredRole="school">
+                  <SchoolInsightsPage />
                 </ProtectedRoute>
               }
             />

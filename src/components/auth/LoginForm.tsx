@@ -11,7 +11,7 @@ import { Loader2, Eye, EyeOff } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
 
 const loginSchema = z.object({
-  identifier: z.string().min(3, 'Please enter your email or phone number'),
+  identifier: z.string().min(3, 'Please enter your email or UPI number'),
   password: z.string().min(6, 'Password must be at least 6 characters'),
 })
 
@@ -69,11 +69,11 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onToggleMode }) => {
           )}
 
           <div className="space-y-2">
-            <Label htmlFor="identifier">Email or Phone Number</Label>
+            <Label htmlFor="identifier">Email or UPI Number</Label>
             <Input
               id="identifier"
               type="text"
-              placeholder="Enter your email or phone"
+              placeholder="Enter your email or NEMIS UPI"
               {...register('identifier')}
               disabled={isLoading}
             />

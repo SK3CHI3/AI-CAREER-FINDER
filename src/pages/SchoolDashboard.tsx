@@ -6,13 +6,14 @@ import { classService, type ClassRecord } from '@/lib/class-service'
 import SchoolOnboarding from '@/components/school/SchoolOnboarding'
 import InviteTeacher from '@/components/school/InviteTeacher'
 import SubscriptionCard from '@/components/school/SubscriptionCard'
+import SchoolInsights from '@/components/school/SchoolInsights'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import {
   Bot, Building2, LogOut, Users, BookOpen, GraduationCap,
-  Plus, ChevronRight, Clock, Mail, Trash2, RefreshCw, CreditCard
+  Plus, ChevronRight, Clock, Mail, Trash2, RefreshCw, CreditCard, Sparkles
 } from 'lucide-react'
 
 const SchoolDashboard: React.FC = () => {
@@ -70,18 +71,19 @@ const SchoolDashboard: React.FC = () => {
       <header className="border-b border-card-border bg-background/80 backdrop-blur-md sticky top-0 z-10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
-            <div className="flex items-center space-x-3">
-              <div className="w-8 h-8 bg-gradient-primary rounded-lg flex items-center justify-center">
-                <Bot className="w-5 h-5 text-primary-foreground" />
-              </div>
-              <span className="text-xl font-bold bg-gradient-text bg-clip-text text-transparent">CareerGuide AI</span>
-              <span className="text-foreground-muted">·</span>
+            <div className="flex items-center gap-3">
+              <img
+                src="/logos/CareerGuide_Logo.png"
+                alt="CareerGuide AI"
+                className="h-10 w-auto"
+              />
+              <Badge variant="outline" className="border-primary/30 text-primary bg-primary/5 mt-1">School Portal</Badge>
+            </div>
+            <div className="flex items-center space-x-4">
               <div className="flex items-center gap-2">
                 <Building2 className="w-4 h-4 text-primary" />
                 <span className="font-medium text-foreground text-sm">{school?.name ?? 'School'}</span>
               </div>
-            </div>
-            <div className="flex items-center gap-3">
               <Button variant="ghost" size="sm" onClick={loadData} title="Refresh">
                 <RefreshCw className="w-4 h-4" />
               </Button>
@@ -116,6 +118,15 @@ const SchoolDashboard: React.FC = () => {
                 onInvited={loadData}
               />
             )}
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-9 border-primary/30 text-primary hover:bg-primary/10"
+              onClick={() => navigate('/school/insights')}
+            >
+              <Sparkles className="w-4 h-4 mr-2" />
+              AI Insights
+            </Button>
             <Button variant="outline" size="sm" onClick={loadData} className="h-9">
               <RefreshCw className={`w-4 h-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
               Sync Data
@@ -250,6 +261,11 @@ const SchoolDashboard: React.FC = () => {
             </CardContent>
           </Card>
         </div>
+
+        {/* School Insights Section */}
+        {school && (
+          <SchoolInsights schoolId={school.id} />
+        )}
 
         {/* Subscription / Billing Section */}
         <SubscriptionCard

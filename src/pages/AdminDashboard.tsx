@@ -1,216 +1,178 @@
 import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useAuth } from '@/contexts/AuthContext'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Input } from '@/components/ui/input'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from 'recharts'
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts'
 import {
-  Users,
-  BookOpen,
-  Target,
-  TrendingUp,
-  Settings,
-  LogOut,
-  Bot,
-  BarChart3,
-  Search,
-  Filter,
-  Download,
-  Eye,
-  Edit,
-  Shield,
-  Activity,
-  Calendar,
-  Award
+  Users, BookOpen, Target, TrendingUp, LogOut, Bot,
+  Search, Filter, Download, Eye, Shield, Activity,
+  Building2, GraduationCap, RefreshCw, AlertCircle
 } from 'lucide-react'
-import { dashboardService, PlatformAnalytics } from '@/lib/dashboard-service'
 import { supabase } from '@/lib/supabase'
 
-// Mock data for admin analytics
-const userGrowthData = [
-  { month: 'Jan', students: 120, assessments: 89 },
-  { month: 'Feb', students: 180, assessments: 145 },
-  { month: 'Mar', students: 250, assessments: 210 },
-  { month: 'Apr', students: 320, assessments: 280 },
-  { month: 'May', students: 420, assessments: 380 },
-  { month: 'Jun', students: 520, assessments: 465 },
-]
+interface AdminStats {
+  totalStudents: number
+  totalSchools: number
+  totalTeachers: number
+  totalAssessments: number
+  studentGrowth: { month: string; students: number; schools: number }[]
+  careerDistribution: { name: string; value: number; color: string }[]
+  recentUsers: {
+    id: string; name: string; email: string
+    role: string; joined: string; status: string
+  }[]
+}
 
-const careerDistribution = [
-  { name: 'Technology', value: 35, color: '#3b82f6' },
-  { name: 'Healthcare', value: 25, color: '#10b981' },
-  { name: 'Business', value: 20, color: '#f59e0b' },
-  { name: 'Engineering', value: 15, color: '#ef4444' },
-  { name: 'Arts', value: 5, color: '#8b5cf6' },
-]
-
-const recentUsers = [
-  { id: 1, name: 'John Kamau', email: 'john.kamau@email.com', role: 'student', joined: '2024-01-15', assessments: 3, status: 'active' },
-  { id: 2, name: 'Mary Wanjiku', email: 'mary.w@email.com', role: 'student', joined: '2024-01-14', assessments: 2, status: 'active' },
-  { id: 3, name: 'Peter Ochieng', email: 'peter.o@email.com', role: 'student', joined: '2024-01-13', assessments: 1, status: 'inactive' },
-  { id: 4, name: 'Grace Akinyi', email: 'grace.a@email.com', role: 'student', joined: '2024-01-12', assessments: 4, status: 'active' },
-  { id: 5, name: 'David Kiprop', email: 'david.k@email.com', role: 'student', joined: '2024-01-11', assessments: 2, status: 'active' },
-]
+const CAREER_COLORS = ['#6366f1', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#14b8a6']
 
 const AdminDashboard = () => {
+  const navigate = useNavigate()
   const { user, profile, signOut } = useAuth()
   const [activeTab, setActiveTab] = useState('overview')
   const [searchTerm, setSearchTerm] = useState('')
-  const [platformAnalytics, setPlatformAnalytics] = useState<PlatformAnalytics[]>([])
-  const [userGrowthData, setUserGrowthData] = useState<any[]>([])
-  const [careerDistribution, setCareerDistribution] = useState<any[]>([])
-  const [recentUsers, setRecentUsers] = useState<any[]>([])
-  const [isLoading, setIsLoading] = useState(true)
+  const [stats, setStats] = useState<AdminStats | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
-  const handleSignOut = async () => {
+  const loadData = async () => {
+    if (!user) return
+    setLoading(true)
+    setError(null)
     try {
-      const { error } = await signOut()
-      if (error) {
-        console.error('Sign out failed:', error)
-        // Still redirect to login even if there's an error
+      // ── Counts ──────────────────────────────────────────────────────────
+      const [
+        { count: totalStudents },
+        { count: totalSchools },
+        { count: totalTeachers },
+        { count: totalAssessments },
+      ] = await Promise.all([
+        supabase.from('profiles').select('id', { count: 'exact', head: true }).eq('role', 'student'),
+        supabase.from('schools').select('id', { count: 'exact', head: true }),
+        supabase.from('profiles').select('id', { count: 'exact', head: true }).eq('role', 'teacher'),
+        supabase.from('user_activities').select('id', { count: 'exact', head: true }).in('activity_type', ['assessment', 'riasec_assessment']),
+      ])
+
+      // ── Monthly growth (last 6 months via created_at buckets) ───────────
+      const { data: allProfiles } = await supabase
+        .from('profiles')
+        .select('role, created_at')
+        .order('created_at', { ascending: true })
+
+      const monthMap: Record<string, { students: number; schools: number }> = {}
+      const now = new Date()
+      for (let i = 5; i >= 0; i--) {
+        const d = new Date(now.getFullYear(), now.getMonth() - i, 1)
+        const key = d.toLocaleString('default', { month: 'short' })
+        monthMap[key] = { students: 0, schools: 0 }
       }
-    } catch (error) {
-      console.error('Sign out error:', error)
-    }
-  }
+      ;(allProfiles ?? []).forEach((p) => {
+        const d = new Date(p.created_at)
+        const diffMonths = (now.getFullYear() - d.getFullYear()) * 12 + (now.getMonth() - d.getMonth())
+        if (diffMonths >= 0 && diffMonths < 6) {
+          const key = d.toLocaleString('default', { month: 'short' })
+          if (key in monthMap) {
+            if (p.role === 'student') monthMap[key].students++
+            if (p.role === 'school') monthMap[key].schools++
+          }
+        }
+      })
+      const studentGrowth = Object.entries(monthMap).map(([month, v]) => ({ month, ...v }))
 
-  // Load admin dashboard data
-  useEffect(() => {
-    const loadAdminData = async () => {
-      if (!user) return
+      // ── Career distribution ──────────────────────────────────────────────
+      const { data: careerProfiles } = await supabase.from('profiles').select('career_interests')
+      const careerCounts: Record<string, number> = {}
+      ;(careerProfiles ?? []).forEach((p) => {
+        ;(p.career_interests ?? []).forEach((c: string) => {
+          careerCounts[c] = (careerCounts[c] ?? 0) + 1
+        })
+      })
+      const careerDistribution = Object.entries(careerCounts)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 7)
+        .map(([name, value], i) => ({ name, value, color: CAREER_COLORS[i % CAREER_COLORS.length] }))
 
-      try {
-        setIsLoading(true)
-
-        // Load platform analytics
-        const analytics = await dashboardService.getPlatformAnalytics()
-        setPlatformAnalytics(analytics)
-
-        // Load user growth data (simulated for now)
-        const growthData = await generateUserGrowthData()
-        setUserGrowthData(growthData)
-
-        // Load career distribution (simulated for now)
-        const careerDist = await generateCareerDistribution()
-        setCareerDistribution(careerDist)
-
-        // Load recent users
-        const users = await loadRecentUsers()
-        setRecentUsers(users)
-
-      } catch (error) {
-        console.error('Failed to load admin data:', error)
-      } finally {
-        setIsLoading(false)
-      }
-    }
-
-    loadAdminData()
-  }, [user])
-
-  // Generate user growth data
-  const generateUserGrowthData = async () => {
-    // This would typically come from analytics queries
-    return [
-      { month: 'Jan', students: 120, assessments: 89 },
-      { month: 'Feb', students: 180, assessments: 145 },
-      { month: 'Mar', students: 250, assessments: 210 },
-      { month: 'Apr', students: 320, assessments: 280 },
-      { month: 'May', students: 420, assessments: 380 },
-      { month: 'Jun', students: 520, assessments: 465 },
-    ]
-  }
-
-  // Generate career distribution
-  const generateCareerDistribution = async () => {
-    // This would typically come from career recommendations analytics
-    return [
-      { name: 'Technology', value: 35, color: '#3b82f6' },
-      { name: 'Healthcare', value: 25, color: '#10b981' },
-      { name: 'Business', value: 20, color: '#f59e0b' },
-      { name: 'Engineering', value: 15, color: '#ef4444' },
-      { name: 'Arts', value: 5, color: '#8b5cf6' },
-    ]
-  }
-
-  // Load recent users
-  const loadRecentUsers = async () => {
-    try {
-      const { data, error } = await supabase
+      // ── Recent users ─────────────────────────────────────────────────────
+      const { data: recent } = await supabase
         .from('profiles')
         .select('id, email, full_name, role, created_at')
         .order('created_at', { ascending: false })
-        .limit(10)
+        .limit(20)
 
-      if (error) throw error
+      const recentUsers = (recent ?? []).map((u) => ({
+        id: u.id,
+        name: u.full_name || 'Unknown',
+        email: u.email,
+        role: u.role,
+        joined: new Date(u.created_at).toLocaleDateString('en-KE'),
+        status: 'active',
+      }))
 
-      return data?.map((user, index) => ({
-        id: user.id,
-        name: user.full_name || 'Unknown',
-        email: user.email,
-        role: user.role,
-        joined: new Date(user.created_at).toISOString().split('T')[0],
-        assessments: Math.floor(Math.random() * 5) + 1,
-        status: Math.random() > 0.2 ? 'active' : 'inactive'
-      })) || []
-    } catch (error) {
-      console.error('Failed to load recent users:', error)
-      return []
+      setStats({
+        totalStudents: totalStudents ?? 0,
+        totalSchools: totalSchools ?? 0,
+        totalTeachers: totalTeachers ?? 0,
+        totalAssessments: totalAssessments ?? 0,
+        studentGrowth,
+        careerDistribution,
+        recentUsers,
+      })
+    } catch (err: any) {
+      setError('Failed to load admin data. Please refresh.')
+      console.error(err)
+    } finally {
+      setLoading(false)
     }
   }
 
-  const getInitials = (name: string | null) => {
-    if (!name) return 'A'
-    return name
-      .split(' ')
-      .map(word => word[0])
-      .join('')
-      .toUpperCase()
-      .slice(0, 2)
-  }
+  useEffect(() => { loadData() }, [user])
 
-  const filteredUsers = recentUsers.filter(user =>
-    user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    user.email.toLowerCase().includes(searchTerm.toLowerCase())
+  const getInitials = (name: string) =>
+    name.split(' ').map((w) => w[0]).join('').toUpperCase().slice(0, 2)
+
+  const filteredUsers = (stats?.recentUsers ?? []).filter(
+    (u) =>
+      u.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      u.email.toLowerCase().includes(searchTerm.toLowerCase())
   )
 
+  const metricCards = stats
+    ? [
+        { label: 'Total Students', value: stats.totalStudents, icon: Users, color: 'text-sky-400', bg: 'bg-sky-400/10', note: 'Registered on platform' },
+        { label: 'Schools Onboarded', value: stats.totalSchools, icon: Building2, color: 'text-violet-400', bg: 'bg-violet-400/10', note: 'Active institutions' },
+        { label: 'Teachers', value: stats.totalTeachers, icon: GraduationCap, color: 'text-emerald-400', bg: 'bg-emerald-400/10', note: 'Verified staff members' },
+        { label: 'Assessments Done', value: stats.totalAssessments, icon: Target, color: 'text-amber-400', bg: 'bg-amber-400/10', note: 'Career assessments taken' },
+      ]
+    : []
+
   return (
-    <div className="min-h-screen" style={{ background: 'var(--gradient-page-subtle)' }}>
+    <div className="min-h-screen" style={{ background: 'var(--gradient-homepage)' }}>
       {/* Header */}
       <header className="border-b border-card-border bg-background/80 backdrop-blur-md sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
-            {/* Logo */}
-            <div className="flex items-center space-x-3">
-              <div className="w-8 h-8 bg-gradient-primary rounded-lg flex items-center justify-center">
-                <Bot className="w-5 h-5 text-primary-foreground" />
-              </div>
-              <h1 className="text-xl font-bold bg-gradient-text bg-clip-text text-transparent">
-                CareerGuide AI Admin
-              </h1>
+            <div className="flex items-center gap-3">
+              <img
+                src="/logos/CareerGuide_Logo.png"
+                alt="CareerGuide AI"
+                className="h-10 w-auto"
+              />
+              <Badge className="bg-destructive/20 text-destructive border-destructive/30 text-xs mt-1">Admin Panel</Badge>
             </div>
-
-            {/* User Menu */}
-            <div className="flex items-center space-x-4">
-              <div className="flex items-center space-x-3">
-                <Avatar>
-                  <AvatarImage src={profile?.avatar_url || ''} />
-                  <AvatarFallback>{getInitials(profile?.full_name)}</AvatarFallback>
-                </Avatar>
-                <div className="hidden md:block">
-                  <p className="text-sm font-medium text-foreground">
-                    {profile?.full_name || 'Admin'}
-                  </p>
-                  <Badge className="bg-destructive text-destructive-foreground">
-                    Admin
-                  </Badge>
-                </div>
-              </div>
-              <Button variant="ghost" size="sm" onClick={handleSignOut}>
+            <div className="flex items-center gap-3">
+              <Button variant="ghost" size="sm" onClick={loadData}>
+                <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+              </Button>
+              <Avatar className="w-8 h-8">
+                <AvatarFallback className="text-xs">{getInitials(profile?.full_name ?? 'A')}</AvatarFallback>
+              </Avatar>
+              <span className="text-sm text-foreground hidden md:block">{profile?.full_name ?? user?.email}</span>
+              <Button variant="ghost" size="icon" onClick={() => signOut()}>
                 <LogOut className="w-4 h-4" />
               </Button>
             </div>
@@ -218,380 +180,233 @@ const AdminDashboard = () => {
         </div>
       </header>
 
-      {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Welcome Section */}
-        <div className="mb-8">
-          <h2 className="text-3xl font-bold text-foreground mb-2">
-            Admin Dashboard 🛡️
-          </h2>
-          <p className="text-foreground-muted">
-            Monitor platform performance and manage user activities.
-          </p>
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+        <div>
+          <h2 className="text-3xl font-extrabold text-foreground tracking-tight">Dashboard Overview</h2>
+          <p className="text-foreground-muted text-sm mt-1">Real-time platform metrics and user management.</p>
         </div>
 
-        {/* Tabs Navigation */}
+        {error && (
+          <div className="flex items-center gap-2 p-4 rounded-xl bg-destructive/10 border border-destructive/30 text-destructive text-sm">
+            <AlertCircle className="w-4 h-4 shrink-0" /> {error}
+          </div>
+        )}
+
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4 lg:w-auto lg:grid-cols-4">
+          <TabsList className="bg-background/50 border border-card-border">
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="users">Users</TabsTrigger>
             <TabsTrigger value="analytics">Analytics</TabsTrigger>
-            <TabsTrigger value="settings">Settings</TabsTrigger>
           </TabsList>
 
-          {/* Overview Tab */}
-          <TabsContent value="overview" className="space-y-6">
-            {/* Key Metrics */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              {isLoading ? (
-                Array.from({ length: 4 }).map((_, index) => (
-                  <Card key={index} className="bg-card border-card-border">
-                    <CardHeader className="pb-3">
-                      <div className="flex items-center justify-between">
-                        <div className="flex-1">
-                          <div className="h-4 bg-muted rounded animate-pulse mb-2"></div>
-                          <div className="h-8 bg-muted rounded animate-pulse mb-2"></div>
-                          <div className="h-3 bg-muted rounded animate-pulse w-2/3"></div>
+          {/* ── Overview ── */}
+          <TabsContent value="overview" className="space-y-8">
+            {/* Metric Cards */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+              {loading
+                ? Array.from({ length: 4 }).map((_, i) => (
+                    <Card key={i} className="bg-gradient-surface border-card-border">
+                      <CardContent className="p-6">
+                        <div className="h-4 bg-muted rounded animate-pulse mb-3 w-2/3" />
+                        <div className="h-8 bg-muted rounded animate-pulse mb-2" />
+                        <div className="h-3 bg-muted rounded animate-pulse w-1/2" />
+                      </CardContent>
+                    </Card>
+                  ))
+                : metricCards.map(({ label, value, icon: Icon, color, bg, note }) => (
+                    <Card key={label} className="bg-gradient-surface border-card-border overflow-hidden relative group">
+                      <div className={`absolute top-0 right-0 w-24 h-24 -mr-8 -mt-8 rounded-full ${bg} blur-2xl opacity-40 group-hover:opacity-70 transition-opacity`} />
+                      <CardContent className="p-6 relative">
+                        <div className={`w-11 h-11 rounded-xl ${bg} flex items-center justify-center mb-4 border border-white/5`}>
+                          <Icon className={`w-5 h-5 ${color}`} />
                         </div>
-                        <div className="w-8 h-8 bg-muted rounded animate-pulse"></div>
-                      </div>
-                    </CardHeader>
-                  </Card>
-                ))
-              ) : (
-                <>
-                  <Card className="bg-card border-card-border">
-                    <CardHeader className="pb-3">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <CardDescription>Total Students</CardDescription>
-                          <CardTitle className="text-2xl">{recentUsers.length}</CardTitle>
-                        </div>
-                        <Users className="w-8 h-8 text-blue-500" />
-                      </div>
-                      <div className="text-xs text-green-500">+12% from last month</div>
-                    </CardHeader>
-                  </Card>
-
-                  <Card className="bg-card border-card-border">
-                    <CardHeader className="pb-3">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <CardDescription>Assessments Taken</CardDescription>
-                          <CardTitle className="text-2xl">{recentUsers.reduce((sum, user) => sum + user.assessments, 0)}</CardTitle>
-                        </div>
-                        <Target className="w-8 h-8 text-green-500" />
-                      </div>
-                      <div className="text-xs text-green-500">+18% from last month</div>
-                    </CardHeader>
-                  </Card>
-
-                  <Card className="bg-card border-card-border">
-                    <CardHeader className="pb-3">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <CardDescription>Active Sessions</CardDescription>
-                          <CardTitle className="text-2xl">{recentUsers.filter(u => u.status === 'active').length}</CardTitle>
-                        </div>
-                        <Activity className="w-8 h-8 text-purple-500" />
-                      </div>
-                      <div className="text-xs text-blue-500">Real-time</div>
-                    </CardHeader>
-                  </Card>
-
-                  <Card className="bg-card border-card-border">
-                    <CardHeader className="pb-3">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <CardDescription>Career Matches</CardDescription>
-                          <CardTitle className="text-2xl">{careerDistribution.reduce((sum, cat) => sum + cat.value, 0)}</CardTitle>
-                        </div>
-                        <Award className="w-8 h-8 text-yellow-500" />
-                      </div>
-                      <div className="text-xs text-green-500">+25% from last month</div>
-                    </CardHeader>
-                  </Card>
-                </>
-              )}
+                        <p className={`text-3xl font-black ${color} tabular-nums tracking-tight`}>{value.toLocaleString()}</p>
+                        <p className="text-sm font-semibold text-foreground mt-1">{label}</p>
+                        <p className="text-[10px] text-foreground-muted uppercase tracking-wider mt-0.5">{note}</p>
+                      </CardContent>
+                    </Card>
+                  ))}
             </div>
 
             {/* Charts */}
             <div className="grid lg:grid-cols-2 gap-6">
-              {/* User Growth Chart */}
-              <Card className="bg-card border-card-border">
+              <Card className="bg-gradient-surface border-card-border">
                 <CardHeader>
-                  <CardTitle>User Growth & Engagement</CardTitle>
-                  <CardDescription>Monthly student registrations and assessment completions</CardDescription>
+                  <CardTitle className="text-base">New Users — Last 6 Months</CardTitle>
+                  <CardDescription>Student & school registrations per month</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <div className="h-80">
+                  <div className="h-64">
                     <ResponsiveContainer width="100%" height="100%">
-                      <BarChart data={userGrowthData}>
-                        <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis dataKey="month" />
-                        <YAxis />
-                        <Tooltip />
-                        <Bar dataKey="students" fill="#3b82f6" name="New Students" />
-                        <Bar dataKey="assessments" fill="#10b981" name="Assessments" />
+                      <BarChart data={stats?.studentGrowth ?? []} barSize={12}>
+                        <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
+                        <XAxis dataKey="month" tick={{ fontSize: 11, fill: '#888' }} />
+                        <YAxis tick={{ fontSize: 11, fill: '#888' }} />
+                        <Tooltip contentStyle={{ background: '#1a1a2e', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8 }} />
+                        <Bar dataKey="students" fill="#6366f1" name="Students" radius={[4, 4, 0, 0]} />
+                        <Bar dataKey="schools" fill="#10b981" name="Schools" radius={[4, 4, 0, 0]} />
                       </BarChart>
                     </ResponsiveContainer>
                   </div>
                 </CardContent>
               </Card>
 
-              {/* Career Interest Distribution */}
-              <Card className="bg-card border-card-border">
+              <Card className="bg-gradient-surface border-card-border">
                 <CardHeader>
-                  <CardTitle>Career Interest Distribution</CardTitle>
-                  <CardDescription>Popular career fields among students</CardDescription>
+                  <CardTitle className="text-base">Career Interest Distribution</CardTitle>
+                  <CardDescription>What students across the platform aspire to</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <div className="h-80">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <PieChart>
-                        <Pie
-                          data={careerDistribution}
-                          cx="50%"
-                          cy="50%"
-                          outerRadius={100}
-                          dataKey="value"
-                          label={({ name, value }) => `${name}: ${value}%`}
-                        >
-                          {careerDistribution.map((entry, index) => (
-                            <Cell key={`cell-${index}`} fill={entry.color} />
-                          ))}
-                        </Pie>
-                        <Tooltip />
-                      </PieChart>
-                    </ResponsiveContainer>
+                  <div className="h-64">
+                    {(stats?.careerDistribution ?? []).length === 0 ? (
+                      <div className="flex items-center justify-center h-full text-foreground-muted text-sm">
+                        No career data yet
+                      </div>
+                    ) : (
+                      <ResponsiveContainer width="100%" height="100%">
+                        <PieChart>
+                          <Pie
+                            data={stats?.careerDistribution}
+                            cx="50%" cy="50%"
+                            outerRadius={90}
+                            dataKey="value"
+                            label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                            labelLine={false}
+                          >
+                            {stats?.careerDistribution.map((entry, i) => (
+                              <Cell key={`cell-${i}`} fill={entry.color} />
+                            ))}
+                          </Pie>
+                          <Tooltip contentStyle={{ background: '#1a1a2e', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8 }} />
+                        </PieChart>
+                      </ResponsiveContainer>
+                    )}
                   </div>
                 </CardContent>
               </Card>
             </div>
-
-            {/* Recent Activity */}
-            <Card className="bg-gradient-surface border-card-border">
-              <CardHeader>
-                <CardTitle>Recent Platform Activity</CardTitle>
-                <CardDescription>Latest user actions and system events</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  <div className="flex items-center space-x-4 p-3 rounded-lg bg-background/50">
-                    <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center">
-                      <Users className="w-5 h-5 text-green-600" />
-                    </div>
-                    <div className="flex-1">
-                      <p className="font-medium">New student registered</p>
-                      <p className="text-sm text-foreground-muted">Sarah Muthoni joined the platform</p>
-                    </div>
-                    <span className="text-xs text-foreground-muted">2 min ago</span>
-                  </div>
-                  <div className="flex items-center space-x-4 p-3 rounded-lg bg-background/50">
-                    <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
-                      <Target className="w-5 h-5 text-blue-600" />
-                    </div>
-                    <div className="flex-1">
-                      <p className="font-medium">Assessment completed</p>
-                      <p className="text-sm text-foreground-muted">John Kamau finished personality assessment</p>
-                    </div>
-                    <span className="text-xs text-foreground-muted">5 min ago</span>
-                  </div>
-                  <div className="flex items-center space-x-4 p-3 rounded-lg bg-background/50">
-                    <div className="w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center">
-                      <BarChart3 className="w-5 h-5 text-purple-600" />
-                    </div>
-                    <div className="flex-1">
-                      <p className="font-medium">System report generated</p>
-                      <p className="text-sm text-foreground-muted">Monthly analytics report is ready</p>
-                    </div>
-                    <span className="text-xs text-foreground-muted">1 hour ago</span>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
           </TabsContent>
 
-          {/* Users Tab */}
+          {/* ── Users ── */}
           <TabsContent value="users" className="space-y-6">
-            {/* Search and Filters */}
             <Card className="bg-gradient-surface border-card-border">
               <CardHeader>
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                   <div>
                     <CardTitle>User Management</CardTitle>
-                    <CardDescription>View and manage all platform users</CardDescription>
+                    <CardDescription>All registered platform users</CardDescription>
                   </div>
-                  <div className="flex items-center space-x-2">
+                  <div className="flex items-center gap-2">
                     <div className="relative">
-                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-foreground-muted w-4 h-4" />
+                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-foreground-muted w-4 h-4" />
                       <Input
                         placeholder="Search users..."
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
-                        className="pl-10 w-64"
+                        className="pl-10 w-56"
                       />
                     </div>
-                    <Button variant="outline" size="sm">
-                      <Filter className="w-4 h-4 mr-2" />
-                      Filter
-                    </Button>
-                    <Button variant="outline" size="sm">
-                      <Download className="w-4 h-4 mr-2" />
-                      Export
-                    </Button>
                   </div>
                 </div>
               </CardHeader>
               <CardContent>
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>User</TableHead>
-                      <TableHead>Role</TableHead>
-                      <TableHead>Joined</TableHead>
-                      <TableHead>Assessments</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {filteredUsers.map((user) => (
-                      <TableRow key={user.id}>
-                        <TableCell>
-                          <div className="flex items-center space-x-3">
-                            <Avatar className="w-8 h-8">
-                              <AvatarFallback className="text-xs">
-                                {user.name.split(' ').map(n => n[0]).join('')}
-                              </AvatarFallback>
-                            </Avatar>
-                            <div>
-                              <p className="font-medium">{user.name}</p>
-                              <p className="text-sm text-foreground-muted">{user.email}</p>
+                {loading ? (
+                  <div className="flex justify-center py-10">
+                    <RefreshCw className="w-6 h-6 animate-spin text-primary/40" />
+                  </div>
+                ) : (
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>User</TableHead>
+                        <TableHead>Role</TableHead>
+                        <TableHead>Joined</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead>Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {filteredUsers.map((u) => (
+                        <TableRow key={u.id}>
+                          <TableCell>
+                            <div className="flex items-center gap-3">
+                              <Avatar className="w-8 h-8">
+                                <AvatarFallback className="text-xs">{getInitials(u.name)}</AvatarFallback>
+                              </Avatar>
+                              <div>
+                                <p className="font-medium text-sm">{u.name}</p>
+                                <p className="text-xs text-foreground-muted">{u.email}</p>
+                              </div>
                             </div>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant="secondary">{user.role}</Badge>
-                        </TableCell>
-                        <TableCell>{user.joined}</TableCell>
-                        <TableCell>{user.assessments}</TableCell>
-                        <TableCell>
-                          <Badge variant={user.status === 'active' ? 'default' : 'secondary'}>
-                            {user.status}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex items-center space-x-2">
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant="secondary" className="text-[10px] uppercase">{u.role}</Badge>
+                          </TableCell>
+                          <TableCell className="text-sm text-foreground-muted">{u.joined}</TableCell>
+                          <TableCell>
+                            <Badge variant="outline" className="text-[10px] text-emerald-400 border-emerald-400/30">Active</Badge>
+                          </TableCell>
+                          <TableCell>
                             <Button variant="ghost" size="sm">
                               <Eye className="w-4 h-4" />
                             </Button>
-                            <Button variant="ghost" size="sm">
-                              <Edit className="w-4 h-4" />
-                            </Button>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                )}
               </CardContent>
             </Card>
           </TabsContent>
 
-          {/* Analytics Tab */}
+          {/* ── Analytics ── */}
           <TabsContent value="analytics" className="space-y-6">
             <div className="grid md:grid-cols-2 gap-6">
               <Card className="bg-gradient-surface border-card-border">
                 <CardHeader>
-                  <CardTitle>Platform Performance</CardTitle>
-                  <CardDescription>Key performance indicators</CardDescription>
+                  <CardTitle className="text-base">Platform Summary</CardTitle>
+                  <CardDescription>Live counts from Supabase</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <div className="flex justify-between items-center">
-                    <span>Average Session Duration</span>
-                    <span className="font-semibold">12m 34s</span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span>Assessment Completion Rate</span>
-                    <span className="font-semibold">87%</span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span>User Satisfaction Score</span>
-                    <span className="font-semibold">4.6/5</span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span>Career Match Accuracy</span>
-                    <span className="font-semibold">92%</span>
-                  </div>
+                  {[
+                    { label: 'Total Registered Users', value: ((stats?.totalStudents ?? 0) + (stats?.totalTeachers ?? 0) + (stats?.totalSchools ?? 0)).toLocaleString() },
+                    { label: 'Schools Active', value: stats?.totalSchools.toLocaleString() ?? '—' },
+                    { label: 'Career Assessments Completed', value: stats?.totalAssessments.toLocaleString() ?? '—' },
+                    { label: 'Unique Career Interests Tracked', value: stats?.careerDistribution.length.toString() ?? '—' },
+                  ].map(({ label, value }) => (
+                    <div key={label} className="flex justify-between items-center text-sm">
+                      <span className="text-foreground-muted">{label}</span>
+                      <span className="font-semibold text-foreground">{value}</span>
+                    </div>
+                  ))}
                 </CardContent>
               </Card>
 
               <Card className="bg-gradient-surface border-card-border">
                 <CardHeader>
-                  <CardTitle>System Health</CardTitle>
-                  <CardDescription>Technical performance metrics</CardDescription>
+                  <CardTitle className="text-base">Top Career Interests</CardTitle>
+                  <CardDescription>Across all students platform-wide</CardDescription>
                 </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="flex justify-between items-center">
-                    <span>Server Uptime</span>
-                    <span className="font-semibold text-green-500">99.9%</span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span>API Response Time</span>
-                    <span className="font-semibold">145ms</span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span>Database Performance</span>
-                    <span className="font-semibold text-green-500">Optimal</span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span>Error Rate</span>
-                    <span className="font-semibold text-green-500">0.02%</span>
+                <CardContent>
+                  <div className="flex flex-wrap gap-2">
+                    {(stats?.careerDistribution ?? []).map((c) => (
+                      <Badge
+                        key={c.name}
+                        variant="secondary"
+                        className="text-xs px-2.5 py-1 rounded-full"
+                        style={{ backgroundColor: `${c.color}22`, color: c.color, borderColor: `${c.color}44` }}
+                      >
+                        {c.name} ({c.value})
+                      </Badge>
+                    ))}
+                    {(stats?.careerDistribution ?? []).length === 0 && (
+                      <p className="text-sm text-foreground-muted">No data yet</p>
+                    )}
                   </div>
                 </CardContent>
               </Card>
             </div>
-          </TabsContent>
-
-          {/* Settings Tab */}
-          <TabsContent value="settings" className="space-y-6">
-            <Card className="bg-gradient-surface border-card-border">
-              <CardHeader>
-                <CardTitle>Platform Settings</CardTitle>
-                <CardDescription>Configure system-wide settings and preferences</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                <div className="grid md:grid-cols-2 gap-6">
-                  <div className="space-y-4">
-                    <h3 className="font-semibold">User Management</h3>
-                    <div className="space-y-2">
-                      <Button variant="outline" className="w-full justify-start">
-                        <Shield className="w-4 h-4 mr-2" />
-                        Manage User Roles
-                      </Button>
-                      <Button variant="outline" className="w-full justify-start">
-                        <Users className="w-4 h-4 mr-2" />
-                        Bulk User Actions
-                      </Button>
-                    </div>
-                  </div>
-                  <div className="space-y-4">
-                    <h3 className="font-semibold">System Configuration</h3>
-                    <div className="space-y-2">
-                      <Button variant="outline" className="w-full justify-start">
-                        <Settings className="w-4 h-4 mr-2" />
-                        General Settings
-                      </Button>
-                      <Button variant="outline" className="w-full justify-start">
-                        <BarChart3 className="w-4 h-4 mr-2" />
-                        Analytics Configuration
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
           </TabsContent>
         </Tabs>
       </main>

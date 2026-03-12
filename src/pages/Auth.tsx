@@ -60,12 +60,11 @@ const Auth = () => {
         {/* Logo */}
         <div className="text-center mb-8">
           <div className="flex items-center justify-center space-x-3 mb-4">
-            <div className="w-12 h-12 bg-gradient-primary rounded-2xl flex items-center justify-center">
-              <Bot className="w-6 h-6 text-primary-foreground" />
-            </div>
-            <h1 className="text-2xl font-bold bg-gradient-text bg-clip-text text-transparent">
-              CareerGuide AI
-            </h1>
+            <img
+              src="/logos/CareerGuide_Logo.png"
+              alt="CareerGuide AI"
+              className="h-14 w-auto drop-shadow-sm"
+            />
           </div>
           <p className="text-foreground-muted">
             AI-Powered Career Guidance for Kenya's CBE System
