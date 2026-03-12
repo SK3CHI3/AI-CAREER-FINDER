@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Send, Bot, User, Sparkles, Loader2, AlertCircle, Download, ArrowRight } from "lucide-react";
+import { Send, Bot, User, Sparkles, Loader2, AlertCircle, Download, ArrowRight, RefreshCw } from "lucide-react";
 import { aiCareerService, type ChatMessage } from "@/lib/ai-service";
 import { ReportGenerator, type GuestProfile } from "@/lib/report-generator";
 
@@ -55,8 +55,20 @@ const GuestAIChat = () => {
       .trim();
   };
 
-  // Initialize with welcome message
-  useEffect(() => {
+  const [isAssessmentStarted, setIsAssessmentStarted] = useState(false);
+
+  // Function to initialize or reset the chat
+  const startAssessment = () => {
+    setMessage("");
+    setIsLoading(false);
+    setError(null);
+    setGuestProfile({});
+    setShowFinishCTA(false);
+    setAssessmentComplete(false);
+    setShowReport(false);
+    setIsGeneratingReport(false);
+    setIsAssessmentStarted(true);
+
     const welcomeMessage: ChatMessage = {
       id: crypto.randomUUID(),
       role: 'assistant',
@@ -76,7 +88,7 @@ Let's start with the basics - what's your name? 😊`,
       timestamp: new Date()
     };
     setConversation([welcomeMessage]);
-  }, []);
+  };
 
   const createGuestSystemPrompt = (): string => {
     return `You are CareerGuide AI, Kenya's most engaging career counselor! You're conducting a FREE quick assessment to help students discover their perfect career path through Kenya's CBE system.
@@ -441,59 +453,84 @@ Keep tone professional, clear, and actionable.`;
           </div>
         </CardHeader>
 
-        {/* Chat Messages */}
-        <CardContent className="p-0">
-          <ScrollArea ref={scrollAreaRef} className="h-[60vh] sm:h-[500px] p-3 sm:p-6 overflow-y-auto">
-            <div className="space-y-4 sm:space-y-6">
-              {conversation.map((msg) => (
-                <div key={msg.id} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                  <div className={`flex max-w-[90%] sm:max-w-[85%] ${msg.role === 'user' ? 'flex-row-reverse' : 'flex-row'} space-x-2 sm:space-x-3`}>
-                    <div className={`w-6 h-6 sm:w-8 sm:h-8 rounded-full flex items-center justify-center flex-shrink-0 ${msg.role === 'user'
-                      ? 'bg-primary text-primary-foreground ml-2 sm:ml-3'
-                      : 'bg-gradient-primary text-primary-foreground mr-2 sm:mr-3'
-                      }`}>
-                      {msg.role === 'user' ? (
-                        <User className="w-3 h-3 sm:w-4 sm:h-4" />
-                      ) : (
-                        <Bot className="w-3 h-3 sm:w-4 sm:h-4" />
-                      )}
-                    </div>
-                    <div className={`p-3 sm:p-4 rounded-2xl ${msg.role === 'user'
-                      ? 'bg-primary text-primary-foreground'
-                      : 'bg-background border border-card-border'
-                      }`}>
-                      <p className="text-xs sm:text-sm leading-relaxed whitespace-pre-wrap">{msg.content}</p>
-                      <p className="text-[10px] sm:text-xs opacity-70 mt-1 sm:mt-2">
-                        {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              ))}
+        {/* Start Assessment Screen */}
+        {!isAssessmentStarted && (
+          <div className="p-8 sm:p-12 text-center space-y-6">
+            <div className="w-16 h-16 sm:w-20 sm:h-20 bg-gradient-primary rounded-full flex items-center justify-center mx-auto shadow-glow">
+              <Bot className="w-8 h-8 sm:w-10 sm:h-10 text-primary-foreground" />
+            </div>
+            <div>
+              <h3 className="text-xl sm:text-2xl font-bold text-foreground mb-2">Ready to find your path?</h3>
+              <p className="text-foreground-muted max-w-md mx-auto">
+                Take a 2-minute chat-based assessment to uncover careers that match your unique personality and CBE learning areas.
+              </p>
+            </div>
+            <Button 
+              onClick={startAssessment} 
+              size="lg" 
+              className="bg-gradient-primary hover:opacity-90 text-primary-foreground text-lg px-8 py-6 rounded-full shadow-elevated transition-transform hover:scale-105"
+            >
+              <Sparkles className="w-5 h-5 mr-2" />
+              Start Quick Assessment
+            </Button>
+          </div>
+        )}
 
-              {isLoading && (
-                <div className="flex justify-start">
-                  <div className="flex space-x-2 sm:space-x-3">
-                    <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-gradient-primary text-primary-foreground flex items-center justify-center">
-                      <Bot className="w-3 h-3 sm:w-4 sm:h-4" />
-                    </div>
-                    <div className="bg-background border border-card-border p-2 sm:p-4 rounded-2xl">
-                      <div className="flex items-center space-x-2">
-                        <Loader2 className="w-3 h-3 sm:w-4 sm:h-4 animate-spin" />
-                        <span className="text-xs sm:text-sm text-foreground-muted">AI is analyzing...</span>
+        {/* Chat Messages */}
+        {isAssessmentStarted && (
+          <CardContent className="p-0">
+            <ScrollArea ref={scrollAreaRef} className="h-[60vh] sm:h-[500px] p-3 sm:p-6 overflow-y-auto">
+              <div className="space-y-4 sm:space-y-6">
+                {conversation.map((msg) => (
+                  <div key={msg.id} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                    <div className={`flex max-w-[90%] sm:max-w-[85%] ${msg.role === 'user' ? 'flex-row-reverse' : 'flex-row'} space-x-2 sm:space-x-3`}>
+                      <div className={`w-6 h-6 sm:w-8 sm:h-8 rounded-full flex items-center justify-center flex-shrink-0 ${msg.role === 'user'
+                        ? 'bg-primary text-primary-foreground ml-2 sm:ml-3'
+                        : 'bg-gradient-primary text-primary-foreground mr-2 sm:mr-3'
+                        }`}>
+                        {msg.role === 'user' ? (
+                          <User className="w-3 h-3 sm:w-4 sm:h-4" />
+                        ) : (
+                          <Bot className="w-3 h-3 sm:w-4 sm:h-4" />
+                        )}
+                      </div>
+                      <div className={`p-3 sm:p-4 rounded-2xl ${msg.role === 'user'
+                        ? 'bg-primary text-primary-foreground'
+                        : 'bg-background border border-card-border'
+                        }`}>
+                        <p className="text-xs sm:text-sm leading-relaxed whitespace-pre-wrap">{msg.content}</p>
+                        <p className="text-[10px] sm:text-xs opacity-70 mt-1 sm:mt-2">
+                          {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        </p>
                       </div>
                     </div>
                   </div>
-                </div>
-              )}
+                ))}
 
-              <div ref={messagesEndRef} />
-            </div>
-          </ScrollArea>
-        </CardContent>
+                {isLoading && (
+                  <div className="flex justify-start">
+                    <div className="flex space-x-2 sm:space-x-3">
+                      <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-gradient-primary text-primary-foreground flex items-center justify-center">
+                        <Bot className="w-3 h-3 sm:w-4 sm:h-4" />
+                      </div>
+                      <div className="bg-background border border-card-border p-2 sm:p-4 rounded-2xl">
+                        <div className="flex items-center space-x-2">
+                          <Loader2 className="w-3 h-3 sm:w-4 sm:h-4 animate-spin" />
+                          <span className="text-xs sm:text-sm text-foreground-muted">AI is analyzing...</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                <div ref={messagesEndRef} />
+              </div>
+            </ScrollArea>
+          </CardContent>
+        )}
 
         {/* Finish Assessment CTA - Subtle */}
-        {showFinishCTA && !assessmentComplete && !isLoading && !showReport && (
+        {isAssessmentStarted && showFinishCTA && !assessmentComplete && !isLoading && !showReport && (
           <div className="p-4 border-t border-card-border bg-gradient-surface/30">
             <div className="text-center space-y-3">
               <p className="text-sm text-foreground-muted">
@@ -518,7 +555,7 @@ Keep tone professional, clear, and actionable.`;
         )}
 
         {/* Assessment Complete - Force Finish */}
-        {assessmentComplete && !isLoading && !showReport && (
+        {isAssessmentStarted && assessmentComplete && !isLoading && !showReport && (
           <div className="p-6 border-t border-card-border bg-gradient-surface/50">
             <div className="text-center space-y-4">
               <div className="flex items-center justify-center space-x-2 text-green-600">
@@ -541,18 +578,18 @@ Keep tone professional, clear, and actionable.`;
         )}
 
         {/* Report Generated */}
-        {showReport && (
+        {isAssessmentStarted && showReport && (
           <div className="p-6 border-t border-card-border bg-gradient-surface/50">
-            <div className="text-center space-y-4">
+            <div className="text-center space-y-5">
               <div className="flex items-center justify-center space-x-2 text-blue-600">
                 <Download className="w-5 h-5" />
-                <span className="font-medium">Your Report is Ready!</span>
+                <span className="font-medium text-lg">Your Report is Ready!</span>
               </div>
               <p className="text-sm text-foreground-muted">
-                Download your personalized career assessment report and continue your journey with a full account.
+                Download your personalized career assessment report and continue your journey with a full account, or discover more paths.
               </p>
               <div className="flex flex-col sm:flex-row gap-3 justify-center">
-                <Button onClick={downloadReport} variant="outline">
+                <Button onClick={downloadReport} variant="outline" className="border-primary text-primary hover:bg-primary/5">
                   <Download className="w-4 h-4 mr-2" />
                   Download Report
                 </Button>
@@ -561,12 +598,19 @@ Keep tone professional, clear, and actionable.`;
                   Create Full Account
                 </Button>
               </div>
+              
+              <div className="pt-4 mt-2 border-t border-card-border">
+                <Button onClick={startAssessment} variant="ghost" className="text-foreground-muted hover:text-foreground">
+                  <RefreshCw className="w-4 h-4 mr-2" />
+                  Take Another Assessment
+                </Button>
+              </div>
             </div>
           </div>
         )}
 
         {/* Chat Input */}
-        {!showReport && !assessmentComplete && (
+        {isAssessmentStarted && !showReport && !assessmentComplete && (
           <div className="p-6 border-t border-card-border">
             {connectionTest && (
               <Alert className="mb-4">
@@ -587,7 +631,7 @@ Keep tone professional, clear, and actionable.`;
                 onChange={(e) => setMessage(e.target.value)}
                 onKeyPress={(e) => e.key === 'Enter' && !e.shiftKey && handleSend()}
                 disabled={isLoading}
-                className="bg-background border-card-border"
+                className="bg-background border-card-border focus-visible:ring-primary"
               />
               <Button
                 onClick={handleSend}
@@ -604,11 +648,11 @@ Keep tone professional, clear, and actionable.`;
 
             <div className="flex items-center justify-between mt-3">
               <p className="text-xs text-foreground-muted flex items-center">
-                <Sparkles className="w-3 h-3 mr-1" />
+                <Sparkles className="w-3 h-3 mr-1 text-primary" />
                 Free quick assessment • No signup required
               </p>
               {guestProfile.name && (
-                <Badge variant="outline" className="text-xs">
+                <Badge variant="outline" className="text-xs border-primary/20 text-primary">
                   Assessing: {guestProfile.name}
                 </Badge>
               )}

@@ -8,6 +8,8 @@ import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import PaymentGate from "@/components/PaymentGate";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
+import About from "./pages/About";
+import FAQ from "./pages/FAQ";
 import StudentDashboard from "./pages/StudentDashboard";
 import AdminDashboard from "./pages/AdminDashboard";
 import SchoolDashboard from "./pages/SchoolDashboard"
@@ -32,6 +34,8 @@ const App = () => (
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/auth" element={<Auth />} />
+            <Route path="/about" element={<About />} />
+            <Route path="/faq" element={<FAQ />} />
             <Route
               path="/student"
               element={

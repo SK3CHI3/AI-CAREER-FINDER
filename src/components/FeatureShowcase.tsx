@@ -3,40 +3,40 @@ import { Bot, Users, BookOpen, Target } from "lucide-react";
 
 const features = [
   {
-    id: "ai-pathways",
-    icon: Bot,
-    title: "AI-Powered Career Pathways",
-    description: "Connects CBE learning areas to real career opportunities, helping students explore clear future paths aligned with their competencies.",
-    color: "text-primary",
-    image: "/images/feature-pathways.jpg",
-    stat: "500+ pathways"
-  },
-  {
-    id: "teacher-dashboard",
-    icon: Users,
-    title: "Teacher Guidance Dashboard",
-    description: "Provides teachers with simple tools to support structured career exploration and track student progress within the CBE framework.",
-    color: "text-secondary",
-    image: "/images/feature-teacher.jpg",
-    stat: "1,000+ teachers"
-  },
-  {
-    id: "offline-access",
-    icon: BookOpen,
-    title: "Offline & Low-Connectivity Access",
-    description: "Works seamlessly in schools with limited internet, ensuring students in rural and underserved areas can always access guidance.",
-    color: "text-accent",
-    image: "/images/feature-offline.jpg",
-    stat: "47 counties"
-  },
-  {
-    id: "secure-platform",
+    id: "school-insights",
     icon: Target,
-    title: "Secure & Student-Safe Platform",
-    description: "Built with strong privacy protections to keep student information secure and responsibly handled.",
+    title: "For Schools: Data-Driven Insights",
+    description: "Get comprehensive dashboards that track student interests, identify trending career paths, and help administrators make informed decisions about resource allocation and guest speakers.",
+    color: "text-primary",
+    image: "/images/feature-teacher.jpg",
+    stat: "Actionable analytics"
+  },
+  {
+    id: "teacher-guidance",
+    icon: Users,
+    title: "For Schools: Teacher Guidance Tools",
+    description: "Equip educators across 47 counties with intuitive tools to manage classes, upload grades easily, and provide personalized career counseling aligned with the CBE framework.",
+    color: "text-secondary",
+    image: "/images/feature-teacher.jpg", // Kept same image as teacher-dashboard
+    stat: "Easy class management"
+  },
+  {
+    id: "student-pathways",
+    icon: Bot,
+    title: "For Students: AI Career Pathways",
+    description: "Discover perfect career matches based on personal interests, academic performance, and personality traits. See clear steps from your current grade to your dream job.",
+    color: "text-accent",
+    image: "/images/feature-pathways.jpg",
+    stat: "Personalized matching"
+  },
+  {
+    id: "student-discovery",
+    icon: BookOpen,
+    title: "For Students: Interactive Discovery",
+    description: "Engage with our AI assistant through fun, interactive assessments. Explore a wide variety of careers, from medicine to technology, in a safe and supportive environment.",
     color: "text-primary",
     image: "/images/feature-secure.jpg",
-    stat: "100% secure"
+    stat: "24/7 AI guidance"
   }
 ];
 
@@ -99,13 +99,13 @@ const Features = () => {
         {/* Header */}
         <div className="text-center max-w-3xl mx-auto mb-20">
           <h2 className="text-4xl md:text-5xl font-bold mb-6">
-            Built for{" "}
+            Empowering{" "}
             <span className="bg-gradient-text bg-clip-text text-transparent">
-              Kenyan Education
+              Schools & Students
             </span>
           </h2>
           <p className="text-lg text-foreground-muted">
-            Four powerful features designed to transform career guidance for CBE students
+            See how CareerGuide AI transforms education for institutions and unlocks potential for every learner.
           </p>
         </div>
 
