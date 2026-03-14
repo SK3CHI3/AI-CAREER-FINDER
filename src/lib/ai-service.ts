@@ -382,35 +382,70 @@ Return exactly this format:
 
       const response = await this.sendMessage(prompt, [], {});
       
-      // Clean the response: remove any potential markdown code blocks
-      const cleanedResponse = response.replace(/```json/g, '').replace(/```/g, '').trim();
-
-      try {
-        const jsonMatch = cleanedResponse.match(/\[[\s\S]*?\]/);
-        if (jsonMatch) {
-          const parsed = JSON.parse(jsonMatch[0]);
-          if (Array.isArray(parsed) && parsed.length > 0) {
-            return parsed;
-          }
-        }
-        throw new Error('No valid JSON array found in response');
-      } catch (parseError) {
-        console.error('Initial JSON parse failed, attempting fallback cleanup:', parseError);
-        // Try one more aggressive cleanup if needed
-        const aggressiveCleanup = cleanedResponse
-          .replace(/[\n\r]/g, ' ')
-          .replace(/\s+/g, ' ')
-          .trim();
-        const secondMatch = aggressiveCleanup.match(/\[.*\]/);
-        if (secondMatch) {
-          return JSON.parse(secondMatch[0]);
-        }
-        throw parseError;
-      }
+      return this.parseAndRepairJson(response);
     } catch (error) {
       console.error('Failed to get trending careers from AI:', error);
       throw error;
     }
+  }
+
+  private parseAndRepairJson(content: string): any[] {
+    // 1. Clean the response: remove any potential markdown code blocks
+    let cleaned = content
+      .replace(/```json/g, '')
+      .replace(/```/g, '')
+      .trim();
+
+    // 2. Extract the array part
+    const jsonMatch = cleaned.match(/\[[\s\S]*?\]/);
+    if (!jsonMatch) {
+      throw new Error('No JSON array found in AI response');
+    }
+
+    let jsonString = jsonMatch[0];
+
+    try {
+      // Try standard parse first
+      const parsed = JSON.parse(jsonString);
+      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+    } catch (e) {
+      console.warn('Initial JSON parse failed, attempting repair...', e);
+    }
+
+    // 3. Robust Repair Steps
+    try {
+      // Fix trailing commas: [1, 2,] -> [1, 2]
+      jsonString = jsonString.replace(/,\s*([\]}])/g, '$1');
+      
+      // Fix missing quotes around property names (if any)
+      jsonString = jsonString.replace(/([{,]\s*)([a-zA-Z0-9_]+)\s*:/g, '$1"$2":');
+      
+      // Fix unescaped newlines in values
+      jsonString = jsonString.replace(/:\s*"([^"]*)"/g, (match, p1) => {
+        return ': "' + p1.replace(/\n/g, '\\n') + '"';
+      });
+
+      // Handle common syntax errors in the middle of lists
+      // Look for places where a quote is following by text without a comma
+      jsonString = jsonString.replace(/"\s+([a-zA-Z0-9_]+)":/g, '", "$1":');
+
+      const repaired = JSON.parse(jsonString);
+      if (Array.isArray(repaired)) return repaired;
+    } catch (repairError) {
+      console.error('JSON repair failed:', repairError);
+      
+      // Final attempt: aggressive character cleanup
+      try {
+        const ultraClean = jsonString
+          .replace(/[^\x20-\x7E]/g, '') // Remove non-printable characters
+          .replace(/\\/g, '\\\\'); // Double escape backslashes
+        return JSON.parse(ultraClean);
+      } catch (f) {
+        throw new Error('JSON parsing failed after multiple repair attempts');
+      }
+    }
+    
+    return [];
   }
 
   private getFallbackRecommendations(userContext: UserContext): any[] {

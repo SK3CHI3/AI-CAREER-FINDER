@@ -21,7 +21,7 @@ const FeatureShowcase = () => {
               </div>
             </div>
             
-            <div className="p-8 flex-1 flex flex-col justify-between">
+            <div className="p-8 flex-1 flex flex-col justify-between overflow-y-auto custom-scrollbar">
               <div>
                 <h4 className="text-[15px] font-bold text-foreground mb-6">Top Career Matches</h4>
                 <div className="space-y-4 mb-4">
@@ -87,18 +87,18 @@ const FeatureShowcase = () => {
               </div>
               <div className="flex items-start gap-5 bg-transparent p-5 rounded-2xl border border-transparent hover:bg-surface-light transition-colors">
                 <div className="bg-surface-light p-2.5 rounded-full text-foreground-muted shrink-0">
-                  <BookOpen className="w-5 h-5" />
+                  <Target className="w-5 h-5" />
                 </div>
                 <div className="pt-0.5">
-                  <h4 className="text-[15px] font-bold text-card-foreground mb-1">CBE Subject Selection</h4>
-                  <p className="text-sm text-foreground-muted leading-snug font-medium">Know exactly which learning areas to choose for your path.</p>
+                  <h4 className="text-[15px] font-bold text-card-foreground mb-1">Career Days & Scholarships</h4>
+                  <p className="text-sm text-foreground-muted leading-snug font-medium">Spend a day with professionals in your target field and discover scholarship opportunities to fund your dreams.</p>
                 </div>
               </div>
             </div>
             
             <div className="pt-6">
-              <Button className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-full px-8 py-6 text-[15px] font-semibold border-none shadow-sm transition-all">
-                Start Exploring Now <ArrowRight className="w-4 h-4 ml-2" />
+              <Button className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-full px-8 py-6 text-[15px] font-semibold border-none shadow-sm transition-all shadow-glow">
+                Start your journey <ArrowRight className="w-4 h-4 ml-2" />
               </Button>
             </div>
           </div>
@@ -135,18 +135,18 @@ const FeatureShowcase = () => {
               </div>
               <div className="flex items-start gap-5 bg-transparent p-5 rounded-2xl border border-transparent hover:bg-surface-light transition-colors">
                 <div className="bg-surface-light p-2.5 rounded-full text-foreground-muted shrink-0">
-                  <BarChart3 className="w-5 h-5" />
+                  <ShieldCheck className="w-5 h-5" />
                 </div>
                 <div className="pt-0.5">
-                  <h4 className="text-[15px] font-bold text-card-foreground mb-1">Progress Dashboard</h4>
-                  <p className="text-sm text-foreground-muted leading-snug font-medium">Monitor engagement and goal completion across grade levels.</p>
+                  <h4 className="text-[15px] font-bold text-card-foreground mb-1">Career Days Sync</h4>
+                  <p className="text-sm text-foreground-muted leading-snug font-medium">Host industry experts at your school and organize immersion days where students spend quality time with mentors.</p>
                 </div>
               </div>
             </div>
             
             <div className="flex items-center gap-6 pt-6">
               <Button className="bg-secondary hover:bg-secondary/90 text-secondary-foreground rounded-full px-7 py-6 text-[15px] font-semibold shadow-sm transition-all border-none">
-                School Dashboard <ArrowRight className="w-4 h-4 ml-2" />
+                Onboard my school <ArrowRight className="w-4 h-4 ml-2" />
               </Button>
             </div>
           </div>
