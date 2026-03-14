@@ -20,8 +20,8 @@ const Footer = () => {
         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
           {/* Brand */}
           <div className="space-y-4">
-            <button 
-              onClick={() => navigate("/")} 
+            <button
+              onClick={() => navigate("/")}
               className="flex items-center h-[40px] overflow-visible hover:opacity-80 transition-opacity"
             >
               <img
@@ -84,7 +84,7 @@ const Footer = () => {
               <li className="flex items-center space-x-3">
                 <Phone className="w-4 h-4 text-foreground-muted" />
                 <a href="tel:+254700000000" className="text-foreground-muted hover:text-foreground transition-colors">
-                  +254 700 000 000
+                  +254 714525667
                 </a>
               </li>
               <li className="flex items-start space-x-3">

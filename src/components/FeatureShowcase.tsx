@@ -10,10 +10,10 @@ const FeatureShowcase = () => {
         <div className="grid lg:grid-cols-2 gap-16 items-center">
           
           {/* Left Dashboard Mockup (Students) */}
-          <div className="order-2 lg:order-1 bg-card rounded-2xl shadow-elevated border border-border overflow-hidden h-[540px] flex flex-col">
-            <div className="bg-primary px-6 py-[18px] flex-shrink-0 flex items-center gap-3.5 text-primary-foreground">
+          <div className="order-2 lg:order-1 bg-card rounded-2xl shadow-elevated border border-border overflow-hidden min-h-[540px] h-auto flex flex-col">
+            <div className="bg-primary px-6 py-[24px] flex-shrink-0 flex items-center gap-3.5 text-primary-foreground">
               <div className="bg-white/10 border border-white/20 p-2 rounded-lg shrink-0">
-                <UserCircle2 className="w-5 h-5 text-primary-foreground/90" />
+                <UserCircle2 className="w-6 h-6 text-primary-foreground/90" />
               </div>
               <div>
                 <h3 className="font-semibold text-[15px] leading-tight text-white/95">Amina's Pathway</h3>
@@ -21,7 +21,7 @@ const FeatureShowcase = () => {
               </div>
             </div>
             
-            <div className="p-8 flex-1 flex flex-col justify-between overflow-y-auto custom-scrollbar">
+            <div className="p-8 flex-1 flex flex-col justify-between">
               <div>
                 <h4 className="text-[15px] font-bold text-foreground mb-6">Top Career Matches</h4>
                 <div className="space-y-4 mb-4">
@@ -85,12 +85,12 @@ const FeatureShowcase = () => {
                   <p className="text-sm text-foreground-muted leading-snug font-medium">Personalized recommendations based on your unique profile.</p>
                 </div>
               </div>
-              <div className="flex items-start gap-5 bg-transparent p-5 rounded-2xl border border-transparent hover:bg-surface-light transition-colors">
-                <div className="bg-surface-light p-2.5 rounded-full text-foreground-muted shrink-0">
+              <div className="flex items-start gap-5 bg-primary/5 p-6 rounded-2xl border border-primary/20 shadow-glow-sm transition-all hover:scale-[1.02]">
+                <div className="bg-primary/20 p-2.5 rounded-full text-primary shrink-0 border border-primary/30">
                   <Target className="w-5 h-5" />
                 </div>
                 <div className="pt-0.5">
-                  <h4 className="text-[15px] font-bold text-card-foreground mb-1">Career Days & Scholarships</h4>
+                  <h4 className="text-[16px] font-bold text-card-foreground mb-1.5">Career Days & Scholarships</h4>
                   <p className="text-sm text-foreground-muted leading-snug font-medium">Spend a day with professionals in your target field and discover scholarship opportunities to fund your dreams.</p>
                 </div>
               </div>
@@ -126,19 +126,19 @@ const FeatureShowcase = () => {
             <div className="space-y-4 pt-4">
               <div className="flex items-start gap-5 bg-card p-5 rounded-2xl shadow-sm border border-border">
                 <div className="bg-secondary/10 p-2.5 rounded-full text-secondary shrink-0 border border-secondary/20">
-                  <CheckCircle2 className="w-5 h-5" />
+                  <Bot className="w-5 h-5" />
                 </div>
                 <div className="pt-0.5">
-                  <h4 className="text-[15px] font-bold text-card-foreground mb-1">CBE Alignment</h4>
-                  <p className="text-sm text-foreground-muted leading-snug font-medium">Stay compliant with all professional guidance benchmarks.</p>
+                  <h4 className="text-[15px] font-bold text-card-foreground mb-1">AI Student Insights</h4>
+                  <p className="text-sm text-foreground-muted leading-snug font-medium">Use data-driven AI insights to help students make informed decisions about their future paths.</p>
                 </div>
               </div>
-              <div className="flex items-start gap-5 bg-transparent p-5 rounded-2xl border border-transparent hover:bg-surface-light transition-colors">
-                <div className="bg-surface-light p-2.5 rounded-full text-foreground-muted shrink-0">
+              <div className="flex items-start gap-5 bg-secondary/5 p-6 rounded-2xl border border-secondary/20 shadow-glow-sm transition-all hover:scale-[1.02]">
+                <div className="bg-secondary/20 p-2.5 rounded-full text-secondary shrink-0 border border-secondary/30">
                   <ShieldCheck className="w-5 h-5" />
                 </div>
                 <div className="pt-0.5">
-                  <h4 className="text-[15px] font-bold text-card-foreground mb-1">Career Days Sync</h4>
+                  <h4 className="text-[16px] font-bold text-card-foreground mb-1.5">Career Days Sync</h4>
                   <p className="text-sm text-foreground-muted leading-snug font-medium">Host industry experts at your school and organize immersion days where students spend quality time with mentors.</p>
                 </div>
               </div>

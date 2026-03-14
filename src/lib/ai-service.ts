@@ -420,13 +420,20 @@ Return exactly this format:
       // Fix missing quotes around property names (if any)
       jsonString = jsonString.replace(/([{,]\s*)([a-zA-Z0-9_]+)\s*:/g, '$1"$2":');
       
+      // Fix unescaped double quotes inside values: "desc": "this is a "broken" string"
+      // This is tricky but we can try to find quotes that aren't followed by , or } or :
+      // More aggressive: replace quotes that are followed by alphanumeric characters without a colon
+      jsonString = jsonString.replace(/"([^"]+)"/g, (match, p1) => {
+        // If the contents of the quote contain more quotes, they should be escaped
+        return '"' + p1.replace(/"/g, '\\"') + '"';
+      });
+
       // Fix unescaped newlines in values
       jsonString = jsonString.replace(/:\s*"([^"]*)"/g, (match, p1) => {
         return ': "' + p1.replace(/\n/g, '\\n') + '"';
       });
 
       // Handle common syntax errors in the middle of lists
-      // Look for places where a quote is following by text without a comma
       jsonString = jsonString.replace(/"\s+([a-zA-Z0-9_]+)":/g, '", "$1":');
 
       const repaired = JSON.parse(jsonString);
@@ -434,11 +441,11 @@ Return exactly this format:
     } catch (repairError) {
       console.error('JSON repair failed:', repairError);
       
-      // Final attempt: aggressive character cleanup
+      // Final attempt: aggressive character cleanup - remove all control characters except basic whitespace
       try {
         const ultraClean = jsonString
-          .replace(/[^\x20-\x7E]/g, '') // Remove non-printable characters
-          .replace(/\\/g, '\\\\'); // Double escape backslashes
+          .replace(/[\x00-\x1F\x7F-\x9F]/g, "") // Remove control characters
+          .replace(/\\(?!["\\\/bfnrtu])/g, "\\\\"); // Fix invalid escapes
         return JSON.parse(ultraClean);
       } catch (f) {
         throw new Error('JSON parsing failed after multiple repair attempts');

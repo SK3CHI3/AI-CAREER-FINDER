@@ -260,7 +260,7 @@ class DashboardService {
         .select('created_at')
         .order('created_at', { ascending: false })
         .limit(1)
-        .single();
+        .maybeSingle();
 
       const ONE_WEEK = 7 * 24 * 60 * 60 * 1000;
       const isStale = !latestEntry || (new Date().getTime() - new Date(latestEntry.created_at).getTime() > ONE_WEEK);

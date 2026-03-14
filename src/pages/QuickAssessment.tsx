@@ -144,17 +144,7 @@ const QuickAssessment = () => {
             <Navigation />
             
             <main className="max-w-4xl mx-auto px-4 py-8 relative z-10">
-                <div className="text-center mb-8">
-                    <div className="w-16 h-16 bg-gradient-primary rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-glow">
-                        <Bot className="w-8 h-8 text-white" />
-                    </div>
-                    <h1 className="text-3xl md:text-4xl font-bold mb-4 bg-gradient-text bg-clip-text text-transparent">
-                        Quick Career Assessment
-                    </h1>
-                    <p className="text-foreground-muted">
-                        Answer a few questions to get your personalized CBE career roadmap.
-                    </p>
-                </div>
+                {/* Removed Hero title section for a cleaner assessment focus */}
 
                 <Card className="bg-gradient-surface border-card-border shadow-elevated overflow-hidden">
                     <CardHeader className="border-b border-card-border bg-muted/30">
