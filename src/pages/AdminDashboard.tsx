@@ -238,7 +238,7 @@ const AdminDashboard = () => {
       }
 
       // ── Real Analytics Fetch ──────────────────────────────
-      const rangeDays = dateRange === '7d' ? 7 : dateRange === '14d' ? 14 : dateRange === '30d' ? 30 : dateRange === '90d' ? 90 : 365
+      const rangeDays = dateRange === '7d' ? 7 : dateRange === '14d' ? 14 : dateRange === '30d' ? 30 : dateRange === '90d' ? 90 : dateRange === '1y' ? 365 : 365
       const startDate = new Date(Date.now() - rangeDays * 24 * 60 * 60 * 1000).toISOString()
 
       const { data: activityData } = await supabase
@@ -314,7 +314,7 @@ const AdminDashboard = () => {
   )
 
   return (
-    <div className="min-h-screen bg-[#020617] text-slate-100 flex overflow-hidden font-sans">
+    <div className="h-screen bg-[#020617] text-slate-100 flex overflow-hidden font-sans">
       {/* Sidebar Overlay for Mobile */}
       <AnimatePresence>
         {!isSidebarOpen && (
@@ -442,7 +442,7 @@ const AdminDashboard = () => {
               />
             </div>
             <div className="flex bg-slate-900/40 border border-white/5 rounded-xl p-1 shadow-inner">
-              {['7d', '14d', '30d', '90d'].map((range) => (
+              {['7d', '14d', '30d', '90d', '1y'].map((range) => (
                 <button
                   key={range}
                   onClick={() => setDateRange(range)}
@@ -884,7 +884,7 @@ const AdminDashboard = () => {
                             <div className="grid grid-cols-2 gap-4 mb-6">
                               <div className="space-y-1">
                                 <p className="text-[10px] uppercase font-black text-slate-300 tracking-thinner">Teachers</p>
-                                <p className="text-xl font-black text-foreground">{s.teacher_count}</p>
+                                <p className="text-xl font-black text-white">{s.teacher_count}</p>
                               </div>
                               <div className="space-y-1">
                                 <p className="text-[10px] uppercase font-black text-slate-300 tracking-thinner">Students</p>
@@ -924,17 +924,17 @@ const AdminDashboard = () => {
                       <Card className="bg-slate-950/40 backdrop-blur-md border-white/5 shadow-glass">
                         <CardHeader className="flex flex-row items-center justify-between">
                           <div>
-                            <CardTitle className="text-lg font-black">Engagement Dynamics</CardTitle>
+                            <CardTitle className="text-lg font-black text-white">Engagement Dynamics</CardTitle>
                             <CardDescription className="text-xs font-bold uppercase tracking-widest text-slate-300 text-[10px]">Activity across the platform</CardDescription>
                           </div>
                           <div className="flex gap-4">
                             <div className="flex items-center gap-1.5">
-                              <div className="w-2 h-2 rounded-full bg-primary" />
-                              <span className="text-[9px] font-black text-slate-300 uppercase">Assessments</span>
+                              <div className="w-2 h-2 rounded-full bg-primary shadow-glow" />
+                              <span className="text-[9px] font-black text-white uppercase">Assessments</span>
                             </div>
                             <div className="flex items-center gap-1.5">
-                              <div className="w-2 h-2 rounded-full bg-amber-500" />
-                              <span className="text-[9px] font-black text-slate-300 uppercase">Logins</span>
+                              <div className="w-2 h-2 rounded-full bg-amber-500 shadow-glow" />
+                              <span className="text-[9px] font-black text-white uppercase">Logins</span>
                             </div>
                           </div>
                         </CardHeader>
@@ -964,7 +964,7 @@ const AdminDashboard = () => {
 
                       <Card className="bg-slate-950/40 backdrop-blur-md border-white/5 shadow-glass">
                         <CardHeader>
-                          <CardTitle className="text-lg font-black">Revenue Velocity</CardTitle>
+                          <CardTitle className="text-lg font-black text-white">Revenue Velocity</CardTitle>
                           <CardDescription className="text-xs font-bold uppercase tracking-widest text-slate-300 text-[10px]">Estimated revenue growth overtime (KES)</CardDescription>
                         </CardHeader>
                         <CardContent className="h-[350px] p-6">
@@ -984,7 +984,7 @@ const AdminDashboard = () => {
                                 itemStyle={{ color: '#fff', fontWeight: '900', fontSize: '12px' }}
                                 labelStyle={{ color: '#94a3b8', fontWeight: 'bold', fontSize: '10px', marginBottom: '4px', textTransform: 'uppercase' }}
                               />
-                              <Area type="stepAfter" dataKey="revenue" stroke="#10b981" strokeWidth={5} fillOpacity={1} fill="url(#colorRev)" />
+                              <Area type="monotone" dataKey="revenue" stroke="#10b981" strokeWidth={5} fillOpacity={1} fill="url(#colorRev)" />
                             </AreaChart>
                           </ResponsiveContainer>
                         </CardContent>
@@ -1022,7 +1022,7 @@ const AdminDashboard = () => {
 
                       <Card className="bg-slate-950/40 backdrop-blur-md border-white/5 shadow-glass">
                         <CardHeader>
-                          <CardTitle className="text-lg font-black">Institutional Mix</CardTitle>
+                          <CardTitle className="text-lg font-black text-white">Institutional Mix</CardTitle>
                           <CardDescription className="text-xs font-bold uppercase tracking-widest text-slate-500 text-[10px]">School subscription distribution</CardDescription>
                         </CardHeader>
                         <CardContent className="h-[350px] p-6">
