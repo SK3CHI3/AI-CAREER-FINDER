@@ -353,15 +353,21 @@ const AdminDashboard = () => {
         className="fixed lg:sticky top-0 lg:h-screen z-[70] bg-[#020617]/95 border-r border-white/5 flex flex-col overflow-hidden"
       >
         {/* Sidebar Header */}
-        <div className="p-8 flex items-center justify-center border-b border-white/5 bg-white/[0.01] relative">
-          <div className="relative group/logo cursor-pointer" onClick={() => setActiveTab('overview')}>
-            <div className="absolute inset-0 bg-primary/20 blur-3xl opacity-40 group-hover/logo:opacity-60 transition-opacity" />
+        <div className="p-8 flex flex-col items-center border-b border-white/5 bg-white/[0.01] relative group/header">
+          <div 
+            className="relative cursor-pointer mb-5 transition-transform hover:scale-105 duration-500" 
+            onClick={() => setActiveTab('overview')}
+          >
+            <div className="absolute inset-0 bg-primary/20 blur-3xl opacity-40 group-hover/header:opacity-60 transition-opacity" />
             <img 
               src="/logos/CareerGuide_Logo.png" 
               alt="Logo" 
-              className="w-16 h-16 object-contain relative z-10 transition-transform group-hover/logo:scale-110 duration-500"
+              className="w-28 h-28 object-contain relative z-10"
               onError={(e) => (e.currentTarget.src = "/placeholder-logo.png")}
             />
+          </div>
+          <div className="text-center">
+            <span className="text-[10px] font-black text-primary tracking-[0.2em] uppercase block opacity-80">Admin Intelligence</span>
           </div>
           <Button 
             variant="ghost" 
