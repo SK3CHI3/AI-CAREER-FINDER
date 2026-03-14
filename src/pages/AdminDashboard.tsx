@@ -89,7 +89,7 @@ const StatCard = ({ label, value, icon: Icon, color, trend, description }: any) 
           )}
         </div>
         <div>
-          <h3 className="text-3xl font-black text-foreground tracking-tighter tabular-nums mb-1">
+          <h3 className="text-3xl font-black text-white tracking-tighter tabular-nums mb-1">
             {typeof value === 'number' ? value.toLocaleString() : value}
           </h3>
           <p className="text-sm font-bold text-slate-200 uppercase tracking-widest">{label}</p>
@@ -336,25 +336,25 @@ const AdminDashboard = () => {
           opacity: isSidebarOpen ? 1 : 0,
           x: isSidebarOpen ? 0 : -280
         }}
-        className="fixed lg:relative inset-y-0 left-0 z-[70] bg-[#020617]/95 border-r border-white/5 flex flex-col overflow-hidden"
+        className="fixed lg:sticky top-0 lg:h-screen z-[70] bg-[#020617]/95 border-r border-white/5 flex flex-col overflow-hidden"
       >
         {/* Sidebar Header */}
-        <div className="p-6 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-primary/10 rounded-xl border border-primary/20 shadow-glow">
+        <div className="p-8 flex items-center justify-between border-b border-white/5 bg-white/[0.01]">
+          <div className="flex flex-col gap-4">
+            <div className="w-12 h-12 bg-primary/10 rounded-2xl border border-primary/20 shadow-glow flex items-center justify-center p-2">
               <img 
                 src="/logos/CareerGuide_Logo.png" 
                 alt="Logo" 
-                className="w-6 h-6 object-contain"
+                className="w-full h-full object-contain"
                 onError={(e) => (e.currentTarget.src = "/placeholder-logo.png")}
               />
             </div>
             <div>
-              <h1 className="font-black text-lg tracking-tighter leading-none text-white">CareerGuide</h1>
-              <span className="text-[10px] font-bold text-primary tracking-widest uppercase">Admin Hub</span>
+              <h1 className="font-black text-xl tracking-tighter leading-none text-white">CareerGuide</h1>
+              <span className="text-[10px] font-bold text-primary tracking-widest uppercase mt-1 block">Admin Intelligence</span>
             </div>
           </div>
-          <Button variant="ghost" size="icon" onClick={() => setIsSidebarOpen(false)} className="lg:hidden text-slate-400 hover:text-white hover:bg-white/5">
+          <Button variant="ghost" size="icon" onClick={() => setIsSidebarOpen(false)} className="lg:hidden text-slate-400 hover:text-white hover:bg-white/5 self-start">
             <X className="w-5 h-5" />
           </Button>
         </div>
@@ -561,14 +561,14 @@ const AdminDashboard = () => {
                               />
                               <Tooltip 
                                 contentStyle={{ 
-                                  backgroundColor: '#0f172a', 
-                                  border: '1px solid rgba(255,255,255,0.1)', 
-                                  borderRadius: '12px',
-                                  boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)',
-                                  color: '#f8fafc'
+                                  backgroundColor: '#020617', 
+                                  border: '1px solid rgba(99,102,241,0.2)', 
+                                  borderRadius: '16px',
+                                  boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.4)',
+                                  padding: '12px'
                                 }} 
-                                itemStyle={{ fontSize: '12px', fontWeight: 'bold' }}
-                                labelStyle={{ color: '#94a3b8', marginBottom: '8px' }}
+                                itemStyle={{ fontSize: '12px', fontWeight: '900', color: '#fff' }}
+                                labelStyle={{ color: '#94a3b8', fontWeight: 'bold', marginBottom: '4px', textTransform: 'uppercase', fontSize: '10px', letterSpacing: '0.05em' }}
                               />
                               <Area 
                                 type="monotone" 
@@ -950,11 +950,13 @@ const AdminDashboard = () => {
                               <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(255,255,255,0.01)" />
                               <XAxis dataKey="activityDate" axisLine={false} tickLine={false} tick={{ fontSize: 9, fill: '#94a3b8' }} dy={10} />
                               <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 9, fill: '#94a3b8' }} width={30} allowDecimals={false} />
-                              <Tooltip 
-                                contentStyle={{ backgroundColor: '#0f172a', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', fontSize: '10px' }}
+                               <Tooltip 
+                                contentStyle={{ backgroundColor: '#020617', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '16px', padding: '12px' }}
+                                itemStyle={{ color: '#fff', fontWeight: '900', fontSize: '12px' }}
+                                labelStyle={{ color: '#94a3b8', fontWeight: 'bold', fontSize: '10px', marginBottom: '4px', textTransform: 'uppercase' }}
                               />
-                              <Area type="monotone" dataKey="assessments" stroke="#818cf8" strokeWidth={4} fillOpacity={1} fill="url(#colorEngage)" />
-                              <Area type="monotone" dataKey="logins" stroke="#f59e0b" strokeWidth={3} fill="transparent" strokeDasharray="5 5" />
+                              <Area type="monotone" dataKey="assessments" stroke="#6366f1" strokeWidth={5} fillOpacity={1} fill="url(#colorEngage)" />
+                              <Area type="monotone" dataKey="logins" stroke="#f59e0b" strokeWidth={3} fill="transparent" strokeDasharray="6 6" />
                             </AreaChart>
                           </ResponsiveContainer>
                         </CardContent>
@@ -977,8 +979,12 @@ const AdminDashboard = () => {
                               <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(255,255,255,0.01)" />
                               <XAxis dataKey="activityDate" axisLine={false} tickLine={false} tick={{ fontSize: 9, fill: '#94a3b8' }} dy={10} />
                               <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 9, fill: '#94a3b8' }} width={40} allowDecimals={false} tickFormatter={(value) => `K${value}`} />
-                              <Tooltip contentStyle={{ backgroundColor: '#0f172a', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', fontSize: '10px' }} />
-                              <Area type="stepAfter" dataKey="revenue" stroke="#34d399" strokeWidth={4} fillOpacity={1} fill="url(#colorRev)" />
+                               <Tooltip 
+                                contentStyle={{ backgroundColor: '#020617', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '16px', padding: '12px' }}
+                                itemStyle={{ color: '#fff', fontWeight: '900', fontSize: '12px' }}
+                                labelStyle={{ color: '#94a3b8', fontWeight: 'bold', fontSize: '10px', marginBottom: '4px', textTransform: 'uppercase' }}
+                              />
+                              <Area type="stepAfter" dataKey="revenue" stroke="#10b981" strokeWidth={5} fillOpacity={1} fill="url(#colorRev)" />
                             </AreaChart>
                           </ResponsiveContainer>
                         </CardContent>
@@ -1005,7 +1011,10 @@ const AdminDashboard = () => {
                                   <Cell key={`cell-${i}`} fill={entry.color} />
                                 ))}
                               </Pie>
-                              <Tooltip contentStyle={{ backgroundColor: '#0f172a', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', fontSize: '10px' }} />
+                              <Tooltip 
+                                contentStyle={{ backgroundColor: '#020617', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '16px', padding: '12px' }}
+                                itemStyle={{ color: '#fff', fontWeight: '900', fontSize: '12px' }}
+                              />
                             </PieChart>
                           </ResponsiveContainer>
                         </CardContent>
@@ -1022,7 +1031,12 @@ const AdminDashboard = () => {
                               <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(255,255,255,0.01)" />
                               <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 9, fill: '#94a3b8', fontWeight: 'bold' }} />
                               <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 9, fill: '#94a3b8' }} width={30} allowDecimals={false} />
-                              <Tooltip cursor={{ fill: 'rgba(255,255,255,0.05)' }} contentStyle={{ backgroundColor: '#0f172a', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px' }} />
+                              <Tooltip 
+                                cursor={{ fill: 'rgba(255,255,255,0.05)' }} 
+                                contentStyle={{ backgroundColor: '#020617', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '16px', padding: '12px' }} 
+                                itemStyle={{ color: '#fff', fontWeight: '900', fontSize: '12px' }}
+                                labelStyle={{ color: '#94a3b8', fontWeight: 'bold', fontSize: '10px', marginBottom: '4px', textTransform: 'uppercase' }}
+                              />
                               <Bar dataKey="value" radius={[6, 6, 0, 0]}>
                                 {(stats?.subscriptionBreakdown ?? []).map((entry, index) => (
                                   <Cell key={`cell-${index}`} fill={entry.color} />
