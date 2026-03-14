@@ -106,7 +106,11 @@ const AcceptInvite: React.FC = () => {
             <div className="min-h-screen flex items-center justify-center bg-background">
                 <div className="text-center">
                     <div className="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center mx-auto mb-4 animate-pulse">
-                        <Bot className="w-8 h-8 text-primary" />
+                        <img 
+                            src="/logos/CareerGuide_Logo.png" 
+                            alt="Loading" 
+                            className="h-10 w-auto opacity-80" 
+                        />
                     </div>
                     <p className="text-foreground-muted">Verifying invite...</p>
                 </div>
@@ -121,11 +125,12 @@ const AcceptInvite: React.FC = () => {
             <div className="max-w-md w-full mx-4">
                 {/* Header */}
                 <div className="text-center mb-8">
-                    <div className="flex items-center justify-center gap-3 mb-2">
-                        <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center shadow-lg transform -rotate-12">
-                            <Bot className="w-6 h-6 text-white" />
-                        </div>
-                        <h1 className="text-3xl font-black tracking-tight text-foreground">CareerGuide AI</h1>
+                    <div className="flex items-center justify-center mb-4">
+                        <img 
+                            src="/logos/CareerGuide_Logo.png" 
+                            alt="CareerGuide AI" 
+                            className="h-16 w-auto" 
+                        />
                     </div>
                     <p className="text-foreground-muted font-medium">Shaping the future of Kenyan education</p>
                 </div>
