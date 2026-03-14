@@ -14,6 +14,7 @@ export interface UserContext {
   interests?: string[]
   careerGoals?: string
   assessmentResults?: UserProfile['assessment_results']
+  constraints?: string[]
   previousRecommendations?: UserProfile['previous_recommendations']
   academicPerformance?: {
     overallAverage: number
@@ -33,12 +34,14 @@ class AICareerService {
     this.modelName = MODEL_NAME
     this.baseUrl = 'https://api.deepseek.com'
 
-    console.log('AI Service initialized:', {
-      hasApiKey: !!this.apiKey,
-      apiKeyLength: this.apiKey?.length,
-      modelName: this.modelName,
-      baseUrl: this.baseUrl
-    });
+    if (import.meta.env.DEV) {
+      console.log('AI Service initialized:', {
+        hasApiKey: !!this.apiKey,
+        apiKeyLength: this.apiKey?.length,
+        modelName: this.modelName,
+        baseUrl: this.baseUrl
+      });
+    }
 
     if (!this.apiKey) {
       throw new Error('DeepSeek API key is not configured. Please add VITE_DEEPSEEK_API_KEY to your environment variables.')
@@ -46,7 +49,27 @@ class AICareerService {
   }
 
   private createSystemPrompt(userContext: UserContext): string {
-    return `You are CareerPath AI, Kenya's friendliest career counselor specializing in the CBE curriculum. Your mission is to guide students through a structured, engaging conversation to discover their perfect career path.
+    const assessment = userContext.assessmentResults;
+    const riasec = assessment?.riasec_scores;
+    const personality = assessment?.personality_type?.join(', ');
+    const values = assessment?.values?.join(', ');
+    const constraints = userContext.constraints?.join(', ') || assessment?.constraints?.join(', ');
+
+    const assessmentSection = assessment ? `
+ASSESSMENT DATA:
+${riasec ? `- RIASEC Personality: ${personality} (Scores: R:${riasec.realistic}, I:${riasec.investigative}, A:${riasec.artistic}, S:${riasec.social}, E:${riasec.enterprising}, C:${riasec.conventional})` : ''}
+${values ? `- Core Values: ${values}` : ''}
+${constraints ? `- Real-world Constraints: ${constraints}` : ''}
+` : '';
+
+    const academicSection = userContext.academicPerformance ? `
+ACADEMIC PERFORMANCE:
+- Overall: ${userContext.academicPerformance.overallAverage.toFixed(1)}%
+- Strong in: ${userContext.academicPerformance.strongSubjects.join(', ')}
+- Weak in: ${userContext.academicPerformance.weakSubjects.join(', ')}
+` : '';
+
+    return `You are CareerGuide AI, Kenya's most advanced career counselor. Your mission is to provide personalized, actionable guidance using "Realistic Triangulation Logic"—balancing a student's Personality (RIASEC), Academic Performance, Stated Interests, and Real-World Realities.
 
 CURRENT USER PROFILE:
 ${userContext.name ? `- Name: ${userContext.name}` : '- Name: Not provided'}
@@ -55,56 +78,39 @@ ${userContext.currentGrade ? `- Current Grade: ${userContext.currentGrade}` : '-
 ${userContext.subjects?.length ? `- CBE Subjects: ${userContext.subjects.join(', ')}` : '- CBE Subjects: Not specified'}
 ${userContext.interests?.length ? `- Career Interests: ${userContext.interests.join(', ')}` : '- Career Interests: Not specified'}
 ${userContext.careerGoals ? `- Career Goals: ${userContext.careerGoals}` : '- Career Goals: Not specified'}
+${assessmentSection}
+${academicSection}
 
-CONVERSATION STRUCTURE - ASK ONE QUESTION AT A TIME:
-1. **Greeting & Name** - Start with "Karibu!" and get their name
-2. **Education Level** - What grade/level are they in? (Use CBE structure)
-3. **Interests Discovery** - What activities/fields excite them most?
-4. **Subject Preferences** - Which CBE subjects do they enjoy?
-5. **Work Style** - Practical vs Academic vs Creative vs Business?
-6. **Environment Preference** - Office, Outdoor, Technical, Digital?
-7. **Career Goals** - What's their dream job or aspiration?
-8. **Provide Recommendations** - Give 3 personalized career matches
+GUIDANCE LOGIC:
+1. Personality (RIASEC): Holland Codes are the foundation. Recommend roles aligned with their top 2-3 RIASEC types.
+2. Academic Performance: Align careers with their strong subjects. If a student wants a STEM career but is weak in Math, suggest technical pathways that leverage their other strengths or bridging options.
+3. Personal Values: Factor in what matters to them (e.g., Autonomy, Impact, Income). If they value stability, avoid highly volatile freelance/startup-heavy paths unless they have a safety net.
+4. Feasibility & Constraints: Respect constraints (Geography, Finance, Time). If they need remote work or scholarships, prioritize careers with high digital accessibility or available government/private funding in Kenya.
+5. Labor Market Reality: Factor in Kenyan market demand (Vision 2030, tech boom, manufacturing needs, automation risk). Avoid oversaturated or shrinking fields.
 
-FORMATTING RULES - IMPORTANT:
-- Write in clean, natural text - NO markdown symbols like ** or ##
-- Use emojis naturally in sentences: "Habari yako, John! 👋"
-- Use numbered options with emojis: "1️⃣ Junior Secondary (Grades 7-9)"
-- Use line breaks for structure, not markdown formatting
-- Write "Next question:" instead of "**Next question:**"
-- Write "Habari yako, [Name]!" instead of "**Habari yako, [Name]!**"
-- Keep responses clean and readable without any ** or ## symbols
+CONVERSATION STRUCTURE:
+1. Greeting & Context - Acknowledge their assessment results and core values.
+2. Dynamic Exploration - Ask one question at a time to dive deeper into how their values conflict or align with their interests.
+3. Actionable Coaching - Don't just list careers; provide the "Feasibility Score" for their goals.
+4. Professional Recommendations - Provide 3 precise career matches based on all data.
 
-CBE PATHWAYS TO REFERENCE:
-**Junior Secondary (7-9):** Broad exploration across all learning areas
-**Senior Secondary (10-12):** Choose pathway:
-- 🔬 **STEM**: Math, Sciences, Computer Science
-- 📚 **Social Sciences**: History, Geography, Economics
-- 🎨 **Creative Arts**: Visual Arts, Music, Film
-- 🔧 **Technical**: Engineering, Agriculture, Home Science
-- 🗣️ **Languages**: English, Kiswahili, Literature
+FORMATTING RULES - NO MARKDOWN (** or ##):
+- Clean, natural sentences with line breaks.
+- Use emojis for warmth.
+- Numbered options clearly.
+- Avoid robotic technical jargon.
 
 KENYAN CAREER CONTEXT:
-- Reference Vision 2030 priorities
-- Mention specific universities (UoN, KU, JKUAT, etc.)
-- Include salary ranges in KES
-- Consider both university and technical college paths
-- Focus on emerging opportunities in Kenya
+- Vision 2030 priorities (Digital Superhighway, Affordable Housing, Healthcare, Creative Economy).
+- Real-world demand vs. Degree prestige.
+- Automation risk in traditional roles.
 
-PERSONALITY:
-- Friendly and encouraging ("Karibu!", "Fantastic choice!", "That's exciting!")
-- Curious and genuinely interested in their responses
-- Supportive but realistic about requirements
-- Use Kenyan context and cultural understanding
-
-CRITICAL RULE: Ask only ONE question per response. Wait for their answer before moving to the next topic. Be conversational, not robotic.
-
-Remember: YOU MUST ALWAYS BE CURIOUS TO KNOW THEM. Make each question feel personal and engaging!`
+CRITICAL: Ask only ONE question per response. Be curious, realistic, and empathetic. Wait for their answer before proceeding.`
   }
 
   async sendMessage(
-    message: string, 
-    conversationHistory: ChatMessage[], 
+    message: string,
+    conversationHistory: ChatMessage[],
     userContext: UserContext,
     retryCount = 0
   ): Promise<string> {
@@ -113,7 +119,7 @@ Remember: YOU MUST ALWAYS BE CURIOUS TO KNOW THEM. Make each question feel perso
 
     try {
       const systemPrompt = this.createSystemPrompt(userContext)
-      
+
       const messages = [
         { role: 'system', content: systemPrompt },
         ...conversationHistory.map(msg => ({
@@ -123,14 +129,16 @@ Remember: YOU MUST ALWAYS BE CURIOUS TO KNOW THEM. Make each question feel perso
         { role: 'user', content: message }
       ]
 
-      console.log('Making AI API call to:', `${this.baseUrl}/chat/completions`);
-      console.log('API Key available:', !!this.apiKey);
-      console.log('Request payload:', {
-        model: this.modelName,
-        messageCount: messages.length,
-        temperature: 0.7,
-        streaming: true
-      });
+      if (import.meta.env.DEV) {
+        console.log('Making AI API call to:', `${this.baseUrl}/chat/completions`);
+        console.log('API Key available:', !!this.apiKey);
+        console.log('Request payload:', {
+          model: this.modelName,
+          messageCount: messages.length,
+          temperature: 0.7,
+          streaming: true
+        });
+      }
 
       const response = await fetch(`${this.baseUrl}/chat/completions`, {
         method: 'POST',
@@ -203,7 +211,7 @@ Remember: YOU MUST ALWAYS BE CURIOUS TO KNOW THEM. Make each question feel perso
       return fullResponse
     } catch (error) {
       console.error('AI Service Error:', error)
-      
+
       // Retry logic for network errors
       if (retryCount < maxRetries && (
         (error instanceof TypeError && error.message.includes('Failed to fetch')) ||
@@ -213,7 +221,7 @@ Remember: YOU MUST ALWAYS BE CURIOUS TO KNOW THEM. Make each question feel perso
         await new Promise(resolve => setTimeout(resolve, retryDelay))
         return this.sendMessage(message, conversationHistory, userContext, retryCount + 1)
       }
-      
+
       // Handle specific network errors with user-friendly messages
       if (error instanceof TypeError && error.message.includes('Failed to fetch')) {
         throw new Error('Network connection failed. Please check your internet connection and try again.')
@@ -227,9 +235,73 @@ Remember: YOU MUST ALWAYS BE CURIOUS TO KNOW THEM. Make each question feel perso
     }
   }
 
+  async generateTeacherInsights(userContext: UserContext): Promise<string> {
+    try {
+      const assessmentInfo = userContext.assessmentResults ? `
+ASSESSMENT DATA:
+- Personality (RIASEC): ${userContext.assessmentResults.personality_type?.join(', ') || 'Not assessed'}
+- Core Values: ${userContext.assessmentResults.values?.join(', ') || 'Not assessed'}
+- Constraints: ${userContext.assessmentResults.constraints?.join(', ') || 'None stated'}
+` : ''
+
+      const academicInfo = userContext.academicPerformance ? `
+ACADEMIC PERFORMANCE:
+- Overall Average: ${userContext.academicPerformance.overallAverage.toFixed(1)}%
+- Strong Subjects: ${userContext.academicPerformance.strongSubjects.join(', ') || 'None identified'}
+- Weak Subjects: ${userContext.academicPerformance.weakSubjects.join(', ') || 'None identified'}
+- Performance Trend: ${userContext.academicPerformance.performanceTrend}
+` : ''
+
+      const prompt = `You are a Senior Pedagogical Consultant & Career Mentor. Your task is to provide a Teacher with specific, actionable guidance strategies for a student named ${userContext.name || 'this student'}.
+
+STUDENT PROFILE:
+${userContext.schoolLevel ? `- Level: ${userContext.schoolLevel}` : ''} ${userContext.currentGrade ? `(Grade ${userContext.currentGrade})` : ''}
+- Career Interests: ${userContext.interests?.join(', ') || 'Not specified'}
+${assessmentInfo}
+${academicInfo}
+
+TASK:
+Provide a strategic "Teacher Guidance Report" that is realistic and tactical.
+
+STRUCTURE YOUR RESPONSE IN THESE SECTIONS (NO MARKDOWN ** or ##):
+
+1. STUDENT TRIANGULATION SUMMARY
+A one-sentence summary of who this student is based on the intersection of their personality, academics, and practical constraints.
+
+2. PEDAGOGICAL TACTICS
+Provide 3 concrete classroom or school-level actions the teacher can take to support this student's specific career trajectory.
+If they are weak in a subject core to their goal, suggest a specific remedial approach.
+If they have financial/geographical constraints, suggest specific resources (TVET, bursaries, digital skills).
+
+3. MENTORSHIP TALKING POINTS
+Provide 2-3 specific questions or topics the teacher should bring up in a 1-on-1 mentorship session.
+
+4. REAL-WORLD REALITY CHECK
+Highlight one major opportunity or hurdle the teacher should prepare the student for (e.g., automation risk, market demand in Kenya).
+
+FORMATTING:
+- Use clear headings in ALL CAPS.
+- No markdown bolding or subheadings.
+- Use emojis for readability.
+- Keep sentences professional but warm.`
+
+      const response = await this.sendMessage(prompt, [], userContext)
+      return response
+    } catch (error) {
+      console.error('Failed to generate teacher insights:', error)
+      return "I'm sorry, I couldn't generate insights for this student right now. Please check if the student has completed their profile and grades are uploaded."
+    }
+  }
+
   async generateCareerRecommendations(userContext: UserContext): Promise<any[]> {
     try {
-      // Enhanced prompt with academic performance data
+      const assessmentInfo = userContext.assessmentResults ? `
+Assessment Results:
+- Personality (RIASEC): ${userContext.assessmentResults.personality_type?.join(', ') || 'Not assessed'}
+- Core Values: ${userContext.assessmentResults.values?.join(', ') || 'Not assessed'}
+- Constraints: ${userContext.assessmentResults.constraints?.join(', ') || 'None stated'}
+` : ''
+
       const academicInfo = userContext.academicPerformance ? `
 Academic Performance:
 - Overall Average: ${userContext.academicPerformance.overallAverage.toFixed(1)}%
@@ -238,14 +310,22 @@ Academic Performance:
 - Performance Trend: ${userContext.academicPerformance.performanceTrend}
 ` : ''
 
-      const prompt = `Generate 3 career recommendations for a Kenyan student based on their profile and academic performance. Return ONLY a JSON array:
+      const prompt = `Generate 3 career recommendations for a Kenyan student using "Realistic Triangulation Logic" (Personality + Grades + Interests + Values + Constraints + Market Reality). Return ONLY a JSON array:
 
 Profile: ${userContext.schoolLevel || 'Secondary'} student, Grade ${userContext.currentGrade || '10'}, Subjects: ${userContext.subjects?.slice(0, 3).join(', ') || 'Math, English, Science'}, Interests: ${userContext.interests?.slice(0, 2).join(', ') || 'Technology, Business'}
+${assessmentInfo}
 ${academicInfo}
-Consider their academic strengths and weaknesses when recommending careers. Focus on careers that align with their strong subjects and provide growth opportunities.
+
+Instructions:
+1. High Value Fit: Ensure the career matches their core values (e.g., stability vs. autonomy).
+2. Feasibility Check: Filter careers based on constraints (e.g., if they need scholarships, prioritize TVET or high-grant fields).
+3. Market Reality: Recommend careers with strong growth in Kenya (Vision 2030 pillars).
+4. Growth Trajectory: Evaluate if the career offers long-term growth and transition paths as the person evolves.
+5. For each career, explain "whyRecommended" by explaining the specific alignment with their RIASEC types AND their core values.
+6. Provide an "actionabilityScore" (1-100) reflecting how easily they can pursue this given their constraints.
 
 Return exactly this format:
-[{"title":"Software Engineer","matchPercentage":85,"description":"Develops software applications","salaryRange":"KSh 80,000-200,000","education":"Computer Science degree","whyRecommended":"Matches your strong performance in Mathematics and interest in technology"},{"title":"Data Analyst","matchPercentage":78,"description":"Analyzes data to help businesses make decisions","salaryRange":"KSh 60,000-150,000","education":"Statistics or Mathematics degree","whyRecommended":"Leverages your analytical skills and strong subject performance"},{"title":"Business Manager","matchPercentage":72,"description":"Manages business operations and teams","salaryRange":"KSh 70,000-180,000","education":"Business Administration degree","whyRecommended":"Combines your interests with leadership opportunities"}]`
+[{"title":"Career Name","matchPercentage":85,"actionabilityScore":90,"description":"Short description","salaryRange":"KSh range","education":"Required path","whyRecommended":"Detailed explanation including RIASEC fit, Value alignment, Growth Trajectory, and Market feasibility"}]`
 
       const response = await this.sendMessage(prompt, [], userContext)
 
@@ -269,6 +349,101 @@ Return exactly this format:
     } catch (error) {
       console.error('Failed to generate career recommendations:', error)
       return this.getFallbackRecommendations(userContext)
+    }
+  }
+
+  async getTrendingCareers(): Promise<any[]> {
+    try {
+      const prompt = `CRITICAL: Return ONLY a valid JSON array of objects. No markdown, no backticks, no text.
+      
+      Structure:
+      [{"title":"...","category":"...","demand_level":"...","salary_range":"...","growth_percentage":"...","skills_required":[],"description":"...","education_requirements":"...","career_level":"..."}]
+      
+      Constraints:
+      - exactly 15 items
+      - demand_level: "Very High" | "High" | "Growing" | "Emerging"
+      - career_level: "entry" | "mid" | "senior"
+      - Be specific to Kenya.`;
+
+      const response = await this.sendMessage(prompt, [], {});
+      
+      return this.parseAndRepairJson(response);
+    } catch (error) {
+      console.error('Failed to get trending careers from AI:', error);
+      throw error;
+    }
+  }
+
+  private parseAndRepairJson(content: string): any[] {
+    // 1. Clean the response: remove any potential markdown code blocks
+    let cleaned = content
+      .replace(/```json/g, '')
+      .replace(/```/g, '')
+      .trim();
+
+    // 2. Extract the array part
+    const jsonMatch = cleaned.match(/\[[\s\S]*?\]/);
+    if (!jsonMatch) {
+      throw new Error('No JSON array found in AI response');
+    }
+
+    let jsonString = jsonMatch[0];
+
+    try {
+      // Try standard parse first
+      const parsed = JSON.parse(jsonString);
+      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+    } catch (e) {
+      console.warn('Initial JSON parse failed, attempting repair...', e);
+    }
+
+    // 3. Robust Repair Steps
+    try {
+      // Fix common LLM errors in multiple passes
+      let repaired = jsonString;
+      
+      // Pass 1: Simple syntax fixes
+      repaired = repaired
+        .replace(/,\s*([\]}])/g, '$1') // Trailing commas
+        .replace(/([{,]\s*)([a-zA-Z0-9_]+)\s*:/g, '$1"$2":') // Unquoted keys
+        .replace(/"\s+([a-zA-Z0-9_]+)":/g, '", "$1":'); // Missing commas between props
+
+      // Pass 2: Handle unescaped internal quotes and newlines more aggressively
+      // We look for the start of a value after a colon and try to find the actual end quote
+      repaired = repaired.replace(/:\s*"([\s\S]*?)"(?=\s*[,}\]])/g, (match, p1) => {
+        // If there are internal quotes that aren't escaped, escape them
+        const fixed = p1
+          .replace(/\n/g, '\\n')
+          .replace(/\r/g, '\\r')
+          .replace(/(?<!\\)"/g, '\\"');
+        return `: "${fixed}"`;
+      });
+      
+      // Pass 3: Fix missing commas between objects in array
+      repaired = repaired.replace(/}\s*{/g, '}, {');
+
+      // Pass 4: Fix unescaped characters that are common
+      repaired = repaired.replace(/[\u0000-\u0019]+/g, "");
+
+      try {
+        const parsed = JSON.parse(repaired);
+        if (Array.isArray(parsed)) return parsed;
+      } catch (innerError) {
+        console.warn('Advanced repair pass failed. Raw snippet near error:', repaired.substring(Math.max(0, (innerError as any).pos - 50), (innerError as any).pos + 50));
+        
+        // Pass 5: Extreme cleanup
+        repaired = repaired.replace(/"\s*,\s*"/g, '", "');
+      }
+
+      const ultraClean = repaired
+        .replace(/[\x00-\x1F\x7F-\x9F]/g, "") // Remove control characters
+        .replace(/\\(?!["\\\/bfnrtu])/g, "\\\\"); // Fix invalid escapes
+      
+      return JSON.parse(ultraClean);
+    } catch (repairError) {
+      console.error('All JSON repair attempts failed. Raw content length:', jsonString.length);
+      console.error('JSON string at failure:', jsonString);
+      throw new Error(`JSON parsing failed: ${repairError instanceof Error ? repairError.message : String(repairError)}`);
     }
   }
 

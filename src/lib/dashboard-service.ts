@@ -1,6 +1,7 @@
 // Dashboard Data Service - Dynamic Data Management
 import { supabase } from './supabase'
 import { aiCacheService } from './ai-cache-service'
+import { aiCareerService } from './ai-service'
 
 export interface UserActivity {
   id: string
@@ -34,6 +35,7 @@ export interface CareerRecommendation {
   growth_prospect: string
   education_required: string
   skills_required: string[]
+  actionability_score?: number
   created_at: string
   expires_at: string
 }
@@ -152,7 +154,10 @@ class DashboardService {
       .order('calculated_at', { ascending: false })
 
     if (error) throw error
-    return data || []
+    return (data || []).map(stat => ({
+      ...stat,
+      stat_trend: stat.stat_trend as 'up' | 'down' | 'stable'
+    }))
   }
 
   async upsertUserStat(stat: Omit<UserStat, 'id' | 'calculated_at'>): Promise<UserStat> {
@@ -163,7 +168,10 @@ class DashboardService {
       .single()
 
     if (error) throw error
-    return data
+    return {
+      ...data,
+      stat_trend: data.stat_trend as 'up' | 'down' | 'stable'
+    }
   }
 
   // Career Recommendations - Now uses caching
@@ -171,7 +179,7 @@ class DashboardService {
     try {
       // First try to get from cache
       const cachedRecommendations = await aiCacheService.getCachedCareerRecommendations(userId)
-      
+
       if (cachedRecommendations && cachedRecommendations.length > 0) {
         console.log(`Using cached career recommendations for user ${userId}`)
         return cachedRecommendations.map(rec => ({
@@ -214,7 +222,7 @@ class DashboardService {
     try {
       // Save to cache first (primary storage)
       await aiCacheService.saveCareerRecommendations(userId, recommendations)
-      
+
       // Also save to old table for backward compatibility
       await supabase
         .from('career_recommendations')
@@ -245,21 +253,75 @@ class DashboardService {
 
   // Career Paths
   async getCareerPaths(category?: string, limit: number = 20): Promise<CareerPath[]> {
-    let query = supabase
-      .from('career_paths')
-      .select('*')
-      .eq('is_active', true)
-      .order('created_at', { ascending: false })
-      .limit(limit)
+    try {
+      // 1. Check if we need to refresh (once a week)
+      const { data: entries, error: fetchError } = await supabase
+        .from('career_paths')
+        .select('created_at')
+        .order('created_at', { ascending: false })
+        .limit(1);
 
-    if (category) {
-      query = query.eq('category', category)
+      if (fetchError) throw fetchError;
+      const latestEntry = entries && entries.length > 0 ? entries[0] : null;
+
+      const ONE_WEEK = 7 * 24 * 60 * 60 * 1000;
+      const isStale = !latestEntry || (new Date().getTime() - new Date(latestEntry.created_at).getTime() > ONE_WEEK);
+
+      if (isStale) {
+        console.log('Career paths are stale or missing. Refreshing from AI...');
+        await this.syncCareerPathsWithAI();
+      }
+
+      // 2. Fetch data
+      let query = supabase
+        .from('career_paths')
+        .select('*')
+        .eq('is_active', true)
+        .order('created_at', { ascending: false })
+        .limit(limit)
+
+      if (category) {
+        query = query.eq('category', category)
+      }
+
+      const { data, error } = await query
+
+      if (error) throw error
+      return data || []
+    } catch (err) {
+      console.error('Error in getCareerPaths:', err);
+      // Fallback to whatever is in the DB if AI refresh fails
+      const { data } = await supabase.from('career_paths').select('*').limit(limit);
+      return data || [];
     }
+  }
 
-    const { data, error } = await query
+  private async syncCareerPathsWithAI() {
+    try {
+      const trendingCareers = await aiCareerService.getTrendingCareers();
+      
+      if (trendingCareers && trendingCareers.length > 0) {
+        // Deactivate old careers (or just keep them as inactive)
+        await supabase
+          .from('career_paths')
+          .update({ is_active: false })
+          .eq('is_active', true);
 
-    if (error) throw error
-    return data || []
+        // Insert new ones
+        const { error: insertError } = await supabase
+          .from('career_paths')
+          .insert(trendingCareers.map(c => ({
+            ...c,
+            is_active: true,
+            updated_at: new Date().toISOString()
+          })));
+
+        if (insertError) throw insertError;
+        console.log(`Successfully synced ${trendingCareers.length} career paths from AI.`);
+      }
+    } catch (error) {
+      console.error('Failed to sync career paths with AI:', error);
+    }
   }
 
   // CBE Subjects
@@ -409,7 +471,7 @@ class DashboardService {
     performanceTrend: 'improving' | 'declining' | 'stable'
   }> {
     const grades = await this.getUserGrades(userId)
-    
+
     if (grades.length === 0) {
       return {
         overallAverage: 0,
@@ -450,10 +512,10 @@ class DashboardService {
     // Calculate performance trend (simplified)
     const recentGrades = grades.slice(0, Math.min(5, grades.length))
     const olderGrades = grades.slice(-Math.min(5, grades.length))
-    
+
     const recentAverage = recentGrades.reduce((sum, grade) => sum + grade.grade_value, 0) / recentGrades.length
     const olderAverage = olderGrades.reduce((sum, grade) => sum + grade.grade_value, 0) / olderGrades.length
-    
+
     let performanceTrend: 'improving' | 'declining' | 'stable' = 'stable'
     if (recentAverage > olderAverage + 5) performanceTrend = 'improving'
     else if (recentAverage < olderAverage - 5) performanceTrend = 'declining'
@@ -509,8 +571,8 @@ class DashboardService {
       stat_type: 'academic_performance',
       stat_value: `${academicPerformance.overallAverage.toFixed(1)}%`,
       stat_change: `${academicPerformance.performanceTrend}`,
-      stat_trend: academicPerformance.performanceTrend === 'improving' ? 'up' : 
-                  academicPerformance.performanceTrend === 'declining' ? 'down' : 'stable'
+      stat_trend: academicPerformance.performanceTrend === 'improving' ? 'up' :
+        academicPerformance.performanceTrend === 'declining' ? 'down' : 'stable'
     })
 
     // Save all stats

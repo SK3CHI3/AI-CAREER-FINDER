@@ -12,13 +12,13 @@ import { Badge } from '@/components/ui/badge'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Alert, AlertDescription } from '@/components/ui/alert'
-import { 
-  Plus, 
-  Edit, 
-  Trash2, 
-  BookOpen, 
-  TrendingUp, 
-  Award, 
+import {
+  Plus,
+  Edit,
+  Trash2,
+  BookOpen,
+  TrendingUp,
+  Award,
   Calendar,
   GraduationCap,
   Target,
@@ -76,9 +76,10 @@ interface AcademicTerm {
 
 interface GradesManagerProps {
   onGradesUpdated?: () => void
+  readOnly?: boolean
 }
 
-const GradesManager = ({ onGradesUpdated }: GradesManagerProps) => {
+const GradesManager = ({ onGradesUpdated, readOnly = false }: GradesManagerProps) => {
   const { user } = useAuth()
   const [grades, setGrades] = useState<StudentGrade[]>([])
   const [subjects, setSubjects] = useState<CbeSubject[]>([])
@@ -120,7 +121,7 @@ const GradesManager = ({ onGradesUpdated }: GradesManagerProps) => {
         loadGradeCategories(),
         loadAcademicTerms()
       ])
-      
+
       setGrades(gradesData)
       setSubjects(subjectsData)
       setGradeCategories(categoriesData)
@@ -135,7 +136,7 @@ const GradesManager = ({ onGradesUpdated }: GradesManagerProps) => {
 
   const loadGrades = async (): Promise<StudentGrade[]> => {
     if (!user) return []
-    
+
     const { data, error } = await supabase
       .from('student_grades')
       .select('*')
@@ -172,7 +173,7 @@ const GradesManager = ({ onGradesUpdated }: GradesManagerProps) => {
 
   const calculateGradeLetter = (gradeValue: number, maxMarks: number = 100): string => {
     const percentage = (gradeValue / maxMarks) * 100
-    
+
     if (percentage >= 80) return 'A'
     if (percentage >= 75) return 'B+'
     if (percentage >= 70) return 'B'
@@ -222,12 +223,12 @@ const GradesManager = ({ onGradesUpdated }: GradesManagerProps) => {
 
       // Reload grades
       await loadGradesData()
-      
+
       // Notify parent component that grades were updated
       if (onGradesUpdated) {
         onGradesUpdated()
       }
-      
+
       // Reset form
       form.reset()
       setEditingGrade(null)
@@ -294,9 +295,9 @@ const GradesManager = ({ onGradesUpdated }: GradesManagerProps) => {
     let filteredGrades = grades
     if (term) filteredGrades = filteredGrades.filter(g => g.term === term)
     if (academicYear) filteredGrades = filteredGrades.filter(g => g.academic_year === academicYear)
-    
+
     if (filteredGrades.length === 0) return 0
-    
+
     const total = filteredGrades.reduce((sum, grade) => sum + grade.grade_value, 0)
     return (total / filteredGrades.length).toFixed(1)
   }
@@ -304,7 +305,7 @@ const GradesManager = ({ onGradesUpdated }: GradesManagerProps) => {
   const getCurrentAcademicYear = () => {
     const currentYear = new Date().getFullYear()
     const currentMonth = new Date().getMonth()
-    
+
     // If we're in the first half of the year, show previous year
     if (currentMonth < 6) {
       return (currentYear - 1).toString()
@@ -378,9 +379,9 @@ const GradesManager = ({ onGradesUpdated }: GradesManagerProps) => {
       )}
 
       {/* Main Content */}
-      <Tabs defaultValue="add" className="space-y-6">
+      <Tabs defaultValue={readOnly ? "view" : "add"} className="space-y-6">
         <TabsList>
-          <TabsTrigger value="add">Add Grade</TabsTrigger>
+          {!readOnly && <TabsTrigger value="add">Add Grade</TabsTrigger>}
           <TabsTrigger value="view">View Grades</TabsTrigger>
           <TabsTrigger value="analytics">Analytics</TabsTrigger>
         </TabsList>
@@ -594,7 +595,7 @@ const GradesManager = ({ onGradesUpdated }: GradesManagerProps) => {
                             <TableHead>Letter</TableHead>
                             <TableHead>Exam Type</TableHead>
                             <TableHead>Comment</TableHead>
-                            <TableHead>Actions</TableHead>
+                            {!readOnly && <TableHead>Actions</TableHead>}
                           </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -627,24 +628,26 @@ const GradesManager = ({ onGradesUpdated }: GradesManagerProps) => {
                                   <span className="text-muted-foreground">-</span>
                                 )}
                               </TableCell>
-                              <TableCell>
-                                <div className="flex gap-2">
-                                  <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={() => handleEdit(grade)}
-                                  >
-                                    <Edit className="w-4 h-4" />
-                                  </Button>
-                                  <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={() => handleDelete(grade.id)}
-                                  >
-                                    <Trash2 className="w-4 h-4" />
-                                  </Button>
-                                </div>
-                              </TableCell>
+                              {!readOnly && (
+                                <TableCell>
+                                  <div className="flex gap-2">
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      onClick={() => handleEdit(grade)}
+                                    >
+                                      <Edit className="w-4 h-4" />
+                                    </Button>
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      onClick={() => handleDelete(grade.id)}
+                                    >
+                                      <Trash2 className="w-4 h-4" />
+                                    </Button>
+                                  </div>
+                                </TableCell>
+                              )}
                             </TableRow>
                           ))}
                         </TableBody>

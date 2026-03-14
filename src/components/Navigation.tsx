@@ -1,13 +1,31 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Menu, X, Bot, TrendingUp, Users, BookOpen } from "lucide-react";
+import { Menu, X, Bot } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import { getDashboardPathForRole } from "@/types/roles";
+
+const scrollToSection = (id: string) => {
+  const el = document.getElementById(id);
+  if (el) el.scrollIntoView({ behavior: "smooth" });
+};
 
 const Navigation = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+
+  const handleNavClick = (sectionId: string) => {
+    setIsOpen(false);
+    if (location.pathname !== "/") {
+      navigate("/", { state: { scrollTo: sectionId } });
+    } else {
+      scrollToSection(sectionId);
+    }
+  };
+
+  const dashboardPath = user && profile ? getDashboardPathForRole(profile.role) : "/student";
 
   return (
     <nav className="fixed top-0 w-full z-50 bg-background/80 backdrop-blur-md border-b border-card-border">
@@ -15,30 +33,32 @@ const Navigation = () => {
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
           <div className="flex items-center">
-            <div className="flex-shrink-0 flex items-center space-x-2">
-              <div className="w-8 h-8 bg-gradient-primary rounded-lg flex items-center justify-center">
-                <Bot className="w-5 h-5 text-primary-foreground" />
-              </div>
-              <span className="text-xl font-bold bg-gradient-text bg-clip-text text-transparent">
-                CareerPath AI
-              </span>
-            </div>
+            <button 
+              onClick={() => navigate("/")}
+              className="flex-shrink-0 flex items-center space-x-2 hover:opacity-80 transition-opacity"
+            >
+              <img
+                src="/logos/CareerGuide_Logo.png"
+                alt="CareerGuide AI"
+                className="h-10 w-auto"
+              />
+            </button>
           </div>
 
           {/* Desktop Navigation */}
           <div className="hidden md:block">
             <div className="ml-10 flex items-baseline space-x-8">
-              <button onClick={() => navigate('/')} className="text-foreground-muted hover:text-foreground transition-colors">
+              <button onClick={() => handleNavClick('features')} className="text-foreground-muted hover:text-foreground transition-colors">
                 Features
               </button>
-              <button onClick={() => navigate('/')} className="text-foreground-muted hover:text-foreground transition-colors">
+              <button onClick={() => handleNavClick('careers')} className="text-foreground-muted hover:text-foreground transition-colors">
                 Career Paths
               </button>
-              <button onClick={() => navigate('/')} className="text-foreground-muted hover:text-foreground transition-colors">
+              <button onClick={() => navigate('/about')} className="text-foreground-muted hover:text-foreground transition-colors">
                 About
               </button>
-              <button onClick={() => navigate('/')} className="text-foreground-muted hover:text-foreground transition-colors">
-                Contact
+              <button onClick={() => navigate('/faq')} className="text-foreground-muted hover:text-foreground transition-colors">
+                FAQ
               </button>
             </div>
           </div>
@@ -48,7 +68,7 @@ const Navigation = () => {
             {user ? (
               <Button
                 className="bg-gradient-primary hover:opacity-90 text-primary-foreground shadow-glow"
-                onClick={() => navigate('/student')}
+                onClick={() => navigate(dashboardPath)}
               >
                 Dashboard
               </Button>
@@ -65,7 +85,7 @@ const Navigation = () => {
                   className="bg-gradient-primary hover:opacity-90 text-primary-foreground shadow-glow"
                   onClick={() => navigate('/auth')}
                 >
-                  Start Free Assessment
+                  Get started
                 </Button>
               </>
             )}
@@ -88,40 +108,24 @@ const Navigation = () => {
         {isOpen && (
           <div className="md:hidden">
             <div className="px-2 pt-2 pb-3 space-y-1 bg-surface rounded-lg mt-2 shadow-card">
-              <a
-                href="#features"
-                className="block px-3 py-2 text-foreground-muted hover:text-foreground transition-colors"
-                onClick={() => setIsOpen(false)}
-              >
+              <button onClick={() => handleNavClick('features')} className="block w-full text-left px-3 py-2 text-foreground-muted hover:text-foreground transition-colors">
                 Features
-              </a>
-              <a
-                href="#careers"
-                className="block px-3 py-2 text-foreground-muted hover:text-foreground transition-colors"
-                onClick={() => setIsOpen(false)}
-              >
+              </button>
+              <button onClick={() => handleNavClick('careers')} className="block w-full text-left px-3 py-2 text-foreground-muted hover:text-foreground transition-colors">
                 Career Paths
-              </a>
-              <a
-                href="#about"
-                className="block px-3 py-2 text-foreground-muted hover:text-foreground transition-colors"
-                onClick={() => setIsOpen(false)}
-              >
+              </button>
+              <button onClick={() => { navigate('/about'); setIsOpen(false); }} className="block w-full text-left px-3 py-2 text-foreground-muted hover:text-foreground transition-colors">
                 About
-              </a>
-              <a
-                href="#contact"
-                className="block px-3 py-2 text-foreground-muted hover:text-foreground transition-colors"
-                onClick={() => setIsOpen(false)}
-              >
-                Contact
-              </a>
+              </button>
+              <button onClick={() => { navigate('/faq'); setIsOpen(false); }} className="block w-full text-left px-3 py-2 text-foreground-muted hover:text-foreground transition-colors">
+                FAQ
+              </button>
               <div className="pt-4 border-t border-card-border">
                 {user ? (
                   <Button
                     className="w-full bg-gradient-primary text-primary-foreground"
                     onClick={() => {
-                      navigate('/student');
+                      navigate(dashboardPath);
                       setIsOpen(false);
                     }}
                   >
@@ -146,7 +150,7 @@ const Navigation = () => {
                         setIsOpen(false);
                       }}
                     >
-                      Start Free Assessment
+                      Get started
                     </Button>
                   </>
                 )}

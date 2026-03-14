@@ -4,12 +4,12 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
-import { 
-  User, 
-  BookOpen, 
-  Target, 
-  TrendingUp, 
-  Settings, 
+import {
+  User,
+  BookOpen,
+  Target,
+  TrendingUp,
+  Settings,
   LogOut,
   Bot,
   BarChart3,
@@ -21,13 +21,10 @@ const Dashboard = () => {
   const { user, profile, signOut } = useAuth()
 
   // Redirect based on user role
-  if (profile?.role === 'admin') {
-    return <Navigate to="/admin" replace />
-  }
-
-  if (profile?.role === 'student') {
-    return <Navigate to="/student" replace />
-  }
+  if (profile?.role === 'admin') return <Navigate to="/admin" replace />
+  if (profile?.role === 'school') return <Navigate to="/school" replace />
+  if (profile?.role === 'teacher') return <Navigate to="/teacher" replace />
+  if (profile?.role === 'student') return <Navigate to="/student" replace />
 
   const handleSignOut = async () => {
     try {
@@ -55,6 +52,10 @@ const Dashboard = () => {
     switch (role) {
       case 'admin':
         return 'bg-destructive text-destructive-foreground'
+      case 'school':
+        return 'bg-primary text-primary-foreground'
+      case 'teacher':
+        return 'bg-secondary text-secondary-foreground'
       case 'counselor':
         return 'bg-warning text-warning-foreground'
       case 'student':
@@ -71,12 +72,11 @@ const Dashboard = () => {
           <div className="flex justify-between items-center h-16">
             {/* Logo */}
             <div className="flex items-center space-x-3">
-              <div className="w-8 h-8 bg-gradient-primary rounded-lg flex items-center justify-center">
-                <Bot className="w-5 h-5 text-primary-foreground" />
-              </div>
-              <h1 className="text-xl font-bold bg-gradient-text bg-clip-text text-transparent">
-                CareerPath AI
-              </h1>
+              <img
+                src="/logos/CareerGuide_Logo.png"
+                alt="CareerGuide AI"
+                className="h-10 w-auto"
+              />
             </div>
 
             {/* User Menu */}
@@ -189,8 +189,7 @@ const Dashboard = () => {
                       <User className="w-4 h-4 text-primary" />
                     </div>
                     <div className="flex-1">
-                      <p className="text-sm font-medium">Profile created</p>
-                      <p className="text-xs text-foreground-muted">Welcome to CareerPath AI!</p>
+                      <p className="text-xs text-foreground-muted">Welcome to CareerGuide AI!</p>
                     </div>
                     <span className="text-xs text-foreground-muted">Just now</span>
                   </div>

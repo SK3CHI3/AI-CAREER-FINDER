@@ -16,16 +16,33 @@ export interface UserProfile {
   id: string;
   user_id: string;
   name?: string;
+  full_name?: string;
+  phone?: string;
+  email?: string;
+  avatar_url?: string;
   school_level?: 'primary' | 'secondary' | 'tertiary';
   current_grade?: string;
   subjects?: string[];
   interests?: string[];
   career_goals?: string;
+  strengths?: string[];
+  challenges?: string[];
   assessment_results?: {
-    skills: string[];
-    strengths: string[];
-    interests: string[];
-    recommendations: string[];
+    riasec_scores?: {
+      realistic: number;
+      investigative: number;
+      artistic: number;
+      social: number;
+      enterprising: number;
+      conventional: number;
+    };
+    personality_type?: string[]; // e.g., ["Social", "Artistic"]
+    values?: string[];
+    constraints?: string[];
+    skills?: string[];
+    strengths?: string[];
+    interests?: string[];
+    recommendations?: string[];
   };
   previous_recommendations?: {
     career: string;

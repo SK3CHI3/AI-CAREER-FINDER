@@ -109,12 +109,12 @@ const CareerPaths = () => {
       <section id="careers" className="py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
-            <h2 className="text-3xl sm:text-4xl font-bold mb-6">
-              Trending{" "}
-              <span className="bg-gradient-text bg-clip-text text-transparent">
-                Career Opportunities
-              </span>
-            </h2>
+          <h2 className="text-3xl sm:text-4xl font-bold mb-6 text-center">
+            Trending{" "}
+            <span className="bg-gradient-text bg-clip-text text-transparent">
+              Careers in Kenya
+            </span>
+          </h2>
             <p className="text-xl text-foreground-muted max-w-3xl mx-auto">
               Explore high-demand career paths in Kenya's evolving job market, 
               with real-time insights on demand, salaries, and growth projections.
@@ -160,7 +160,7 @@ const CareerPaths = () => {
           <h2 className="text-3xl sm:text-4xl font-bold mb-6">
             Trending{" "}
             <span className="bg-gradient-text bg-clip-text text-transparent">
-              Career Opportunities
+              Careers in Kenya
             </span>
           </h2>
           <p className="text-xl text-foreground-muted max-w-3xl mx-auto">
@@ -170,7 +170,7 @@ const CareerPaths = () => {
         </div>
         
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {dynamicCareerPaths.map((career) => (
+          {dynamicCareerPaths.slice(0, 3).map((career) => (
             <Card 
               key={career.id}
               className="bg-gradient-surface border-card-border p-6 hover:shadow-card transition-all duration-300 group"
@@ -236,10 +236,11 @@ const CareerPaths = () => {
         
         <div className="text-center mt-12">
           <Button 
+            onClick={() => window.location.href = '/careers'}
             size="lg"
-            className="bg-gradient-primary hover:opacity-90 text-primary-foreground shadow-glow"
+            className="bg-gradient-primary hover:opacity-90 text-primary-foreground shadow-glow px-10"
           >
-            Discover My Career Path
+            Explore All Careers
             <ArrowRight className="w-5 h-5 ml-2" />
           </Button>
         </div>

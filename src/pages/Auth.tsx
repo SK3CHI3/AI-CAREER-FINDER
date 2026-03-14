@@ -3,12 +3,18 @@ import { Navigate } from 'react-router-dom'
 import { LoginForm } from '@/components/auth/LoginForm'
 import { SignupForm } from '@/components/auth/SignupForm'
 import { useAuth } from '@/contexts/AuthContext'
+import { getDashboardPathForRole } from '@/types/roles'
 import { Bot } from 'lucide-react'
+import { useSearchParams } from 'react-router-dom'
 
 type AuthMode = 'login' | 'signup'
 
 const Auth = () => {
-  const [mode, setMode] = useState<AuthMode>('login')
+  const [searchParams] = useSearchParams()
+  const initialMode = (searchParams.get('mode') as AuthMode) || 'login'
+  const defaultRole = searchParams.get('role') as 'student' | 'school' | null
+
+  const [mode, setMode] = useState<AuthMode>(initialMode)
   const { user, profile, loading } = useAuth()
 
   // Show loading state
@@ -27,8 +33,7 @@ const Auth = () => {
 
   // Redirect if already authenticated
   if (user && profile) {
-    const redirectPath = profile.role === 'admin' ? '/admin' : '/student'
-    return <Navigate to={redirectPath} replace />
+    return <Navigate to={getDashboardPathForRole(profile.role)} replace />
   }
 
   const renderForm = () => {
@@ -39,7 +44,10 @@ const Auth = () => {
         )
       case 'signup':
         return (
-          <SignupForm onToggleMode={() => setMode('login')} />
+          <SignupForm
+            onToggleMode={() => setMode('login')}
+            defaultRole={defaultRole || 'student'}
+          />
         )
       default:
         return null
@@ -52,12 +60,11 @@ const Auth = () => {
         {/* Logo */}
         <div className="text-center mb-8">
           <div className="flex items-center justify-center space-x-3 mb-4">
-            <div className="w-12 h-12 bg-gradient-primary rounded-2xl flex items-center justify-center">
-              <Bot className="w-6 h-6 text-primary-foreground" />
-            </div>
-            <h1 className="text-2xl font-bold bg-gradient-text bg-clip-text text-transparent">
-              CareerPath AI
-            </h1>
+            <img
+              src="/logos/CareerGuide_Logo.png"
+              alt="CareerGuide AI"
+              className="h-14 w-auto drop-shadow-sm"
+            />
           </div>
           <p className="text-foreground-muted">
             AI-Powered Career Guidance for Kenya's CBE System

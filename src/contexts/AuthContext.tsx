@@ -11,9 +11,12 @@ import { isSessionValid, destroySessionManager } from '@/lib/session-utils'
 interface Profile {
   id: string
   email: string
+  upi_number: string | null
+  phone: string | null
   full_name: string | null
   avatar_url: string | null
-  role: 'student' | 'admin'
+  role: 'student' | 'admin' | 'school' | 'teacher'
+  school_id?: string | null
   school_level?: 'primary' | 'secondary' | 'tertiary'
   current_grade?: string
   cbe_subjects?: string[]
@@ -21,6 +24,12 @@ interface Profile {
   career_interests?: string[]
   interests?: string[]
   career_goals?: string
+  assessment_results?: {
+    riasec_scores: Record<string, number>
+    personality_type: string[]
+    values: string[]
+    constraints: string[]
+  } | null
   payment_status?: 'pending' | 'completed' | 'failed' | 'refunded'
   payment_reference?: string
   payment_date?: string
@@ -39,8 +48,8 @@ interface AuthContextType {
   profileLoading: boolean
   profileError: Error | null
   isMFAEnabled: boolean
-  signUp: (email: string, password: string, fullName: string) => Promise<{ error: AuthError | null }>
-  signIn: (email: string, password: string) => Promise<{ error: AuthError | null }>
+  signUp: (email: string, password: string, fullName: string, upiOrPhone: string, role?: Profile['role']) => Promise<{ data: any; error: AuthError | null }>
+  signIn: (identifier: string, password: string) => Promise<{ error: AuthError | null }>
   signOut: () => Promise<{ error: AuthError | null }>
   updateProfile: (updates: Partial<Profile>) => Promise<{ error: Error | null }>
   refreshProfile: () => Promise<void>
@@ -83,7 +92,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setProfileError(err)
         setProfile(null)
       } else {
-        setProfile(data)
+        setProfile(data as Profile)
         setProfileError(null)
       }
     } catch (error) {
@@ -198,26 +207,88 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, [user])
 
   // Sign up with email and password
-  const signUp = async (email: string, password: string, fullName: string) => {
-    const { error } = await supabase.auth.signUp({
+  // upiOrPhone: UPI number for students (6-char NEMIS code), phone for schools
+  const signUp = async (email: string, password: string, fullName: string, upiOrPhone: string, role: Profile['role'] = 'student') => {
+    const isStudent = role === 'student'
+    const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
         data: {
           full_name: fullName,
+          // Store UPI for students, phone for schools/teachers
+          ...(isStudent ? { upi_number: upiOrPhone } : { phone: upiOrPhone }),
+          role: role,
         },
       },
     })
-    return { error }
+    // If signup succeeded, also save UPI/phone to profiles
+    if (!error && data.user) {
+      if (isStudent) {
+        await supabase.from('profiles').update({ upi_number: upiOrPhone } as any).eq('id', data.user.id)
+      } else {
+        await supabase.from('profiles').update({ phone: upiOrPhone } as any).eq('id', data.user.id)
+      }
+    }
+    return { data, error }
   }
 
-  // Sign in with email and password
-  const signIn = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    })
-    return { error }
+  // Unified Sign In (Email, UPI, or Phone)
+  const signIn = async (identifier: string, password: string) => {
+    try {
+      let email = identifier;
+
+      // Check if identifier is NOT an email — try resolving from UPI or phone
+      const isEmail = identifier.includes('@');
+
+      if (!isEmail) {
+        if (isDev) console.log('🔍 AuthContext: Non-email identifier, resolving email...');
+        const cleanIdentifier = identifier.replace(/[\s-]/g, '');
+
+        // Try UPI first (6-char alphanumeric NEMIS code)
+        const isUPI = /^[A-Za-z0-9]{4,12}$/.test(cleanIdentifier) && !cleanIdentifier.startsWith('07') && !cleanIdentifier.startsWith('+');
+
+        if (isUPI) {
+          const { data, error } = await supabase
+            .from('profiles')
+            .select('email')
+            .eq('upi_number', cleanIdentifier.toUpperCase())
+            .single();
+          if (!error && data?.email) {
+            email = data.email;
+            if (isDev) console.log('🎓 AuthContext: Resolved email from UPI:', email);
+          } else {
+            return { error: { message: 'No account found with this UPI number. Please check your NEMIS UPI and try again.', name: 'AuthError' } as any };
+          }
+        } else {
+          // Phone number fallback
+          const { data, error } = await supabase
+            .from('profiles')
+            .select('email')
+            .eq('phone', cleanIdentifier)
+            .single();
+          if (error || !data?.email) {
+            return { error: { message: 'No account found with this identifier. Please use your email, UPI number, or phone.', name: 'AuthError' } as any };
+          }
+          email = data.email;
+        }
+      }
+
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      })
+
+      if (error) throw error
+
+      setSession(data.session)
+      setUser(data.user)
+
+      return { error: null }
+    } catch (error) {
+      if (isDev) console.error('Sign in error:', error)
+      return { error: error as AuthError }
+    }
   }
 
   // Sign out
@@ -232,7 +303,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       // Sign out from Supabase
       const { error } = await supabase.auth.signOut()
-      
+
       if (error) {
         if (isDev) console.error('Sign out error:', error)
         return { error }

@@ -8,8 +8,75 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Send, Bot, User, Sparkles, Loader2, AlertCircle, RefreshCw } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { aiCareerService, type ChatMessage, type UserContext } from "@/lib/ai-service";
+import { dashboardService } from "@/lib/dashboard-service";
 import { supabase } from "@/lib/supabase";
 import type { Database } from '@/types/supabase';
+import { Target, Briefcase, GraduationCap as GradIcon } from "lucide-react";
+
+// Component to render structured message content
+const MessageContent = ({ content, role }: { content: string, role: 'user' | 'assistant' }) => {
+  if (role === 'user') {
+    return <p className="text-sm leading-relaxed whitespace-pre-wrap break-words">{content}</p>;
+  }
+
+  // Simple parser for assistant messages to detect structured blocks
+  const parts = content.split('\n');
+
+  return (
+    <div className="space-y-3">
+      {parts.map((part, i) => {
+        const trimmed = part.trim();
+
+        // Detect bullet points
+        if (trimmed.startsWith('- ') || trimmed.startsWith('• ') || trimmed.startsWith('* ')) {
+          return (
+            <div key={i} className="flex gap-2 items-start pl-1">
+              <div className="w-1.5 h-1.5 rounded-full bg-primary/40 mt-1.5 shrink-0" />
+              <p className="text-sm leading-relaxed">{trimmed.substring(2)}</p>
+            </div>
+          );
+        }
+
+        // Detect Career Recommendations or Titles (e.g. "Career Profile: [Name]")
+        if (trimmed.startsWith('Career Profile:') || trimmed.startsWith('Recommended Career:')) {
+          return (
+            <div key={i} className="bg-primary/5 border border-primary/10 rounded-xl p-3 my-3">
+              <div className="flex items-center gap-2 mb-1">
+                <Briefcase className="w-4 h-4 text-primary" />
+                <span className="text-xs font-bold uppercase tracking-wider text-primary">Career Match</span>
+              </div>
+              <p className="font-bold text-sm sm:text-base">{trimmed.split(':')[1]?.trim()}</p>
+            </div>
+          );
+        }
+
+        // Detect Key Insights (e.g. "Key Insight:", "Why this matches:")
+        if (trimmed.toLowerCase().includes('insight:') || trimmed.toLowerCase().includes('why this matches:')) {
+          return (
+            <div key={i} className="flex items-center gap-2 text-primary font-bold text-xs mt-4 mb-1">
+              <Target className="w-3.5 h-3.5" />
+              <span>{trimmed.toUpperCase()}</span>
+            </div>
+          );
+        }
+
+        // Detect Subjects (e.g. "Subjects:", "Recommended Subjects:")
+        if (trimmed.startsWith('Subjects:') || trimmed.startsWith('Academic Focus:')) {
+          return (
+            <div key={i} className="flex items-center gap-2 text-purple-600 font-bold text-xs mt-4 mb-1">
+              <GradIcon className="w-3.5 h-3.5" />
+              <span>{trimmed.toUpperCase()}</span>
+            </div>
+          );
+        }
+
+        // Regular text
+        if (!trimmed) return <div key={i} className="h-2" />;
+        return <p key={i} className="text-sm leading-relaxed whitespace-pre-wrap break-words">{trimmed}</p>;
+      })}
+    </div>
+  );
+};
 
 const AIChat = () => {
   const { user, profile } = useAuth();
@@ -22,15 +89,14 @@ const AIChat = () => {
   const [isInitialized, setIsInitialized] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
 
-  // Function to clean markdown formatting from AI responses
-  const cleanMarkdownFormatting = (text: string): string => {
-    return text
-      .replace(/\*\*(.*?)\*\*/g, '$1') // Remove ** bold markers
-      .replace(/\*(.*?)\*/g, '$1')     // Remove * italic markers
-      .replace(/#{1,6}\s/g, '')        // Remove # headers
-      .replace(/`{1,3}(.*?)`{1,3}/g, '$1') // Remove code blocks
-      .trim();
-  };
+  // Predefined quick questions for students
+  const SUGGESTED_QUESTIONS = [
+    "What are the best careers for my subjects?",
+    "How can I improve my grades for Engineering?",
+    "Tell me about university programs in Kenya",
+    "What are high-paying careers in Vision 2030?",
+    "Show me TVET options for my interests"
+  ];
 
   // Initialize user context and conversation
   useEffect(() => {
@@ -83,14 +149,22 @@ const AIChat = () => {
         .single();
       const studentProfile = studentProfileRaw as Database['public']['Tables']['profiles']['Row'] | null;
 
+      const academicPerformance = await dashboardService.calculateAcademicPerformance(user?.id || '');
+
       const context: UserContext = {
         name: profile?.full_name || undefined,
-        schoolLevel: studentProfile ? studentProfile.school_level || undefined : undefined,
+        schoolLevel: studentProfile ? (studentProfile.school_level as 'primary' | 'secondary' | 'tertiary') || undefined : undefined,
         currentGrade: studentProfile ? studentProfile.current_grade || undefined : undefined,
-        subjects: studentProfile ? (studentProfile.subjects || undefined) : undefined,
-        interests: studentProfile ? (studentProfile.interests || undefined) : undefined,
+        subjects: studentProfile ? (studentProfile.cbe_subjects || undefined) : undefined,
+        interests: studentProfile ? (studentProfile.career_interests || undefined) : undefined,
         careerGoals: studentProfile ? studentProfile.career_goals || undefined : undefined,
-        assessmentResults: studentProfile ? (studentProfile.assessment_results as any) || undefined : undefined // fallback as any if not typed
+        assessmentResults: undefined,
+        academicPerformance: {
+          overallAverage: academicPerformance.overallAverage,
+          strongSubjects: academicPerformance.strongSubjects,
+          weakSubjects: academicPerformance.weakSubjects,
+          performanceTrend: academicPerformance.performanceTrend
+        }
       };
 
       setUserContext(context);
@@ -134,17 +208,17 @@ What subjects do you enjoy most in your current studies? 🎯`,
       // Clear the conversation
       setConversation([]);
       setError(null);
-      
+
       // Clear localStorage
       if (user?.id) {
         localStorage.removeItem(`ai_chat_${user.id}`);
         console.log('🗑️ Cleared conversation from localStorage');
       }
-      
+
       // Re-initialize the chat
       setIsInitialized(false);
       await initializeChat();
-      
+
       console.log('Chat refreshed - conversation cleared and re-initialized');
     } catch (error) {
       console.error('Failed to refresh chat:', error);
@@ -179,7 +253,7 @@ What subjects do you enjoy most in your current studies? 🎯`,
       const assistantMessage: ChatMessage = {
         id: crypto.randomUUID(),
         role: 'assistant',
-        content: cleanMarkdownFormatting(response),
+        content: response,
         timestamp: new Date()
       };
 
@@ -191,7 +265,7 @@ What subjects do you enjoy most in your current studies? 🎯`,
 
     } catch (error) {
       console.error('Failed to send message:', error);
-      
+
       // Show user-friendly error messages
       let errorMessage = 'Failed to send message. Please try again.';
       if (error instanceof Error) {
@@ -205,7 +279,7 @@ What subjects do you enjoy most in your current studies? 🎯`,
           errorMessage = error.message;
         }
       }
-      
+
       setError(errorMessage);
     } finally {
       setIsLoading(false);
@@ -214,7 +288,7 @@ What subjects do you enjoy most in your current studies? 🎯`,
 
   if (!user) {
     return (
-      <div className="w-full max-w-2xl px-2 sm:mx-auto sm:p-6 p-2">
+      <div className="w-full max-w-4xl px-2 sm:mx-auto sm:p-6 p-2">
         <Alert>
           <AlertCircle className="h-4 w-4" />
           <AlertDescription>
@@ -228,7 +302,7 @@ What subjects do you enjoy most in your current studies? 🎯`,
   // Fatal init error: show clear message and retry so the UI is not stuck
   if (error && !isInitialized) {
     return (
-      <div className="w-full max-w-2xl px-2 sm:mx-auto sm:p-6 p-2">
+      <div className="w-full max-w-4xl px-2 sm:mx-auto sm:p-6 p-2">
         <Card className="bg-gradient-surface border-card-border shadow-elevated">
           <CardContent className="p-6">
             <Alert variant="destructive" className="mb-4">
@@ -253,7 +327,7 @@ What subjects do you enjoy most in your current studies? 🎯`,
   }
 
   return (
-    <div className="w-full max-w-2xl px-2 sm:mx-auto sm:p-6 p-2">
+    <div className="w-full max-w-5xl px-2 sm:mx-auto sm:p-2 p-1">
       <div className="text-center mb-6 sm:mb-8">
         <h2 className="text-xl sm:text-3xl font-bold mb-3 sm:mb-4">
           Chat with Your{" "}
@@ -269,65 +343,64 @@ What subjects do you enjoy most in your current studies? 🎯`,
 
       <Card className="bg-gradient-surface border-card-border shadow-elevated">
         {/* Chat Header */}
-        <CardHeader className="border-b border-card-border sm:p-6 p-3">
-          <div className="flex items-center justify-between">
+        <CardHeader className="border-b border-card-border p-4 sm:p-6 bg-card/50">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div className="flex items-center space-x-3">
-              <div className="w-9 h-9 sm:w-10 sm:h-10 bg-gradient-primary rounded-full flex items-center justify-center">
-                <Bot className="w-4 h-4 sm:w-5 sm:h-5 text-primary-foreground" />
+              <div className="w-10 h-10 bg-gradient-primary rounded-xl flex items-center justify-center shadow-lg shadow-primary/20">
+                <Bot className="w-5 h-5 text-primary-foreground" />
               </div>
               <div>
-                <CardTitle className="text-base sm:text-lg">CareerPath AI Assistant</CardTitle>
-                <CardDescription className="text-xs sm:text-sm">Quick Assessment • Powered by DeepSeek R1 • Session-based (survives page refresh)</CardDescription>
+                <CardTitle className="text-base sm:text-lg font-bold">Career Counselor AI</CardTitle>
+                <div className="flex items-center gap-2">
+                  <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+                  <span className="text-[10px] sm:text-xs font-medium text-green-600 uppercase tracking-wider">Online & Ready</span>
+                </div>
               </div>
             </div>
-            <div className="flex items-center space-x-2">
+
+            <div className="flex items-center gap-2">
               <Button
                 size="sm"
-                variant="outline"
+                variant="ghost"
                 onClick={handleRefresh}
                 disabled={isRefreshing}
-                className="text-xs min-h-[38px]"
+                className="text-xs h-8 hover:bg-destructive/10 hover:text-destructive transition-colors"
               >
                 {isRefreshing ? (
-                  <Loader2 className="w-3 h-3 animate-spin mr-1" />
+                  <Loader2 className="w-3 h-3 animate-spin mr-1.5" />
                 ) : (
-                  <RefreshCw className="w-3 h-3 mr-1" />
+                  <RefreshCw className="w-3 h-3 mr-1.5" />
                 )}
-                Refresh
+                Reset Chat
               </Button>
-              <Badge variant="secondary" className="bg-green-100 text-green-700">
-                <div className="w-2 h-2 bg-green-500 rounded-full mr-1" />
-                Online
-              </Badge>
+              {userContext.schoolLevel && (
+                <Badge variant="secondary" className="text-[10px] py-0.5 px-2 bg-primary/5 text-primary border-primary/10">
+                  {userContext.schoolLevel}
+                </Badge>
+              )}
             </div>
           </div>
         </CardHeader>
 
         {/* Chat Messages */}
         <CardContent className="p-0 sm:p-6 p-3">
-          <ScrollArea className="h-80 sm:h-96 p-2 sm:p-6">
+          <ScrollArea className="h-[450px] sm:h-[600px] p-2 sm:p-6">
             <div className="space-y-4 sm:space-y-6">
               {conversation.map((msg) => (
-                <div key={msg.id} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                  <div className={`flex max-w-[90vw] sm:max-w-[85%] ${msg.role === 'user' ? 'flex-row-reverse' : 'flex-row'} gap-2 sm:gap-3`}>
-                    <div className={`w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
-                      msg.role === 'user'
-                        ? 'bg-primary text-primary-foreground ml-2 sm:ml-3'
-                        : 'bg-gradient-primary text-primary-foreground mr-2 sm:mr-3'
-                    }`}>
-                      {msg.role === 'user' ? (
-                        <User className="w-4 h-4" />
-                      ) : (
-                        <Bot className="w-4 h-4" />
-                      )}
+                <div key={msg.id} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'} mb-2`}>
+                  <div className={`flex max-w-[95%] sm:max-w-[85%] ${msg.role === 'user' ? 'flex-row-reverse' : 'flex-row'} gap-2 items-end`}>
+                    <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 shadow-sm ${msg.role === 'user'
+                      ? 'bg-primary text-primary-foreground'
+                      : 'bg-gradient-primary text-primary-foreground'
+                      }`}>
+                      {msg.role === 'user' ? <User className="w-4 h-4" /> : <Bot className="w-4 h-4" />}
                     </div>
-                    <div className={`p-3 sm:p-4 rounded-2xl ${
-                      msg.role === 'user'
-                        ? 'bg-primary text-primary-foreground'
-                        : 'bg-background border border-card-border'
-                    }`}>
-                      <p className="text-sm leading-relaxed whitespace-pre-wrap break-words">{msg.content}</p>
-                      <p className="text-xs opacity-70 mt-1 sm:mt-2">
+                    <div className={`p-3 sm:p-4 rounded-2xl shadow-sm ${msg.role === 'user'
+                      ? 'bg-primary text-primary-foreground rounded-br-none'
+                      : 'bg-card border border-card-border rounded-bl-none'
+                      }`}>
+                      <MessageContent content={msg.content} role={msg.role as 'user' | 'assistant'} />
+                      <p className={`text-[10px] mt-1.5 opacity-60 ${msg.role === 'user' ? 'text-right' : 'text-left'}`}>
                         {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                       </p>
                     </div>
@@ -357,27 +430,46 @@ What subjects do you enjoy most in your current studies? 🎯`,
         </CardContent>
 
         {/* Chat Input */}
-        <div className="border-t border-card-border sm:p-6 p-3">
+        <div className="border-t border-card-border p-4 sm:p-6 bg-card/30">
           {error && (
-            <Alert variant="destructive" className="mb-4">
-              <AlertCircle className="h-4 w-4" />
+            <Alert variant="destructive" className="mb-4 text-xs">
+              <AlertCircle className="h-3 w-3" />
               <AlertDescription>{error}</AlertDescription>
             </Alert>
           )}
 
-          <div className="flex flex-col sm:flex-row gap-2 sm:gap-4">
+          {/* Quick Actions Scroll */}
+          <div className="flex overflow-x-auto gap-2 mb-4 pb-2 no-scrollbar">
+            {SUGGESTED_QUESTIONS.map((q, i) => (
+              <Button
+                key={i}
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  setMessage(q);
+                  // Optional: handleSend immediately if helpful
+                }}
+                className="whitespace-nowrap rounded-full h-8 text-xs bg-background/50 border-primary/20 hover:border-primary px-4 py-1 flex-shrink-0"
+              >
+                {q}
+              </Button>
+            ))}
+          </div>
+
+          <div className="flex gap-2 items-center bg-background border border-card-border rounded-2xl p-1 shadow-inner focus-within:ring-2 focus-within:ring-primary/20 transition-all">
             <Input
-              placeholder="Ask about career paths, subjects, university programs, job prospects..."
+              placeholder="Ask about careers..."
               value={message}
               onChange={(e) => setMessage(e.target.value)}
               onKeyPress={(e) => e.key === 'Enter' && !e.shiftKey && handleSend()}
               disabled={isLoading}
-              className="bg-background border-card-border w-full mb-2 sm:mb-0 sm:mr-4 min-h-[44px] text-base"
+              className="border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 min-h-[44px] text-sm sm:text-base flex-1"
             />
             <Button
               onClick={handleSend}
               disabled={isLoading || !message.trim()}
-              className="bg-gradient-primary hover:opacity-90 text-primary-foreground w-full sm:w-auto px-4 sm:px-6 min-h-[44px]"
+              size="icon"
+              className="bg-primary hover:primary/90 text-primary-foreground rounded-xl w-10 h-10 shrink-0 shadow-lg shadow-primary/20"
             >
               {isLoading ? (
                 <Loader2 className="w-4 h-4 animate-spin" />
@@ -387,15 +479,16 @@ What subjects do you enjoy most in your current studies? 🎯`,
             </Button>
           </div>
 
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mt-2 sm:mt-3">
-            <p className="text-xs sm:text-xs text-foreground-muted flex items-center">
-              <Sparkles className="w-3 h-3 mr-1" />
-              Powered by DeepSeek R1 - Advanced AI reasoning for career guidance
+          <div className="flex items-center justify-between mt-3 px-1">
+            <p className="text-[10px] text-foreground-muted flex items-center">
+              <Sparkles className="w-3 h-3 mr-1 text-primary" />
+              DeepSeek R1 Reasoning
             </p>
             {userContext.name && (
-              <Badge variant="outline" className="text-xs mt-2 sm:mt-0">
-                Profile: {userContext.schoolLevel || 'Student'} {userContext.currentGrade && `Grade ${userContext.currentGrade}`}
-              </Badge>
+              <div className="flex items-center gap-1.5 opacity-60">
+                <div className="w-1.5 h-1.5 rounded-full bg-primary" />
+                <span className="text-[10px] font-medium">{userContext.name.split(' ')[0]}</span>
+              </div>
             )}
           </div>
         </div>
