@@ -24,6 +24,7 @@ import QuickAssessment from "./pages/QuickAssessment";
 import Careers from "./pages/Careers";
 import NotFound from "./pages/NotFound";
 import ScrollToTop from "./components/ScrollToTop";
+import FeedbackWidget from "./components/FeedbackWidget";
 
 const queryClient = new QueryClient();
 
@@ -120,6 +121,7 @@ const App = () => (
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
+          <FeedbackWidget />
         </BrowserRouter>
       </TooltipProvider>
     </AuthProvider>

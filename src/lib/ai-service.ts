@@ -408,34 +408,41 @@ Return exactly this format:
         .replace(/([{,]\s*)([a-zA-Z0-9_]+)\s*:/g, '$1"$2":') // Unquoted keys
         .replace(/"\s+([a-zA-Z0-9_]+)":/g, '", "$1":'); // Missing commas between props
 
-      // Pass 2: Handle unescaped internal quotes and newlines
+      // Pass 2: Handle unescaped internal quotes and newlines more aggressively
+      // We look for the start of a value after a colon and try to find the actual end quote
       repaired = repaired.replace(/:\s*"([\s\S]*?)"(?=\s*[,}\]])/g, (match, p1) => {
-        // Escape internal quotes and newlines
+        // If there are internal quotes that aren't escaped, escape them
         const fixed = p1
           .replace(/\n/g, '\\n')
           .replace(/\r/g, '\\r')
           .replace(/(?<!\\)"/g, '\\"');
         return `: "${fixed}"`;
       });
-
+      
       // Pass 3: Fix missing commas between objects in array
       repaired = repaired.replace(/}\s*{/g, '}, {');
+
+      // Pass 4: Fix unescaped characters that are common
+      repaired = repaired.replace(/[\u0000-\u0019]+/g, "");
 
       try {
         const parsed = JSON.parse(repaired);
         if (Array.isArray(parsed)) return parsed;
       } catch (innerError) {
-        console.warn('Advanced repair pass 1 failed, trying aggressive cleanup:', innerError);
+        console.warn('Advanced repair pass failed. Raw snippet near error:', repaired.substring(Math.max(0, (innerError as any).pos - 50), (innerError as any).pos + 50));
+        
+        // Pass 5: Extreme cleanup
+        repaired = repaired.replace(/"\s*,\s*"/g, '", "');
       }
 
-      // Final attempt: aggressive character cleanup - remove all control characters except basic whitespace
       const ultraClean = repaired
         .replace(/[\x00-\x1F\x7F-\x9F]/g, "") // Remove control characters
         .replace(/\\(?!["\\\/bfnrtu])/g, "\\\\"); // Fix invalid escapes
       
       return JSON.parse(ultraClean);
     } catch (repairError) {
-      console.error('All JSON repair attempts failed:', repairError);
+      console.error('All JSON repair attempts failed. Raw content length:', jsonString.length);
+      console.error('JSON string at failure:', jsonString);
       throw new Error(`JSON parsing failed: ${repairError instanceof Error ? repairError.message : String(repairError)}`);
     }
   }

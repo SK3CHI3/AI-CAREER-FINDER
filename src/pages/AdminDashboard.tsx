@@ -31,6 +31,16 @@ interface AdminStats {
   totalRevenue: number
 }
 
+interface Feedback {
+  id: string
+  user_id: string | null
+  user_email: string | null
+  category: string
+  content: string
+  status: string
+  created_at: string
+}
+
 const CAREER_COLORS = ['#6366f1', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#14b8a6']
 
 const AdminDashboard = () => {
@@ -41,6 +51,8 @@ const AdminDashboard = () => {
   const [stats, setStats] = useState<AdminStats | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [feedbacks, setFeedbacks] = useState<Feedback[]>([])
+  const [updatingId, setUpdatingId] = useState<string | null>(null)
 
   const loadData = async () => {
     if (!user) return
@@ -152,7 +164,41 @@ const AdminDashboard = () => {
     }
   }
 
-  useEffect(() => { loadData() }, [user])
+  const loadFeedbacks = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('feedbacks')
+        .select('*')
+        .order('created_at', { ascending: false })
+      
+      if (error) throw error
+      setFeedbacks(data || [])
+    } catch (err) {
+      console.error('Error loading feedbacks:', err)
+    }
+  }
+
+  const updateFeedbackStatus = async (id: string, status: string) => {
+    setUpdatingId(id)
+    try {
+      const { error } = await supabase
+        .from('feedbacks')
+        .update({ status })
+        .eq('id', id)
+      
+      if (error) throw error
+      setFeedbacks(prev => prev.map(f => f.id === id ? { ...f, status } : f))
+    } catch (err) {
+      console.error('Error updating feedback:', err)
+    } finally {
+      setUpdatingId(null)
+    }
+  }
+
+  useEffect(() => { 
+    loadData()
+    loadFeedbacks()
+  }, [user])
 
   const getInitials = (name: string) =>
     name.split(' ').map((w) => w[0]).join('').toUpperCase().slice(0, 2)
@@ -219,6 +265,7 @@ const AdminDashboard = () => {
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="users">Users</TabsTrigger>
             <TabsTrigger value="analytics">Analytics</TabsTrigger>
+            <TabsTrigger value="feedbacks">Feedbacks</TabsTrigger>
           </TabsList>
 
           {/* ── Overview ── */}
@@ -434,6 +481,90 @@ const AdminDashboard = () => {
                 </CardContent>
               </Card>
             </div>
+          </TabsContent>
+
+          {/* ── Feedbacks ── */}
+          <TabsContent value="feedbacks" className="space-y-6">
+            <Card className="bg-gradient-surface border-card-border">
+              <CardHeader>
+                <CardTitle>User Feedback</CardTitle>
+                <CardDescription>Reports, feature requests, and support queries.</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>User / Category</TableHead>
+                      <TableHead>Feedback</TableHead>
+                      <TableHead>Received</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {feedbacks.length === 0 ? (
+                      <TableRow>
+                        <TableCell colSpan={5} className="text-center py-12 text-foreground-muted italic">
+                          No feedback reports found.
+                        </TableCell>
+                      </TableRow>
+                    ) : (
+                      feedbacks.map((f) => (
+                        <TableRow key={f.id}>
+                          <TableCell>
+                            <div className="space-y-1">
+                              <p className="font-bold text-sm flex items-center gap-1.5">
+                                {f.category === 'Bug' && <Bug className="w-3.5 h-3.5 text-destructive" />}
+                                {f.category === 'Feature' && <Lightbulb className="w-3.5 h-3.5 text-amber-400" />}
+                                {f.category === 'Support' && <HelpCircle className="w-3.5 h-3.5 text-primary" />}
+                                {f.category === 'General' && <MessageCircle className="w-3.5 h-3.5 text-sky-400" />}
+                                {f.category}
+                              </p>
+                              <p className="text-[10px] text-foreground-muted font-mono">{f.user_email || 'Anonymous Guest'}</p>
+                            </div>
+                          </TableCell>
+                          <TableCell className="max-w-md">
+                            <p className="text-sm leading-relaxed">{f.content}</p>
+                          </TableCell>
+                          <TableCell className="text-xs text-foreground-muted">
+                            {new Date(f.created_at).toLocaleDateString()}
+                          </TableCell>
+                          <TableCell>
+                            <Badge 
+                              variant={f.status === 'resolved' ? 'default' : f.status === 'in-progress' ? 'secondary' : 'outline'}
+                              className={`text-[10px] uppercase ${
+                                f.status === 'resolved' ? 'bg-green-500/10 text-green-500 border-green-500/20' : 
+                                f.status === 'in-progress' ? 'bg-amber-500/10 text-amber-500 border-amber-500/20' : ''
+                              }`}
+                            >
+                              {f.status}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex items-center gap-2">
+                              {f.status !== 'resolved' && (
+                                <Button 
+                                  variant="ghost" 
+                                  size="sm" 
+                                  className="text-[10px] font-bold h-8 text-primary hover:text-primary hover:bg-primary/10"
+                                  onClick={() => updateFeedbackStatus(f.id, f.status === 'new' ? 'in-progress' : 'resolved')}
+                                  disabled={!!updatingId}
+                                >
+                                  {updatingId === f.id ? <Loader2 className="w-3 h-3 animate-spin" /> : f.status === 'new' ? 'Start' : 'Resolve'}
+                                </Button>
+                              )}
+                              {f.status === 'resolved' && (
+                                <CheckCircle2 className="w-4 h-4 text-green-500 mx-auto" />
+                              )}
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    )}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
           </TabsContent>
         </Tabs>
       </main>

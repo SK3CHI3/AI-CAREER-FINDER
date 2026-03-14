@@ -9,6 +9,7 @@ import FeatureShowcase from "@/components/FeatureShowcase";
 import Testimonials from "@/components/Testimonials";
 import BackgroundGradient from "@/components/BackgroundGradient";
 import StatsPartnersSection from "@/components/StatsPartnersSection.tsx";
+import CallingCard from "@/components/CallingCard";
 
 const Index = () => {
   const location = useLocation();
@@ -34,6 +35,7 @@ const Index = () => {
         <div id="guest-chat" className="guest-chat-section">
           <GuestAIChat />
         </div>
+        <CallingCard />
       </main>
       <Footer />
     </div>
