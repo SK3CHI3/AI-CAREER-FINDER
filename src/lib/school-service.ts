@@ -156,7 +156,7 @@ class SchoolService {
         user_id,
         role,
         joined_at,
-        profiles:user_id ( full_name, email )
+        profiles ( full_name, email )
       `)
       .eq('school_id', schoolId)
 
