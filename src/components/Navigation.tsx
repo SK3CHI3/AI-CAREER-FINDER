@@ -51,11 +51,11 @@ const Navigation = () => {
               <button onClick={() => handleNavClick('careers')} className="text-foreground-muted hover:text-foreground transition-colors">
                 Career Paths
               </button>
-              <button onClick={() => handleNavClick('about')} className="text-foreground-muted hover:text-foreground transition-colors">
+              <button onClick={() => navigate('/about')} className="text-foreground-muted hover:text-foreground transition-colors">
                 About
               </button>
-              <button onClick={() => handleNavClick('contact')} className="text-foreground-muted hover:text-foreground transition-colors">
-                Contact
+              <button onClick={() => navigate('/faq')} className="text-foreground-muted hover:text-foreground transition-colors">
+                FAQ
               </button>
             </div>
           </div>
@@ -111,11 +111,11 @@ const Navigation = () => {
               <button onClick={() => handleNavClick('careers')} className="block w-full text-left px-3 py-2 text-foreground-muted hover:text-foreground transition-colors">
                 Career Paths
               </button>
-              <button onClick={() => handleNavClick('about')} className="block w-full text-left px-3 py-2 text-foreground-muted hover:text-foreground transition-colors">
+              <button onClick={() => { navigate('/about'); setIsOpen(false); }} className="block w-full text-left px-3 py-2 text-foreground-muted hover:text-foreground transition-colors">
                 About
               </button>
-              <button onClick={() => handleNavClick('contact')} className="block w-full text-left px-3 py-2 text-foreground-muted hover:text-foreground transition-colors">
-                Contact
+              <button onClick={() => { navigate('/faq'); setIsOpen(false); }} className="block w-full text-left px-3 py-2 text-foreground-muted hover:text-foreground transition-colors">
+                FAQ
               </button>
               <div className="pt-4 border-t border-card-border">
                 {user ? (

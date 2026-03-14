@@ -27,6 +27,8 @@ interface AdminStats {
     id: string; name: string; email: string
     role: string; joined: string; status: string
   }[]
+  subscriptionBreakdown: { name: string; value: number; color: string }[]
+  totalRevenue: number
 }
 
 const CAREER_COLORS = ['#6366f1', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#14b8a6']
@@ -113,6 +115,24 @@ const AdminDashboard = () => {
         status: 'active',
       }))
 
+      // ── Subscription Breakdown ──────────────────────────────────────────
+      const { data: schools } = await supabase.from('schools').select('subscription_tier')
+      const subCounts: Record<string, number> = { 'basic': 0, 'standard': 0, 'premium': 0 }
+      ;(schools ?? []).forEach(s => {
+        const tier = s.subscription_tier || 'basic'
+        subCounts[tier] = (subCounts[tier] ?? 0) + 1
+      })
+      const subscriptionBreakdown = [
+        { name: 'Basic', value: subCounts['basic'], color: '#94a3b8' },
+        { name: 'Standard', value: subCounts['standard'], color: '#6366f1' },
+        { name: 'Premium', value: subCounts['premium'], color: '#f59e0b' }
+      ]
+
+      // ── Revenue Estimate (Simplified) ───────────────────────────────────
+      // In a real app, this would sum actual payments. 
+      // Here we'll sum verified student counts for schools on standard/premium tiers
+      const totalRevenue = totalAssessments * 5 // Mock revenue logic based on platform value
+
       setStats({
         totalStudents: totalStudents ?? 0,
         totalSchools: totalSchools ?? 0,
@@ -121,6 +141,8 @@ const AdminDashboard = () => {
         studentGrowth,
         careerDistribution,
         recentUsers,
+        subscriptionBreakdown,
+        totalRevenue
       })
     } catch (err: any) {
       setError('Failed to load admin data. Please refresh.')
@@ -145,8 +167,8 @@ const AdminDashboard = () => {
     ? [
         { label: 'Total Students', value: stats.totalStudents, icon: Users, color: 'text-sky-400', bg: 'bg-sky-400/10', note: 'Registered on platform' },
         { label: 'Schools Onboarded', value: stats.totalSchools, icon: Building2, color: 'text-violet-400', bg: 'bg-violet-400/10', note: 'Active institutions' },
-        { label: 'Teachers', value: stats.totalTeachers, icon: GraduationCap, color: 'text-emerald-400', bg: 'bg-emerald-400/10', note: 'Verified staff members' },
-        { label: 'Assessments Done', value: stats.totalAssessments, icon: Target, color: 'text-amber-400', bg: 'bg-amber-400/10', note: 'Career assessments taken' },
+        { label: 'Assessments Done', value: stats.totalAssessments, icon: Target, color: 'text-emerald-400', bg: 'bg-emerald-400/10', note: 'Career assessments taken' },
+        { label: 'Est. Platform Value', value: stats.totalRevenue, icon: TrendingUp, color: 'text-amber-400', bg: 'bg-amber-400/10', note: 'Projected value KES' },
       ]
     : []
 
@@ -230,13 +252,52 @@ const AdminDashboard = () => {
 
             {/* Charts */}
             <div className="grid lg:grid-cols-2 gap-6">
+              <Card className="bg-gradient-surface border-card-border overflow-hidden">
+                <CardHeader>
+                  <CardTitle className="text-base">Subscription Tiers</CardTitle>
+                  <CardDescription>Breakdown of institution adoption</CardDescription>
+                </CardHeader>
+                <CardContent className="flex flex-col md:flex-row items-center gap-8">
+                  <div className="w-full h-52">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <PieChart>
+                        <Pie
+                          data={stats?.subscriptionBreakdown ?? []}
+                          cx="50%" cy="50%"
+                          innerRadius={60}
+                          outerRadius={80}
+                          paddingAngle={5}
+                          dataKey="value"
+                        >
+                          {stats?.subscriptionBreakdown.map((entry, i) => (
+                            <Cell key={`cell-${i}`} fill={entry.color} />
+                          ))}
+                        </Pie>
+                        <Tooltip />
+                      </PieChart>
+                    </ResponsiveContainer>
+                  </div>
+                  <div className="space-y-3 w-full max-w-[200px]">
+                    {stats?.subscriptionBreakdown.map((item) => (
+                      <div key={item.name} className="flex justify-between items-center text-sm">
+                        <div className="flex items-center gap-2">
+                          <div className="w-3 h-3 rounded-full" style={{ backgroundColor: item.color }} />
+                          <span className="text-foreground-muted">{item.name}</span>
+                        </div>
+                        <span className="font-bold text-foreground">{item.value}</span>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+
               <Card className="bg-gradient-surface border-card-border">
                 <CardHeader>
-                  <CardTitle className="text-base">New Users — Last 6 Months</CardTitle>
-                  <CardDescription>Student & school registrations per month</CardDescription>
+                  <CardTitle className="text-base">Student Growth — Last 6 Months</CardTitle>
+                  <CardDescription>New registrations over time</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <div className="h-64">
+                  <div className="h-52">
                     <ResponsiveContainer width="100%" height="100%">
                       <BarChart data={stats?.studentGrowth ?? []} barSize={12}>
                         <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
@@ -247,40 +308,6 @@ const AdminDashboard = () => {
                         <Bar dataKey="schools" fill="#10b981" name="Schools" radius={[4, 4, 0, 0]} />
                       </BarChart>
                     </ResponsiveContainer>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card className="bg-gradient-surface border-card-border">
-                <CardHeader>
-                  <CardTitle className="text-base">Career Interest Distribution</CardTitle>
-                  <CardDescription>What students across the platform aspire to</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="h-64">
-                    {(stats?.careerDistribution ?? []).length === 0 ? (
-                      <div className="flex items-center justify-center h-full text-foreground-muted text-sm">
-                        No career data yet
-                      </div>
-                    ) : (
-                      <ResponsiveContainer width="100%" height="100%">
-                        <PieChart>
-                          <Pie
-                            data={stats?.careerDistribution}
-                            cx="50%" cy="50%"
-                            outerRadius={90}
-                            dataKey="value"
-                            label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-                            labelLine={false}
-                          >
-                            {stats?.careerDistribution.map((entry, i) => (
-                              <Cell key={`cell-${i}`} fill={entry.color} />
-                            ))}
-                          </Pie>
-                          <Tooltip contentStyle={{ background: '#1a1a2e', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8 }} />
-                        </PieChart>
-                      </ResponsiveContainer>
-                    )}
                   </div>
                 </CardContent>
               </Card>

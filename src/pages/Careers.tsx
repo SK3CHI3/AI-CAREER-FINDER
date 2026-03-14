@@ -1,0 +1,212 @@
+import { useState, useEffect } from "react";
+import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { TrendingUp, DollarSign, Search, ArrowRight, Bot, Filter, Sparkles } from "lucide-react";
+import { dashboardService, CareerPath } from "@/lib/dashboard-service";
+import Navigation from "@/components/Navigation";
+import Footer from "@/components/Footer";
+import BackgroundGradient from "@/components/BackgroundGradient";
+import { motion } from "framer-motion";
+
+const Careers = () => {
+  const [careers, setCareers] = useState<CareerPath[]>([]);
+  const [filteredCareers, setFilteredCareers] = useState<CareerPath[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("All");
+
+  useEffect(() => {
+    const loadCareers = async () => {
+      try {
+        setIsLoading(true);
+        const paths = await dashboardService.getCareerPaths();
+        setCareers(paths);
+        setFilteredCareers(paths);
+      } catch (err) {
+        console.error("Failed to load career paths:", err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    loadCareers();
+  }, []);
+
+  useEffect(() => {
+    const filtered = careers.filter(career => {
+      const matchesSearch = career.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                          career.description.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchesCategory = selectedCategory === "All" || career.category === selectedCategory;
+      return matchesSearch && matchesCategory;
+    });
+    setFilteredCareers(filtered);
+  }, [searchQuery, selectedCategory, careers]);
+
+  const categories = ["All", ...Array.from(new Set(careers.map(c => c.category)))];
+
+  const getDemandColor = (demand: string) => {
+    switch (demand) {
+      case "Very High": return "bg-success/20 text-success border-success/30";
+      case "High": return "bg-primary/20 text-primary border-primary/30";
+      case "Growing": return "bg-warning/20 text-warning border-warning/30";
+      case "Emerging": return "bg-accent/20 text-accent border-accent/30";
+      default: return "bg-foreground/20 text-foreground border-foreground/30";
+    }
+  };
+
+  return (
+    <div className="min-h-screen text-foreground relative overflow-x-hidden pt-20">
+      <BackgroundGradient />
+      <Navigation />
+      
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 relative z-10">
+        <div className="text-center mb-16">
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="inline-flex items-center space-x-2 bg-primary/10 text-primary px-4 py-2 rounded-full text-sm font-semibold border border-primary/20 mb-6"
+          >
+            <Sparkles className="w-4 h-4" />
+            <span>Kenya's Career Library</span>
+          </motion.div>
+          <h1 className="text-4xl md:text-5xl font-bold mb-6 bg-gradient-text bg-clip-text text-transparent">
+            Explore Your Future
+          </h1>
+          <p className="text-xl text-foreground-muted max-w-3xl mx-auto leading-relaxed">
+            Discover a comprehensive library of high-demand career paths in Kenya. 
+            From technology to healthcare, find where your skills fit best.
+          </p>
+        </div>
+
+        <div className="flex flex-col md:flex-row gap-6 mb-12 items-center justify-between bg-card/50 backdrop-blur-sm p-6 rounded-2xl border border-card-border">
+          <div className="relative w-full md:max-w-md">
+            <Search className="absolute left-3 top-1/2 -transform -translate-y-1/2 w-4 h-4 text-foreground-muted" />
+            <Input 
+              placeholder="Search careers, skills, or industries..." 
+              className="pl-10 bg-background border-card-border"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+          </div>
+          
+          <div className="flex items-center gap-4 w-full md:w-auto overflow-x-auto pb-2 md:pb-0 no-scrollbar">
+            <Filter className="w-4 h-4 text-foreground-muted shrink-0" />
+            {categories.map(cat => (
+              <button
+                key={cat}
+                onClick={() => setSelectedCategory(cat)}
+                className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all whitespace-nowrap ${
+                  selectedCategory === cat 
+                  ? 'bg-primary text-primary-foreground shadow-sm' 
+                  : 'bg-muted/50 text-foreground-muted hover:bg-muted'
+                }`}
+              >
+                {cat}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {isLoading ? (
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <Card key={i} className="bg-gradient-surface border-card-border p-6 h-[300px] animate-pulse" />
+            ))}
+          </div>
+        ) : filteredCareers.length > 0 ? (
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {filteredCareers.map((career) => (
+              <motion.div
+                key={career.id}
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                whileHover={{ y: -5 }}
+              >
+                <Card className="bg-gradient-surface border-card-border p-6 hover:shadow-card transition-all duration-300 h-full flex flex-col group">
+                  <div className="flex justify-between items-start mb-4">
+                    <h3 className="text-xl font-bold text-foreground group-hover:text-primary transition-colors">
+                      {career.title}
+                    </h3>
+                    <Badge className={getDemandColor(career.demand_level)}>
+                      {career.demand_level}
+                    </Badge>
+                  </div>
+                  
+                  <p className="text-foreground-muted mb-6 flex-1 line-clamp-3">
+                    {career.description}
+                  </p>
+                  
+                  <div className="space-y-3 mb-6">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-2">
+                        <DollarSign className="w-4 h-4 text-foreground-muted" />
+                        <span className="text-sm text-foreground-muted">Salary Range</span>
+                      </div>
+                      <span className="text-sm font-semibold text-foreground">{career.salary_range}</span>
+                    </div>
+                    
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-2">
+                        <TrendingUp className="w-4 h-4 text-foreground-muted" />
+                        <span className="text-sm text-foreground-muted">Growth Rate</span>
+                      </div>
+                      <span className="text-sm font-semibold text-success">{career.growth_percentage}</span>
+                    </div>
+                  </div>
+                  
+                  <div className="pt-4 border-t border-card-border mt-auto">
+                    <Button 
+                      onClick={() => window.location.href = `/quick-assessment?career=${encodeURIComponent(career.title)}`}
+                      className="w-full bg-primary/10 hover:bg-primary text-primary hover:text-primary-foreground border border-primary/20 transition-all font-bold"
+                    >
+                      Assess My Fit
+                      <ArrowRight className="w-4 h-4 ml-2" />
+                    </Button>
+                  </div>
+                </Card>
+              </motion.div>
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-20 bg-card/30 rounded-3xl border border-dashed border-card-border">
+            <div className="w-16 h-16 bg-muted rounded-2xl flex items-center justify-center mx-auto mb-4">
+              <Search className="w-8 h-8 text-foreground-muted" />
+            </div>
+            <h3 className="text-xl font-bold mb-2">No careers found</h3>
+            <p className="text-foreground-muted">Try adjusting your search or category filters.</p>
+            <Button 
+              variant="link" 
+              onClick={() => { setSearchQuery(""); setSelectedCategory("All"); }}
+              className="mt-4 text-primary"
+            >
+              Reset all filters
+            </Button>
+          </div>
+        )}
+      </main>
+      
+      <div className="bg-primary/5 py-20 border-y border-primary/10">
+        <div className="max-w-4xl mx-auto px-4 text-center">
+          <Bot className="w-12 h-12 text-primary mx-auto mb-6" />
+          <h2 className="text-3xl font-bold mb-4 italic">"Not sure where to start?"</h2>
+          <p className="text-lg text-foreground-muted mb-8">
+            Tell our AI counselor about your interests and we'll map out the perfect path for you.
+          </p>
+          <Button 
+            size="lg" 
+            onClick={() => window.location.href = '/quick-assessment'}
+            className="bg-gradient-primary shadow-glow hover:scale-105 transition-transform"
+          >
+            Start AI Career Chat
+            <ArrowRight className="w-5 h-5 ml-2" />
+          </Button>
+        </div>
+      </div>
+
+      <Footer />
+    </div>
+  );
+};
+
+export default Careers;

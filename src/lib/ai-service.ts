@@ -352,6 +352,42 @@ Return exactly this format:
     }
   }
 
+  async getTrendingCareers(): Promise<any[]> {
+    try {
+      const prompt = `Generate a list of exactly 15 trending career paths in Kenya for 2026. 
+      Focus on high-growth sectors: Tech (AI, Cyber, Dev), Green Economy (Renewable Energy, Sustainable Ag), Healthcare, Creative Arts, and Blue Economy.
+      
+      Return ONLY a JSON array with this exact structure:
+      [
+        {
+          "title": "Software Engineer",
+          "category": "Technology",
+          "demand_level": "Very High",
+          "salary_range": "KES 100K - 300K",
+          "growth_percentage": "+25%",
+          "skills_required": ["JavaScript", "Problem Solving", "Cloud Computing"],
+          "description": "Building next-gen digital solutions for the global market.",
+          "education_requirements": "Bachelor's Degree or specialized certification",
+          "career_level": "entry"
+        }
+      ]
+      
+      Ensure demand_level is one of: "Very High", "High", "Growing", or "Emerging".
+      Entries should be specific to the Kenyan context (Vision 2030, affordable housing, digital superhighway).`;
+
+      const response = await this.sendMessage(prompt, [], {});
+      
+      const jsonMatch = response.match(/\[[\s\S]*?\]/);
+      if (jsonMatch) {
+        return JSON.parse(jsonMatch[0]);
+      }
+      throw new Error('Could not parse career paths from AI response');
+    } catch (error) {
+      console.error('Failed to get trending careers from AI:', error);
+      throw error;
+    }
+  }
+
   private getFallbackRecommendations(userContext: UserContext): any[] {
     // Return empty array to force dynamic generation
     return [];

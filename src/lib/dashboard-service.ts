@@ -1,6 +1,7 @@
 // Dashboard Data Service - Dynamic Data Management
 import { supabase } from './supabase'
 import { aiCacheService } from './ai-cache-service'
+import { aiCareerService } from './ai-service'
 
 export interface UserActivity {
   id: string
@@ -252,21 +253,73 @@ class DashboardService {
 
   // Career Paths
   async getCareerPaths(category?: string, limit: number = 20): Promise<CareerPath[]> {
-    let query = supabase
-      .from('career_paths')
-      .select('*')
-      .eq('is_active', true)
-      .order('created_at', { ascending: false })
-      .limit(limit)
+    try {
+      // 1. Check if we need to refresh (once a week)
+      const { data: latestEntry } = await supabase
+        .from('career_paths')
+        .select('updated_at')
+        .order('updated_at', { ascending: false })
+        .limit(1)
+        .single();
 
-    if (category) {
-      query = query.eq('category', category)
+      const ONE_WEEK = 7 * 24 * 60 * 60 * 1000;
+      const isStale = !latestEntry || (new Date().getTime() - new Date(latestEntry.updated_at).getTime() > ONE_WEEK);
+
+      if (isStale) {
+        console.log('Career paths are stale or missing. Refreshing from AI...');
+        await this.syncCareerPathsWithAI();
+      }
+
+      // 2. Fetch data
+      let query = supabase
+        .from('career_paths')
+        .select('*')
+        .eq('is_active', true)
+        .order('created_at', { ascending: false })
+        .limit(limit)
+
+      if (category) {
+        query = query.eq('category', category)
+      }
+
+      const { data, error } = await query
+
+      if (error) throw error
+      return data || []
+    } catch (err) {
+      console.error('Error in getCareerPaths:', err);
+      // Fallback to whatever is in the DB if AI refresh fails
+      const { data } = await supabase.from('career_paths').select('*').limit(limit);
+      return data || [];
     }
+  }
 
-    const { data, error } = await query
+  private async syncCareerPathsWithAI() {
+    try {
+      const trendingCareers = await aiCareerService.getTrendingCareers();
+      
+      if (trendingCareers && trendingCareers.length > 0) {
+        // Deactivate old careers (or just keep them as inactive)
+        await supabase
+          .from('career_paths')
+          .update({ is_active: false })
+          .eq('is_active', true);
 
-    if (error) throw error
-    return data || []
+        // Insert new ones
+        const { error: insertError } = await supabase
+          .from('career_paths')
+          .insert(trendingCareers.map(c => ({
+            ...c,
+            is_active: true,
+            updated_at: new Date().toISOString()
+          })));
+
+        if (insertError) throw insertError;
+        console.log(`Successfully synced ${trendingCareers.length} career paths from AI.`);
+      }
+    } catch (error) {
+      console.error('Failed to sync career paths with AI:', error);
+    }
   }
 
   // CBE Subjects

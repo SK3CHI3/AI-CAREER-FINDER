@@ -62,11 +62,10 @@ const Footer = () => {
           <div className="space-y-4">
             <h3 className="text-lg font-semibold text-foreground">Company</h3>
             <ul className="space-y-2">
-              <li><button onClick={() => scrollToSection('about')} className="text-foreground-muted hover:text-foreground transition-colors text-left">About Us</button></li>
-              <li><button onClick={() => scrollToSection('about')} className="text-foreground-muted hover:text-foreground transition-colors text-left">Our Mission</button></li>
-              <li><button onClick={() => scrollToSection('features')} className="text-foreground-muted hover:text-foreground transition-colors text-left">Blog</button></li>
-              <li><button onClick={() => scrollToSection('contact')} className="text-foreground-muted hover:text-foreground transition-colors text-left">Careers</button></li>
-              <li><button onClick={() => scrollToSection('contact')} className="text-foreground-muted hover:text-foreground transition-colors text-left">Press Kit</button></li>
+              <li><button onClick={() => navigate('/about')} className="text-foreground-muted hover:text-foreground transition-colors text-left">About Us</button></li>
+              <li><button onClick={() => navigate('/about')} className="text-foreground-muted hover:text-foreground transition-colors text-left">Our Mission</button></li>
+              <li><button onClick={() => navigate('/faq')} className="text-foreground-muted hover:text-foreground transition-colors text-left">FAQ</button></li>
+              <li><button onClick={() => scrollToSection('contact')} className="text-foreground-muted hover:text-foreground transition-colors text-left">Contact Us</button></li>
             </ul>
           </div>
 
