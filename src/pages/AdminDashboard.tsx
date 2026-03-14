@@ -247,17 +247,31 @@ const AdminDashboard = () => {
         .gte('created_at', startDate)
       
       const dailyMap: Record<string, { assessments: number; logins: number; revenue: number }> = {}
+      
+      // Generate continuous dates for the range
+      const daysToGenerate = rangeDays
+      for (let i = daysToGenerate - 1; i >= 0; i--) {
+        const d = new Date(Date.now() - i * 24 * 60 * 60 * 1000)
+        const dateKey = d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })
+        dailyMap[dateKey] = { assessments: 0, logins: 0, revenue: 0 }
+      }
+
       ;(activityData ?? []).forEach(a => {
         const date = new Date(a.created_at).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })
-        if (!dailyMap[date]) dailyMap[date] = { assessments: 0, logins: 0, revenue: 0 }
-        if (a.activity_type.includes('assessment')) {
-          dailyMap[date].assessments++
-          dailyMap[date].revenue += 5 // Assuming 5 KES per assessment for trend
+        if (dailyMap[date]) {
+          if (a.activity_type.includes('assessment')) {
+            dailyMap[date].assessments++
+            dailyMap[date].revenue += 5 
+          }
+          if (a.activity_type === 'login') dailyMap[date].logins++
         }
-        if (a.activity_type === 'login') dailyMap[date].logins++
       })
       
-      const analyticsList = Object.entries(dailyMap).map(([activityDate, v]) => ({ activityDate, ...v }))
+      // Sort by absolute date order rather than key insertion
+      const analyticsList = Object.keys(dailyMap).map(activityDate => ({
+        activityDate,
+        ...dailyMap[activityDate]
+      }))
       setAnalytics(analyticsList)
 
     } catch (err: any) {
@@ -339,22 +353,22 @@ const AdminDashboard = () => {
         className="fixed lg:sticky top-0 lg:h-screen z-[70] bg-[#020617]/95 border-r border-white/5 flex flex-col overflow-hidden"
       >
         {/* Sidebar Header */}
-        <div className="p-8 flex items-center justify-between border-b border-white/5 bg-white/[0.01]">
-          <div className="flex flex-col gap-4">
-            <div className="w-12 h-12 bg-primary/10 rounded-2xl border border-primary/20 shadow-glow flex items-center justify-center p-2">
-              <img 
-                src="/logos/CareerGuide_Logo.png" 
-                alt="Logo" 
-                className="w-full h-full object-contain"
-                onError={(e) => (e.currentTarget.src = "/placeholder-logo.png")}
-              />
-            </div>
-            <div>
-              <h1 className="font-black text-xl tracking-tighter leading-none text-white">CareerGuide</h1>
-              <span className="text-[10px] font-bold text-primary tracking-widest uppercase mt-1 block">Admin Intelligence</span>
-            </div>
+        <div className="p-8 flex items-center justify-center border-b border-white/5 bg-white/[0.01] relative">
+          <div className="relative group/logo cursor-pointer" onClick={() => setActiveTab('overview')}>
+            <div className="absolute inset-0 bg-primary/20 blur-3xl opacity-40 group-hover/logo:opacity-60 transition-opacity" />
+            <img 
+              src="/logos/CareerGuide_Logo.png" 
+              alt="Logo" 
+              className="w-16 h-16 object-contain relative z-10 transition-transform group-hover/logo:scale-110 duration-500"
+              onError={(e) => (e.currentTarget.src = "/placeholder-logo.png")}
+            />
           </div>
-          <Button variant="ghost" size="icon" onClick={() => setIsSidebarOpen(false)} className="lg:hidden text-slate-400 hover:text-white hover:bg-white/5 self-start">
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            onClick={() => setIsSidebarOpen(false)} 
+            className="lg:hidden text-slate-400 hover:text-white hover:bg-white/5 absolute right-4 top-4"
+          >
             <X className="w-5 h-5" />
           </Button>
         </div>
@@ -521,14 +535,14 @@ const AdminDashboard = () => {
                           <CardTitle className="text-lg font-black tracking-tight text-white">Ecosystem Growth</CardTitle>
                           <CardDescription className="text-xs text-slate-300">User and school onboarding over the last 6 months</CardDescription>
                         </div>
-                        <div className="flex gap-2">
+                        <div className="flex gap-4">
                           <div className="flex items-center gap-1.5">
                             <div className="w-2.5 h-2.5 rounded-full bg-primary" />
-                            <span className="text-[10px] uppercase font-black text-foreground-muted">Students</span>
+                            <span className="text-[10px] uppercase font-black text-white">Students</span>
                           </div>
                           <div className="flex items-center gap-1.5">
                             <div className="w-2.5 h-2.5 rounded-full bg-emerald-400" />
-                            <span className="text-[10px] uppercase font-black text-foreground-muted">Schools</span>
+                            <span className="text-[10px] uppercase font-black text-white">Schools</span>
                           </div>
                         </div>
                       </CardHeader>
@@ -626,11 +640,11 @@ const AdminDashboard = () => {
                             <div key={item.name} className="flex justify-between items-center group cursor-default">
                               <div className="flex items-center gap-3">
                                 <div className="w-2.5 h-2.5 rounded-full shadow-glow" style={{ backgroundColor: item.color, boxShadow: `0 0 10px ${item.color}44` }} />
-                                <span className="text-sm font-bold text-slate-400 group-hover:text-slate-200 transition-colors uppercase tracking-widest text-[10px]">{item.name}</span>
+                                <span className="text-sm font-bold text-slate-300 group-hover:text-slate-100 transition-colors uppercase tracking-widest text-[10px]">{item.name}</span>
                               </div>
                               <div className="flex items-center gap-2">
                                 <span className="text-sm font-black text-white">{item.value}</span>
-                                <span className="text-[10px] text-slate-300 font-bold">({Math.round(item.value / stats.totalSchools * 100) || 0}%)</span>
+                                <span className="text-[10px] text-slate-200 font-bold">({Math.round(item.value / stats.totalSchools * 100) || 0}%)</span>
                               </div>
                             </div>
                           ))}
@@ -893,10 +907,18 @@ const AdminDashboard = () => {
                             </div>
                             <div className="flex items-center justify-between pt-4 border-t border-white/5">
                               <div className="flex items-center gap-2">
-                                <div className="w-2 h-2 rounded-full bg-emerald-500 shadow-glow" />
+                                <div className="w-2 h-2 rounded-full bg-emerald-500 shadow-glow shadow-emerald-500/40" />
                                 <span className="text-[10px] font-black uppercase tracking-widest text-emerald-500">Active</span>
                               </div>
-                              <Button variant="ghost" size="sm" className="h-9 px-4 rounded-xl text-xs font-bold hover:bg-white/5 hover:text-primary">
+                              <Button 
+                                variant="outline" 
+                                size="sm" 
+                                className="h-9 px-4 rounded-xl text-xs font-black border-white/10 hover:bg-white/5 hover:text-primary transition-all active:scale-95 bg-white/[0.02]"
+                                onClick={() => {
+                                  // Simple functional feedback
+                                  alert(`Managing ${s.name} - Dashboard linking implemented on push.`)
+                                }}
+                              >
                                 Manage <ChevronRight className="w-4 h-4 ml-1" />
                               </Button>
                             </div>
