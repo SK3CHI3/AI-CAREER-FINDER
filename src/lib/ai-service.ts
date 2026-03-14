@@ -354,31 +354,16 @@ Return exactly this format:
 
   async getTrendingCareers(): Promise<any[]> {
     try {
-      const prompt = `Generate a list of exactly 15 trending career paths in Kenya for 2026. 
-      Focus on high-growth sectors: Tech (AI, Cyber, Dev), Green Economy (Renewable Energy, Sustainable Ag), Healthcare, Creative Arts, and Blue Economy.
+      const prompt = `CRITICAL: Return ONLY a valid JSON array of objects. No markdown, no backticks, no text.
       
-      CRITICAL: Return ONLY a valid JSON array. Do not include any markdown formatting, backticks, or text before/after the JSON.
-      Ensure all strings are properly escaped. No unescaped newlines or special characters inside property values.
+      Structure:
+      [{"title":"...","category":"...","demand_level":"...","salary_range":"...","growth_percentage":"...","skills_required":[],"description":"...","education_requirements":"...","career_level":"..."}]
       
-      JSON Structure:
-      [
-        {
-          "title": "Software Engineer",
-          "category": "Technology",
-          "demand_level": "Very High",
-          "salary_range": "KES 100K - 300K",
-          "growth_percentage": "+25%",
-          "skills_required": ["JavaScript", "Problem Solving", "Cloud Computing"],
-          "description": "Building next-gen digital solutions for the global market.",
-          "education_requirements": "Bachelor's Degree or specialized certification",
-          "career_level": "entry"
-        }
-      ]
-      
-      Value constraints:
+      Constraints:
+      - exactly 15 items
       - demand_level: "Very High" | "High" | "Growing" | "Emerging"
       - career_level: "entry" | "mid" | "senior"
-      - Be specific to Kenya (Vision 2030, Digital Superhighway).`;
+      - Be specific to Kenya.`;
 
       const response = await this.sendMessage(prompt, [], {});
       
@@ -414,45 +399,45 @@ Return exactly this format:
 
     // 3. Robust Repair Steps
     try {
-      // Fix trailing commas: [1, 2,] -> [1, 2]
-      jsonString = jsonString.replace(/,\s*([\]}])/g, '$1');
+      // Fix common LLM errors in multiple passes
+      let repaired = jsonString;
       
-      // Fix missing quotes around property names (if any)
-      jsonString = jsonString.replace(/([{,]\s*)([a-zA-Z0-9_]+)\s*:/g, '$1"$2":');
-      
-      // Fix unescaped double quotes inside values: "desc": "this is a "broken" string"
-      // This is tricky but we can try to find quotes that aren't followed by , or } or :
-      // More aggressive: replace quotes that are followed by alphanumeric characters without a colon
-      jsonString = jsonString.replace(/"([^"]+)"/g, (match, p1) => {
-        // If the contents of the quote contain more quotes, they should be escaped
-        return '"' + p1.replace(/"/g, '\\"') + '"';
+      // Pass 1: Simple syntax fixes
+      repaired = repaired
+        .replace(/,\s*([\]}])/g, '$1') // Trailing commas
+        .replace(/([{,]\s*)([a-zA-Z0-9_]+)\s*:/g, '$1"$2":') // Unquoted keys
+        .replace(/"\s+([a-zA-Z0-9_]+)":/g, '", "$1":'); // Missing commas between props
+
+      // Pass 2: Handle unescaped internal quotes and newlines
+      repaired = repaired.replace(/:\s*"([\s\S]*?)"(?=\s*[,}\]])/g, (match, p1) => {
+        // Escape internal quotes and newlines
+        const fixed = p1
+          .replace(/\n/g, '\\n')
+          .replace(/\r/g, '\\r')
+          .replace(/(?<!\\)"/g, '\\"');
+        return `: "${fixed}"`;
       });
 
-      // Fix unescaped newlines in values
-      jsonString = jsonString.replace(/:\s*"([^"]*)"/g, (match, p1) => {
-        return ': "' + p1.replace(/\n/g, '\\n') + '"';
-      });
+      // Pass 3: Fix missing commas between objects in array
+      repaired = repaired.replace(/}\s*{/g, '}, {');
 
-      // Handle common syntax errors in the middle of lists
-      jsonString = jsonString.replace(/"\s+([a-zA-Z0-9_]+)":/g, '", "$1":');
-
-      const repaired = JSON.parse(jsonString);
-      if (Array.isArray(repaired)) return repaired;
-    } catch (repairError) {
-      console.error('JSON repair failed:', repairError);
-      
-      // Final attempt: aggressive character cleanup - remove all control characters except basic whitespace
       try {
-        const ultraClean = jsonString
-          .replace(/[\x00-\x1F\x7F-\x9F]/g, "") // Remove control characters
-          .replace(/\\(?!["\\\/bfnrtu])/g, "\\\\"); // Fix invalid escapes
-        return JSON.parse(ultraClean);
-      } catch (f) {
-        throw new Error('JSON parsing failed after multiple repair attempts');
+        const parsed = JSON.parse(repaired);
+        if (Array.isArray(parsed)) return parsed;
+      } catch (innerError) {
+        console.warn('Advanced repair pass 1 failed, trying aggressive cleanup:', innerError);
       }
+
+      // Final attempt: aggressive character cleanup - remove all control characters except basic whitespace
+      const ultraClean = repaired
+        .replace(/[\x00-\x1F\x7F-\x9F]/g, "") // Remove control characters
+        .replace(/\\(?!["\\\/bfnrtu])/g, "\\\\"); // Fix invalid escapes
+      
+      return JSON.parse(ultraClean);
+    } catch (repairError) {
+      console.error('All JSON repair attempts failed:', repairError);
+      throw new Error(`JSON parsing failed: ${repairError instanceof Error ? repairError.message : String(repairError)}`);
     }
-    
-    return [];
   }
 
   private getFallbackRecommendations(userContext: UserContext): any[] {

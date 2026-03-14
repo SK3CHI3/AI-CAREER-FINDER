@@ -2,7 +2,6 @@ import { useState, useEffect, useRef } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Send, Bot, User, Sparkles, Loader2, AlertCircle, Download, ArrowRight, RefreshCw } from "lucide-react";
@@ -150,9 +149,9 @@ const QuickAssessment = () => {
                     <CardHeader className="border-b border-card-border bg-muted/30">
                         <div className="flex items-center justify-between">
                             <div className="flex items-center space-x-3">
-                                <Badge variant="secondary" className="bg-primary/10 text-primary animate-pulse">
+                                <span className="bg-primary/10 text-primary text-[11px] font-bold px-2 py-0.5 rounded-full border border-primary/20 animate-pulse flex items-center shrink-0">
                                     <Sparkles className="w-3 h-3 mr-1" /> AI Active
-                                </Badge>
+                                </span>
                                 <span className="text-sm font-medium">CareerGuide AI Counselor</span>
                             </div>
                         </div>

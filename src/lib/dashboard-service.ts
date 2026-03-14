@@ -255,12 +255,14 @@ class DashboardService {
   async getCareerPaths(category?: string, limit: number = 20): Promise<CareerPath[]> {
     try {
       // 1. Check if we need to refresh (once a week)
-      const { data: latestEntry } = await supabase
+      const { data: entries, error: fetchError } = await supabase
         .from('career_paths')
         .select('created_at')
         .order('created_at', { ascending: false })
-        .limit(1)
-        .maybeSingle();
+        .limit(1);
+
+      if (fetchError) throw fetchError;
+      const latestEntry = entries && entries.length > 0 ? entries[0] : null;
 
       const ONE_WEEK = 7 * 24 * 60 * 60 * 1000;
       const isStale = !latestEntry || (new Date().getTime() - new Date(latestEntry.created_at).getTime() > ONE_WEEK);

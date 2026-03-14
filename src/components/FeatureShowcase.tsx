@@ -1,4 +1,4 @@
-import { CheckCircle2, ShieldCheck, BarChart3, Bot, BookOpen, Target, ArrowRight, Building2, UserCircle2 } from "lucide-react";
+import { CheckCircle2, ShieldCheck, BarChart3, Bot, BookOpen, Target, ArrowRight, Building2, UserCircle2, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 const FeatureShowcase = () => {
@@ -10,14 +10,14 @@ const FeatureShowcase = () => {
         <div className="grid lg:grid-cols-2 gap-16 items-center">
           
           {/* Left Dashboard Mockup (Students) */}
-          <div className="order-2 lg:order-1 bg-card rounded-2xl shadow-elevated border border-border overflow-hidden min-h-[540px] h-auto flex flex-col">
-            <div className="bg-primary px-6 py-[24px] flex-shrink-0 flex items-center gap-3.5 text-primary-foreground">
+          <div className="order-2 lg:order-1 bg-card rounded-2xl shadow-elevated border border-border overflow-hidden h-auto min-h-[600px] flex flex-col">
+            <div className="bg-primary px-6 py-6 flex-shrink-0 flex items-center gap-3.5 text-primary-foreground">
               <div className="bg-white/10 border border-white/20 p-2 rounded-lg shrink-0">
                 <UserCircle2 className="w-6 h-6 text-primary-foreground/90" />
               </div>
               <div>
-                <h3 className="font-semibold text-[15px] leading-tight text-white/95">Amina's Pathway</h3>
-                <p className="text-primary-foreground/70 text-[13px] font-medium mt-0.5">Student Insights</p>
+                <h3 className="font-semibold text-base leading-tight text-white/95">Amina's Pathway</h3>
+                <p className="text-primary-foreground/70 text-sm font-medium mt-0.5">Student Insights</p>
               </div>
             </div>
             
@@ -75,7 +75,7 @@ const FeatureShowcase = () => {
               We help you find the perfect intersection between your passions and Kenya's emerging job market.
             </p>
             
-            <div className="space-y-4 pt-4">
+            <div className="space-y-6 pt-4">
               <div className="flex items-start gap-5 bg-card p-5 rounded-2xl shadow-sm border border-border">
                 <div className="bg-primary/10 p-2.5 rounded-full text-primary shrink-0 border border-primary/20">
                   <Bot className="w-5 h-5" />
@@ -85,13 +85,23 @@ const FeatureShowcase = () => {
                   <p className="text-sm text-foreground-muted leading-snug font-medium">Personalized recommendations based on your unique profile.</p>
                 </div>
               </div>
-              <div className="flex items-start gap-5 bg-primary/5 p-6 rounded-2xl border border-primary/20 shadow-glow-sm transition-all hover:scale-[1.02]">
-                <div className="bg-primary/20 p-2.5 rounded-full text-primary shrink-0 border border-primary/30">
-                  <Target className="w-5 h-5" />
+
+              {/* Career Days Highlighted Section */}
+              <div className="flex items-start gap-5 bg-primary/5 p-6 rounded-2xl border border-primary/20 shadow-glow-sm relative overflow-hidden group hover:scale-[1.02] transition-all">
+                <div className="absolute top-0 right-0 p-3 opacity-10">
+                  <Sparkles className="w-12 h-12 text-primary" />
+                </div>
+                <div className="bg-primary/20 p-3 rounded-xl text-primary shrink-0 border border-primary/30">
+                  <Target className="w-6 h-6" />
                 </div>
                 <div className="pt-0.5">
-                  <h4 className="text-[16px] font-bold text-card-foreground mb-1.5">Career Days & Scholarships</h4>
-                  <p className="text-sm text-foreground-muted leading-snug font-medium">Spend a day with professionals in your target field and discover scholarship opportunities to fund your dreams.</p>
+                  <h4 className="text-lg font-bold text-card-foreground mb-1.5 flex items-center gap-2">
+                    Career Days & Scholarships
+                    <span className="bg-primary/10 text-primary text-[10px] px-2 py-0.5 rounded-full border border-primary/20 h-4 flex items-center">New</span>
+                  </h4>
+                  <p className="text-sm text-foreground-muted leading-relaxed font-medium">
+                    Spend a day with professionals in your target field and unlock exclusive scholarship opportunities to fund your dreams.
+                  </p>
                 </div>
               </div>
             </div>
@@ -123,7 +133,7 @@ const FeatureShowcase = () => {
               Empower your teachers with data-driven insights to support every student's unique journey through the CBE curriculum.
             </p>
             
-            <div className="space-y-4 pt-4">
+            <div className="space-y-6 pt-4">
               <div className="flex items-start gap-5 bg-card p-5 rounded-2xl shadow-sm border border-border">
                 <div className="bg-secondary/10 p-2.5 rounded-full text-secondary shrink-0 border border-secondary/20">
                   <Bot className="w-5 h-5" />
@@ -133,13 +143,20 @@ const FeatureShowcase = () => {
                   <p className="text-sm text-foreground-muted leading-snug font-medium">Use data-driven AI insights to help students make informed decisions about their future paths.</p>
                 </div>
               </div>
-              <div className="flex items-start gap-5 bg-secondary/5 p-6 rounded-2xl border border-secondary/20 shadow-glow-sm transition-all hover:scale-[1.02]">
-                <div className="bg-secondary/20 p-2.5 rounded-full text-secondary shrink-0 border border-secondary/30">
-                  <ShieldCheck className="w-5 h-5" />
+              
+              {/* School Career Days Sync */}
+              <div className="flex items-start gap-5 bg-secondary/5 p-6 rounded-2xl border border-secondary/20 shadow-glow-sm relative overflow-hidden group hover:scale-[1.02] transition-all">
+                <div className="absolute top-0 right-0 p-3 opacity-10">
+                  <Building2 className="w-12 h-12 text-secondary" />
+                </div>
+                <div className="bg-secondary/20 p-3 rounded-xl text-secondary shrink-0 border border-secondary/30">
+                  <ShieldCheck className="w-6 h-6" />
                 </div>
                 <div className="pt-0.5">
-                  <h4 className="text-[16px] font-bold text-card-foreground mb-1.5">Career Days Sync</h4>
-                  <p className="text-sm text-foreground-muted leading-snug font-medium">Host industry experts at your school and organize immersion days where students spend quality time with mentors.</p>
+                  <h4 className="text-lg font-bold text-card-foreground mb-1.5">Career Days Sync</h4>
+                  <p className="text-sm text-foreground-muted leading-relaxed font-medium">
+                    Host industry experts at your school and organize immersion days where students spend quality time with professional mentors.
+                  </p>
                 </div>
               </div>
             </div>
