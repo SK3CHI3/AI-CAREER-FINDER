@@ -115,6 +115,8 @@ const AdminDashboard = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true)
   const [dateRange, setDateRange] = useState('30d')
 
+  const rangeDays = dateRange === '7d' ? 7 : dateRange === '14d' ? 14 : dateRange === '30d' ? 30 : dateRange === '90d' ? 90 : dateRange === '1y' ? 365 : 365
+
   const sidebarItems = [
     { id: 'overview', label: 'Overview', icon: LayoutDashboard },
     { id: 'users', label: 'Users', icon: Users },
@@ -146,7 +148,6 @@ const AdminDashboard = () => {
         .select('role, created_at')
         .order('created_at', { ascending: true })
 
-      const rangeDays = dateRange === '7d' ? 7 : dateRange === '14d' ? 14 : dateRange === '30d' ? 30 : dateRange === '90d' ? 90 : dateRange === '1y' ? 365 : 365
       const startDate = new Date(Date.now() - rangeDays * 24 * 60 * 60 * 1000).toISOString()
 
       const monthMap: Record<string, { students: number; schools: number }> = {}
@@ -373,7 +374,7 @@ const AdminDashboard = () => {
         className="fixed lg:sticky top-0 lg:h-screen z-[70] bg-[#020617]/95 border-r border-white/5 flex flex-col overflow-hidden"
       >
         {/* Sidebar Header */}
-        <div className="p-8 pb-6 flex flex-col items-center border-b border-white/5 bg-white/[0.01] relative group/header">
+        <div className="p-10 flex flex-col items-center border-b border-white/5 bg-white/[0.01] relative group/header gap-6">
           <div 
             className="relative cursor-pointer transition-transform hover:scale-105 duration-500 overflow-visible" 
             onClick={() => setActiveTab('overview')}
@@ -382,11 +383,11 @@ const AdminDashboard = () => {
             <img 
               src="/logos/CareerGuide_Logo.png" 
               alt="Logo" 
-              className="w-28 h-auto object-contain relative z-10 -my-6"
+              className="w-32 h-auto object-contain relative z-10"
               onError={(e) => (e.currentTarget.src = "/placeholder-logo.png")}
             />
           </div>
-          <div className="text-center relative -mt-3">
+          <div className="text-center relative">
             <span className="text-[10px] font-black text-primary tracking-[0.25em] uppercase block opacity-80 leading-tight">Admin Intelligence</span>
           </div>
           <Button 
@@ -595,7 +596,7 @@ const AdminDashboard = () => {
                                 tickLine={false} 
                                 tick={{ fontSize: 10, fill: '#94a3b8', fontWeight: 600 }} 
                                 dy={10}
-                                interval={rangeDays > 30 ? (rangeDays === 365 ? 1 : 2) : 0}
+                                interval={rangeDays === 30 ? 5 : 0}
                               />
                               <YAxis 
                                 axisLine={false} 
