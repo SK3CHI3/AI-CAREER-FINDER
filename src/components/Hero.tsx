@@ -40,7 +40,7 @@ const Hero = () => {
         <div className="grid lg:grid-cols-2 gap-12 items-center">
           {/* LEFT CONTENT */}
           <div className="space-y-8">
-            <h1 className="text-4xl sm:text-6xl lg:text-7xl font-bold leading-tight tracking-tight">
+            <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold leading-tight tracking-tight">
               Help Students Discover{" "}
               <span className="bg-gradient-text bg-clip-text text-transparent">
                 Their Future Careers Earlier.
@@ -131,7 +131,7 @@ const Hero = () => {
 
 
           {/* RIGHT CONTENT - Professionally sized */}
-          <div className="relative flex items-center justify-center lg:justify-end select-none">
+          <div className="relative hidden lg:flex items-center justify-center lg:justify-end select-none">
             {/* Animation container - just right */}
             <div
               className="relative z-10 w-[110%] lg:w-[600px] xl:w-[700px] pointer-events-none"

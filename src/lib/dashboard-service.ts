@@ -257,13 +257,13 @@ class DashboardService {
       // 1. Check if we need to refresh (once a week)
       const { data: latestEntry } = await supabase
         .from('career_paths')
-        .select('updated_at')
-        .order('updated_at', { ascending: false })
+        .select('created_at')
+        .order('created_at', { ascending: false })
         .limit(1)
         .single();
 
       const ONE_WEEK = 7 * 24 * 60 * 60 * 1000;
-      const isStale = !latestEntry || (new Date().getTime() - new Date(latestEntry.updated_at).getTime() > ONE_WEEK);
+      const isStale = !latestEntry || (new Date().getTime() - new Date(latestEntry.created_at).getTime() > ONE_WEEK);
 
       if (isStale) {
         console.log('Career paths are stale or missing. Refreshing from AI...');

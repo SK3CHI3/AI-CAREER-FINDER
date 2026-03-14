@@ -20,14 +20,16 @@ const Footer = () => {
         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
           {/* Brand */}
           <div className="space-y-4">
-            {/* Container with smaller height to cut off the padding */}
-            <div className="flex items-center h-[40px] overflow-visible">
+            <button 
+              onClick={() => navigate("/")} 
+              className="flex items-center h-[40px] overflow-visible hover:opacity-80 transition-opacity"
+            >
               <img
                 src="/logos/CareerGuide_Logo.png"
                 alt="CareerGuide AI"
-                className="h-[60px] w-auto -mt-2 -ml-2"  // Adjust these until it looks right
+                className="h-[60px] w-auto -mt-2 -ml-2"
               />
-            </div>
+            </button>
 
             <p className="text-foreground-muted text-sm leading-relaxed">
               Empowering Kenya's next generation with AI-driven career guidance aligned with the CBE framework.

@@ -357,7 +357,10 @@ Return exactly this format:
       const prompt = `Generate a list of exactly 15 trending career paths in Kenya for 2026. 
       Focus on high-growth sectors: Tech (AI, Cyber, Dev), Green Economy (Renewable Energy, Sustainable Ag), Healthcare, Creative Arts, and Blue Economy.
       
-      Return ONLY a JSON array with this exact structure:
+      CRITICAL: Return ONLY a valid JSON array. Do not include any markdown formatting, backticks, or text before/after the JSON.
+      Ensure all strings are properly escaped. No unescaped newlines or special characters inside property values.
+      
+      JSON Structure:
       [
         {
           "title": "Software Engineer",
@@ -372,16 +375,38 @@ Return exactly this format:
         }
       ]
       
-      Ensure demand_level is one of: "Very High", "High", "Growing", or "Emerging".
-      Entries should be specific to the Kenyan context (Vision 2030, affordable housing, digital superhighway).`;
+      Value constraints:
+      - demand_level: "Very High" | "High" | "Growing" | "Emerging"
+      - career_level: "entry" | "mid" | "senior"
+      - Be specific to Kenya (Vision 2030, Digital Superhighway).`;
 
       const response = await this.sendMessage(prompt, [], {});
       
-      const jsonMatch = response.match(/\[[\s\S]*?\]/);
-      if (jsonMatch) {
-        return JSON.parse(jsonMatch[0]);
+      // Clean the response: remove any potential markdown code blocks
+      const cleanedResponse = response.replace(/```json/g, '').replace(/```/g, '').trim();
+
+      try {
+        const jsonMatch = cleanedResponse.match(/\[[\s\S]*?\]/);
+        if (jsonMatch) {
+          const parsed = JSON.parse(jsonMatch[0]);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            return parsed;
+          }
+        }
+        throw new Error('No valid JSON array found in response');
+      } catch (parseError) {
+        console.error('Initial JSON parse failed, attempting fallback cleanup:', parseError);
+        // Try one more aggressive cleanup if needed
+        const aggressiveCleanup = cleanedResponse
+          .replace(/[\n\r]/g, ' ')
+          .replace(/\s+/g, ' ')
+          .trim();
+        const secondMatch = aggressiveCleanup.match(/\[.*\]/);
+        if (secondMatch) {
+          return JSON.parse(secondMatch[0]);
+        }
+        throw parseError;
       }
-      throw new Error('Could not parse career paths from AI response');
     } catch (error) {
       console.error('Failed to get trending careers from AI:', error);
       throw error;
