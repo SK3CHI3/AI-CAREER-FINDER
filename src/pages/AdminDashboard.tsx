@@ -146,24 +146,47 @@ const AdminDashboard = () => {
         .select('role, created_at')
         .order('created_at', { ascending: true })
 
+      const rangeDays = dateRange === '7d' ? 7 : dateRange === '14d' ? 14 : dateRange === '30d' ? 30 : dateRange === '90d' ? 90 : dateRange === '1y' ? 365 : 365
+      const startDate = new Date(Date.now() - rangeDays * 24 * 60 * 60 * 1000).toISOString()
+
       const monthMap: Record<string, { students: number; schools: number }> = {}
       const now = new Date()
-      for (let i = 5; i >= 0; i--) {
-        const d = new Date(now.getFullYear(), now.getMonth() - i, 1)
-        const key = d.toLocaleString('default', { month: 'short' })
-        monthMap[key] = { students: 0, schools: 0 }
-      }
-      ;(allProfiles ?? []).forEach((p) => {
-        const d = new Date(p.created_at)
-        const diffMonths = (now.getFullYear() - d.getFullYear()) * 12 + (now.getMonth() - d.getMonth())
-        if (diffMonths >= 0 && diffMonths < 6) {
+      
+      // If range is large (90d+, use month-based buckets for Growth chart)
+      if (rangeDays >= 90) {
+        const monthsToFetch = rangeDays === 365 ? 12 : 3
+        for (let i = monthsToFetch - 1; i >= 0; i--) {
+          const d = new Date(now.getFullYear(), now.getMonth() - i, 1)
           const key = d.toLocaleString('default', { month: 'short' })
-          if (key in monthMap) {
-            if (p.role === 'student') monthMap[key].students++
-            if (p.role === 'school') monthMap[key].schools++
-          }
+          monthMap[key] = { students: 0, schools: 0 }
         }
-      })
+        ;(allProfiles ?? []).forEach((p) => {
+          const d = new Date(p.created_at)
+          if (p.created_at >= startDate) {
+            const key = d.toLocaleString('default', { month: 'short' })
+            if (key in monthMap) {
+              if (p.role === 'student') monthMap[key].students++
+              if (p.role === 'school') monthMap[key].schools++
+            }
+          }
+        })
+      } else {
+        // Daily-based for short ranges
+        for (let i = rangeDays - 1; i >= 0; i--) {
+          const d = new Date(Date.now() - i * 24 * 60 * 60 * 1000)
+          const key = d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })
+          monthMap[key] = { students: 0, schools: 0 }
+        }
+        ;(allProfiles ?? []).forEach((p) => {
+          if (p.created_at >= startDate) {
+            const key = new Date(p.created_at).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })
+            if (monthMap[key]) {
+              if (p.role === 'student') monthMap[key].students++
+              if (p.role === 'school') monthMap[key].schools++
+            }
+          }
+        })
+      }
       const studentGrowth = Object.entries(monthMap).map(([month, v]) => ({ month, ...v }))
 
       const { data: careerProfiles } = await supabase.from('profiles').select('career_interests')
@@ -238,9 +261,6 @@ const AdminDashboard = () => {
       }
 
       // ── Real Analytics Fetch ──────────────────────────────
-      const rangeDays = dateRange === '7d' ? 7 : dateRange === '14d' ? 14 : dateRange === '30d' ? 30 : dateRange === '90d' ? 90 : dateRange === '1y' ? 365 : 365
-      const startDate = new Date(Date.now() - rangeDays * 24 * 60 * 60 * 1000).toISOString()
-
       const { data: activityData } = await supabase
         .from('user_activities')
         .select('created_at, activity_type')
@@ -353,21 +373,21 @@ const AdminDashboard = () => {
         className="fixed lg:sticky top-0 lg:h-screen z-[70] bg-[#020617]/95 border-r border-white/5 flex flex-col overflow-hidden"
       >
         {/* Sidebar Header */}
-        <div className="p-8 flex flex-col items-center border-b border-white/5 bg-white/[0.01] relative group/header">
+        <div className="p-8 pb-6 flex flex-col items-center border-b border-white/5 bg-white/[0.01] relative group/header">
           <div 
-            className="relative cursor-pointer mb-5 transition-transform hover:scale-105 duration-500" 
+            className="relative cursor-pointer transition-transform hover:scale-105 duration-500 overflow-visible" 
             onClick={() => setActiveTab('overview')}
           >
             <div className="absolute inset-0 bg-primary/20 blur-3xl opacity-40 group-hover/header:opacity-60 transition-opacity" />
             <img 
               src="/logos/CareerGuide_Logo.png" 
               alt="Logo" 
-              className="w-28 h-28 object-contain relative z-10"
+              className="w-28 h-auto object-contain relative z-10 -my-6"
               onError={(e) => (e.currentTarget.src = "/placeholder-logo.png")}
             />
           </div>
-          <div className="text-center">
-            <span className="text-[10px] font-black text-primary tracking-[0.2em] uppercase block opacity-80">Admin Intelligence</span>
+          <div className="text-center relative -mt-3">
+            <span className="text-[10px] font-black text-primary tracking-[0.25em] uppercase block opacity-80 leading-tight">Admin Intelligence</span>
           </div>
           <Button 
             variant="ghost" 
@@ -539,7 +559,9 @@ const AdminDashboard = () => {
                       <CardHeader className="flex flex-row items-center justify-between border-b border-white/5 py-6">
                         <div>
                           <CardTitle className="text-lg font-black tracking-tight text-white">Ecosystem Growth</CardTitle>
-                          <CardDescription className="text-xs text-slate-300">User and school onboarding over the last 6 months</CardDescription>
+                          <CardDescription className="text-xs text-slate-300">
+                            Onboarding dynamics for the current period ({dateRange})
+                          </CardDescription>
                         </div>
                         <div className="flex gap-4">
                           <div className="flex items-center gap-1.5">
@@ -571,8 +593,9 @@ const AdminDashboard = () => {
                                 dataKey="month" 
                                 axisLine={false} 
                                 tickLine={false} 
-                                tick={{ fontSize: 11, fill: '#94a3b8', fontWeight: 600 }} 
+                                tick={{ fontSize: 10, fill: '#94a3b8', fontWeight: 600 }} 
                                 dy={10}
+                                interval={rangeDays > 30 ? (rangeDays === 365 ? 1 : 2) : 0}
                               />
                               <YAxis 
                                 axisLine={false} 
