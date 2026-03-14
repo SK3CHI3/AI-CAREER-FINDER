@@ -20,6 +20,7 @@ const AcceptInvite: React.FC = () => {
     const [errorMsg, setErrorMsg] = useState('')
     const [fullName, setFullName] = useState('')
     const [password, setPassword] = useState('')
+    const [confirmPassword, setConfirmPassword] = useState('')
 
     // Validate invite on mount
     useEffect(() => {
@@ -67,16 +68,21 @@ const AcceptInvite: React.FC = () => {
 
     const handleCreateAccountAndAccept = async (e: React.FormEvent) => {
         e.preventDefault()
-        if (!invite || !fullName || !password) return
+        if (!invite || !fullName || !password || !confirmPassword) return
+
+        if (password !== confirmPassword) {
+            setErrorMsg('Passwords do not match.')
+            return
+        }
         
         setState('accepting')
         try {
             // 1. Sign up (role: teacher)
-            const { error: signUpError } = await signUp(invite.email, password, fullName, '', 'teacher')
+            const { data, error: signUpError } = await signUp(invite.email, password, fullName, '', 'teacher')
             if (signUpError) throw signUpError
 
-            // 2. Fetch the newly created user to get their ID
-            const { data: { user: newUser } } = await supabase.auth.getUser()
+            // 2. Use the returned user data
+            const newUser = data.user
             if (!newUser) {
                 setErrorMsg('Account created but failed to sign in automatically. Please log in.')
                 setState('error')
@@ -86,7 +92,9 @@ const AcceptInvite: React.FC = () => {
             // 3. Accept invite
             await schoolService.acceptInvite(token, newUser.id)
             await refreshProfile()
-            setState('done')
+            
+            // 4. Redirect immediately
+            navigate('/teacher')
         } catch (err) {
             setErrorMsg(err instanceof Error ? err.message : 'Failed to create account')
             setState('error')
@@ -193,6 +201,18 @@ const AcceptInvite: React.FC = () => {
                                                 placeholder="At least 6 characters"
                                                 value={password}
                                                 onChange={(e) => setPassword(e.target.value)}
+                                                minLength={6}
+                                            />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <label className="text-sm font-bold text-foreground mx-1">Confirm Password</label>
+                                            <input
+                                                type="password"
+                                                required
+                                                className="w-full h-12 px-4 rounded-xl bg-background border border-card-border focus:ring-2 focus:ring-primary focus:border-transparent transition-all outline-none"
+                                                placeholder="Repeat your password"
+                                                value={confirmPassword}
+                                                onChange={(e) => setConfirmPassword(e.target.value)}
                                                 minLength={6}
                                             />
                                         </div>

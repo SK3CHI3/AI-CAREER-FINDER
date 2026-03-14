@@ -48,7 +48,7 @@ interface AuthContextType {
   profileLoading: boolean
   profileError: Error | null
   isMFAEnabled: boolean
-  signUp: (email: string, password: string, fullName: string, upiOrPhone: string, role?: Profile['role']) => Promise<{ error: AuthError | null }>
+  signUp: (email: string, password: string, fullName: string, upiOrPhone: string, role?: Profile['role']) => Promise<{ data: any; error: AuthError | null }>
   signIn: (identifier: string, password: string) => Promise<{ error: AuthError | null }>
   signOut: () => Promise<{ error: AuthError | null }>
   updateProfile: (updates: Partial<Profile>) => Promise<{ error: Error | null }>
@@ -210,7 +210,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // upiOrPhone: UPI number for students (6-char NEMIS code), phone for schools
   const signUp = async (email: string, password: string, fullName: string, upiOrPhone: string, role: Profile['role'] = 'student') => {
     const isStudent = role === 'student'
-    const { error } = await supabase.auth.signUp({
+    const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
@@ -223,17 +223,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       },
     })
     // If signup succeeded, also save UPI/phone to profiles
-    if (!error) {
-      const { data: { user: newUser } } = await supabase.auth.getUser()
-      if (newUser) {
-        if (isStudent) {
-          await supabase.from('profiles').update({ upi_number: upiOrPhone }).eq('id', newUser.id)
-        } else {
-          await supabase.from('profiles').update({ phone: upiOrPhone }).eq('id', newUser.id)
-        }
+    if (!error && data.user) {
+      if (isStudent) {
+        await supabase.from('profiles').update({ upi_number: upiOrPhone } as any).eq('id', data.user.id)
+      } else {
+        await supabase.from('profiles').update({ phone: upiOrPhone } as any).eq('id', data.user.id)
       }
     }
-    return { error }
+    return { data, error }
   }
 
   // Unified Sign In (Email, UPI, or Phone)
