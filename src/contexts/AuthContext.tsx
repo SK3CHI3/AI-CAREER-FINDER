@@ -258,6 +258,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             email = data.email;
             if (isDev) console.log('🎓 AuthContext: Resolved email from UPI:', email);
           } else {
+            if (error && error.code !== 'PGRST116') {
+              // Not a "0 rows returned" error, probably a server/RLS error
+              console.error('Server error during UPI lookup:', error);
+              return { error: { message: `Server error during login: ${error.message} (Code: ${error.code})`, name: 'AuthError' } as any };
+            }
             return { error: { message: 'No account found with this UPI number. Please check your NEMIS UPI and try again.', name: 'AuthError' } as any };
           }
         } else {
@@ -267,6 +272,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             .select('email')
             .eq('phone', cleanIdentifier)
             .single();
+          if (error && error.code !== 'PGRST116') {
+            console.error('Server error during phone lookup:', error);
+            return { error: { message: `Server error during login: ${error.message} (Code: ${error.code})`, name: 'AuthError' } as any };
+          }
           if (error || !data?.email) {
             return { error: { message: 'No account found with this identifier. Please use your email, UPI number, or phone.', name: 'AuthError' } as any };
           }

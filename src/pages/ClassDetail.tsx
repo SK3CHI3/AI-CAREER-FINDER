@@ -16,7 +16,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
 import {
-    Bot, ArrowLeft, Users, Upload, UserPlus, Trash2,
+    ArrowLeft, Users, Upload, UserPlus, Trash2,
     Loader2, CheckCircle2, FileSpreadsheet, PencilLine,
     BookOpen, RefreshCw, AlertCircle, Sparkles
 } from 'lucide-react'
@@ -45,7 +45,8 @@ const ClassDetail: React.FC = () => {
 
     // Single grade entry state
     const [gradeDialogOpen, setGradeDialogOpen] = useState(false)
-    const [selectedStudentId, setSelectedStudentId] = useState('')
+    const [selectedStudentId, setSelectedStudentId] = useState<string | null>(null)
+    const [selectedStudentPhone, setSelectedStudentPhone] = useState<string | null>(null)
     const [selectedStudentName, setSelectedStudentName] = useState('')
     const [gradeForm, setGradeForm] = useState({
         subject_name: '',
@@ -115,7 +116,8 @@ const ClassDetail: React.FC = () => {
     }
 
     const openGradeDialog = (student: StudentInClass) => {
-        setSelectedStudentId(student.user_id || '')
+        setSelectedStudentId(student.user_id || null)
+        setSelectedStudentPhone(student.phone || null)
         setSelectedStudentName(student.full_name ?? student.phone ?? student.email ?? 'Unknown')
         setGradeForm({ subject_name: '', term: 'Term 1', academic_year: CURRENT_YEAR, grade_value: '', max_marks: '100', exam_type: 'End Term', teacher_comment: '' })
         setEditingGradeId(null)
@@ -123,13 +125,18 @@ const ClassDetail: React.FC = () => {
     }
 
     const openInsightDialog = (student: StudentInClass) => {
-        setInsightStudentId(student.user_id || '')
+        if (!student.user_id) {
+            toast({ title: 'AI Insights not available', description: 'This student has not created an account yet. Insights are generated once they complete their profile.', variant: 'destructive' })
+            return
+        }
+        setInsightStudentId(student.user_id)
         setInsightStudentName(student.full_name ?? student.phone ?? student.email ?? 'Unknown Student')
         setInsightDialogOpen(true)
     }
 
     const openEditGrade = (grade: any) => {
-        setSelectedStudentId(grade.user_id || '')
+        setSelectedStudentId(grade.user_id || null)
+        setSelectedStudentPhone(grade.student_phone || null)
         setSelectedStudentName(grade.profiles?.full_name ?? grade.student_phone ?? grade.profiles?.email ?? '')
         setGradeForm({
             subject_name: grade.subject_name,
@@ -148,7 +155,10 @@ const ClassDetail: React.FC = () => {
         if (!user) return
         setGradeLoading(true)
         try {
-            await gradeUploadService.saveSingleGrade({ user_id: selectedStudentId }, user.id, {
+            await gradeUploadService.saveSingleGrade(
+                { user_id: selectedStudentId || null, phone: selectedStudentPhone || null },
+                user.id,
+                {
                 subject_name: gradeForm.subject_name,
                 term: gradeForm.term,
                 academic_year: gradeForm.academic_year,

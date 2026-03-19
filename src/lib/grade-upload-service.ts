@@ -3,7 +3,7 @@ import { supabase } from './supabase'
 import { aiCacheService } from './ai-cache-service'
 
 export interface ParsedGradeRow {
-    student_phone: string
+    student_upi: string
     subject_name: string
     term: string
     academic_year: string
@@ -35,14 +35,13 @@ export interface UploadResult {
     batchId: string
 }
 
-// Expected CSV/xlsx column aliases
 const COLUMN_ALIASES: Record<string, string> = {
-    // student phone
-    student_phone: 'student_phone',
-    phone: 'student_phone',
-    mobile: 'student_phone',
-    'phone number': 'student_phone',
-    'mobile number': 'student_phone',
+    // student upi
+    student_upi: 'student_upi',
+    upi: 'student_upi',
+    upi_number: 'student_upi',
+    nemis_upi: 'student_upi',
+    'nemis upi': 'student_upi',
     // subject
     subject_name: 'subject_name',
     subject: 'subject_name',
@@ -77,7 +76,7 @@ const COLUMN_ALIASES: Record<string, string> = {
     comments: 'teacher_comment',
 }
 
-const REQUIRED_COLUMNS = ['student_phone', 'subject_name', 'term', 'grade_value']
+const REQUIRED_COLUMNS = ['student_upi', 'subject_name', 'term', 'grade_value']
 const CURRENT_YEAR = new Date().getFullYear().toString()
 
 class GradeUploadService {
@@ -147,7 +146,7 @@ class GradeUploadService {
             const gradeVal = parseFloat(String(normalized.grade_value || ''))
 
             return {
-                student_phone: String(normalized.student_phone || '').trim(),
+                student_upi: String(normalized.student_upi || '').trim().toUpperCase(),
                 subject_name: String(normalized.subject_name || '').trim(),
                 term: String(normalized.term || 'Term 1').trim(),
                 academic_year: String(normalized.academic_year || CURRENT_YEAR).trim(),
@@ -164,9 +163,9 @@ class GradeUploadService {
 
     async validateRows(
         rows: ParsedGradeRow[],
-        classStudents: { user_id: string | null; phone: string | null }[]
+        classStudents: { user_id: string | null; upi_number: string | null }[]
     ): Promise<UploadValidationResult> {
-        const studentMap = new Map(classStudents.filter(s => s.phone).map((s) => [s.phone!, s.user_id]))
+        const studentMap = new Map(classStudents.filter(s => s.upi_number).map((s) => [s.upi_number!, s.user_id]))
         const errors: string[] = []
         const valid: ParsedGradeRow[] = []
         const invalid: ParsedGradeRow[] = []
@@ -175,8 +174,8 @@ class GradeUploadService {
             const rowErrors: string[] = []
             const rowNum = idx + 2 // +2 because row 1 is header
 
-            if (!row.student_phone) {
-                rowErrors.push(`Row ${rowNum}: Missing student phone`)
+            if (!row.student_upi) {
+                rowErrors.push(`Row ${rowNum}: Missing student UPI`)
             }
             if (!row.subject_name) {
                 rowErrors.push(`Row ${rowNum}: Missing subject name`)
@@ -188,9 +187,9 @@ class GradeUploadService {
                 rowErrors.push(`Row ${rowNum}: Grade value must be a number between 0 and 100`)
             }
 
-            const userId = studentMap.get(row.student_phone)
-            if (row.student_phone && !studentMap.has(row.student_phone)) {
-                rowErrors.push(`Row ${rowNum}: Student with phone '${row.student_phone}' is not enrolled in this class`)
+            const userId = studentMap.get(row.student_upi)
+            if (row.student_upi && !studentMap.has(row.student_upi)) {
+                rowErrors.push(`Row ${rowNum}: Student with UPI '${row.student_upi}' is not enrolled in this class`)
             }
 
             if (rowErrors.length > 0) {
@@ -235,7 +234,7 @@ class GradeUploadService {
         for (const chunk of chunks) {
             const recordsWithId = chunk.filter(r => r.student_user_id).map((row) => ({
                 user_id: row.student_user_id!,
-                student_phone: row.student_phone,
+                student_upi: row.student_upi,
                 subject_name: row.subject_name,
                 term: row.term,
                 academic_year: row.academic_year,
@@ -251,7 +250,7 @@ class GradeUploadService {
             }))
 
             const recordsWithoutId = chunk.filter(r => !r.student_user_id).map((row) => ({
-                student_phone: row.student_phone,
+                student_upi: row.student_upi,
                 subject_name: row.subject_name,
                 term: row.term,
                 academic_year: row.academic_year,
@@ -299,7 +298,7 @@ class GradeUploadService {
         // Invalidate cache for all students whose grades were updated
         const uniqueUserIds = new Set(validRows.map(r => r.student_user_id).filter(Boolean))
         uniqueUserIds.forEach(id => {
-            if (id) aiCacheService.clearCache(id)
+            if (id) aiCacheService.invalidateCache(id, classId, 'teacher')
         })
 
         return { created, updated, errors, batchId }
@@ -308,7 +307,7 @@ class GradeUploadService {
     // ─── Single Grade CRUD ────────────────────────────────────────────────
 
     async saveSingleGrade(
-        identifier: { user_id?: string | null; phone?: string | null },
+        identifier: { user_id?: string | null; upi_number?: string | null },
         teacherId: string,
         gradeData: {
             subject_name: string
@@ -324,7 +323,7 @@ class GradeUploadService {
 
         const payload = {
             user_id: identifier.user_id || undefined,
-            student_phone: identifier.phone || undefined,
+            student_upi: identifier.upi_number || undefined,
             subject_name: gradeData.subject_name,
             term: gradeData.term,
             academic_year: gradeData.academic_year,
@@ -343,7 +342,7 @@ class GradeUploadService {
                 .from('student_grades')
                 .upsert(payload, { onConflict: 'user_id,subject_name,term,academic_year,exam_type' })
             if (error) throw new Error(error.message)
-            aiCacheService.clearCache(identifier.user_id)
+            aiCacheService.invalidateCache(identifier.user_id, teacherId, 'teacher')
         } else {
             const { error } = await supabase.from('student_grades').insert(payload)
             if (error) throw new Error(error.message)
@@ -358,7 +357,7 @@ class GradeUploadService {
 
         if (error) throw new Error(error.message)
         if (studentUserId) {
-            aiCacheService.clearCache(studentUserId)
+            aiCacheService.invalidateCache(studentUserId, 'unknown', 'student')
         }
     }
 
@@ -376,9 +375,9 @@ class GradeUploadService {
 
     // ─── Template Download ─────────────────────────────────────────────────
 
-    generateTemplate(students: { phone: string | null; full_name: string | null }[]): void {
+    generateTemplate(students: { upi_number: string | null; full_name: string | null }[]): void {
         const headers = [
-            'student_phone',
+            'student_upi',
             'subject_name',
             'term',
             'academic_year',
@@ -390,8 +389,8 @@ class GradeUploadService {
         ]
 
         const sampleRows = students.length > 0
-            ? students.filter(s => s.phone).map((s) => [
-                s.phone,
+            ? students.filter(s => s.upi_number).map((s) => [
+                s.upi_number,
                 'Mathematics',
                 'Term 1',
                 CURRENT_YEAR,
@@ -402,12 +401,12 @@ class GradeUploadService {
                 '',
             ])
             : [
-                ['+254712345678', 'Mathematics', 'Term 1', CURRENT_YEAR, '75', 'B', '100', 'End Term', 'Good progress'],
-                ['0712345679', 'English', 'Term 1', CURRENT_YEAR, '82', 'A', '100', 'End Term', ''],
+                ['A1B2C3', 'Mathematics', 'Term 1', CURRENT_YEAR, '75', 'B', '100', 'End Term', 'Good progress'],
+                ['D4E5F6', 'English', 'Term 1', CURRENT_YEAR, '82', 'A', '100', 'End Term', ''],
             ]
 
         if (sampleRows.length === 0) {
-            sampleRows.push(['+254712345678', 'Mathematics', 'Term 1', CURRENT_YEAR, '75', 'B', '100', 'End Term', 'Good progress'])
+            sampleRows.push(['A1B2C3', 'Mathematics', 'Term 1', CURRENT_YEAR, '75', 'B', '100', 'End Term', 'Good progress'])
         }
 
         const ws = XLSX.utils.aoa_to_sheet([headers, ...sampleRows])

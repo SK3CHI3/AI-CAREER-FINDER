@@ -268,40 +268,10 @@ class SchoolService {
   }
 
   async acceptInvite(token: string, userId: string): Promise<void> {
-    // 1. Fetch invite
-    const invite = await this.getInviteByToken(token)
-    if (!invite) throw new Error('Invite not found')
-    if (invite.accepted_at) throw new Error('Invite already accepted')
-    if (new Date(invite.expires_at) < new Date()) throw new Error('Invite expired')
-
-    // 2. Add to school_members as teacher
-    const { error: memberError } = await supabase
-      .from('school_members')
-      .upsert(
-        {
-          school_id: invite.school_id,
-          user_id: userId,
-          role: 'teacher',
-          invited_by: invite.invited_by,
-        },
-        { onConflict: 'school_id,user_id' }
-      )
-
-    if (memberError) throw new Error(memberError.message)
-
-    // 3. Update profile: set role=teacher, school_id
-    const { error: profileError } = await supabase
-      .from('profiles')
-      .update({ role: 'teacher', school_id: invite.school_id })
-      .eq('id', userId)
-
-    if (profileError) throw new Error(profileError.message)
-
-    // 4. Mark invite as accepted
-    await (supabase
-      .from('teacher_invites' as any) as any)
-      .update({ accepted_at: new Date().toISOString() })
-      .eq('token', token)
+    // Rely entirely on the backend RPC to validate and apply the invite atomically.
+    // This avoids RLS edge cases and silent failures that occur when the front-end JWT is fresh.
+    const { error } = await supabase.rpc('accept_teacher_invite' as any, { p_token: token })
+    if (error) throw new Error(error.message)
   }
 
   async getPendingInvites(schoolId: string): Promise<TeacherInvite[]> {

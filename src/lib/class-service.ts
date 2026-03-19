@@ -23,7 +23,7 @@ export interface StudentInClass {
     user_id: string | null
     full_name: string | null
     email: string | null
-    phone: string | null
+    upi_number: string | null
     enrolled_at: string
     source: 'manual' | 'spreadsheet'
 }
@@ -119,10 +119,10 @@ class ClassService {
             .select(`
         id,
         student_user_id,
-        student_phone,
+        student_upi,
         enrolled_at,
         source,
-        profiles:student_user_id ( full_name, email, phone )
+        profiles:student_user_id ( full_name, email, upi_number )
       `)
             .eq('class_id', classId)
             .order('enrolled_at', { ascending: false })
@@ -134,24 +134,24 @@ class ClassService {
             user_id: e.student_user_id,
             full_name: e.profiles?.full_name ?? null,
             email: e.profiles?.email ?? null,
-            phone: e.student_phone || e.profiles?.phone || null,
+            upi_number: e.student_upi || e.profiles?.upi_number || null,
             enrolled_at: e.enrolled_at,
             source: e.source,
         }))
     }
 
-    async addStudentByPhone(classId: string, phone: string): Promise<StudentInClass> {
-        const cleanPhone = phone.trim()
+    async addStudentByUPI(classId: string, upi: string): Promise<StudentInClass> {
+        const cleanUPI = upi.trim().toUpperCase()
 
-        // 1. Try to find student by phone first
+        // 1. Try to find student by UPI first
         const { data: profile } = await supabase
             .from('profiles')
-            .select('id, full_name, email, phone')
-            .eq('phone', cleanPhone)
+            .select('id, full_name, email, upi_number')
+            .eq('upi_number', cleanUPI)
             .maybeSingle()
 
-        // 2. Enroll using either profile id or just the phone
-        const insertData: any = { class_id: classId, student_phone: cleanPhone, source: 'manual' }
+        // 2. Enroll using either profile id or just the UPI
+        const insertData: any = { class_id: classId, student_upi: cleanUPI, source: 'manual' }
         if (profile?.id) {
             insertData.student_user_id = profile.id
         }
@@ -159,7 +159,7 @@ class ClassService {
         const { data, error: enrollError } = await supabase
             .from('class_enrollments')
             .insert(insertData)
-            .select('id, student_user_id, student_phone, enrolled_at, source')
+            .select('id, student_user_id, student_upi, enrolled_at, source')
             .single()
 
         if (enrollError) {
@@ -175,7 +175,7 @@ class ClassService {
             user_id: profile?.id || null,
             full_name: profile?.full_name || null,
             email: profile?.email || null,
-            phone: cleanPhone,
+            upi_number: cleanUPI,
             enrolled_at: data.enrolled_at,
             source: 'manual',
         }
@@ -196,28 +196,28 @@ class ClassService {
         // Get all enrolled students first
         const { data: enrollments, error: enrollError } = await supabase
             .from('class_enrollments')
-            .select('student_user_id, student_phone')
+            .select('student_user_id, student_upi')
             .eq('class_id', classId)
 
         if (enrollError || !enrollments?.length) return []
 
         const studentIds = enrollments.map((e) => e.student_user_id).filter(Boolean)
-        const studentPhones = enrollments.map((e) => e.student_phone).filter(Boolean)
+        const studentUPIs = enrollments.map((e) => e.student_upi).filter(Boolean)
 
         let query = supabase
             .from('student_grades')
             .select(`
         *,
-        profiles:user_id ( full_name, email, phone )
+        profiles:user_id ( full_name, email, upi_number )
       `)
 
         // Need to construct our query carefully to allow OR conditions over nested IN
-        if (studentIds.length > 0 && studentPhones.length > 0) {
-            query = query.or(`user_id.in.(${studentIds.join(',')}),student_phone.in.(${studentPhones.join(',')})`)
+        if (studentIds.length > 0 && studentUPIs.length > 0) {
+            query = query.or(`user_id.in.(${studentIds.join(',')}),student_upi.in.(${studentUPIs.map(upi => `"${upi}"`).join(',')})`)
         } else if (studentIds.length > 0) {
             query = query.in('user_id', studentIds)
-        } else if (studentPhones.length > 0) {
-            query = query.in('student_phone', studentPhones)
+        } else if (studentUPIs.length > 0) {
+            query = query.in('student_upi', studentUPIs)
         } else {
             return []
         }
@@ -235,7 +235,7 @@ class ClassService {
     async getClassStudentCount(classId: string): Promise<number> {
         const { count, error } = await supabase
             .from('class_enrollments')
-            .select('student_user_id', { count: 'exact', head: true })
+            .select('id', { count: 'exact', head: true })
             .eq('class_id', classId)
 
         if (error) return 0

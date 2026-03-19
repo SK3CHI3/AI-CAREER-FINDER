@@ -75,7 +75,7 @@ const GradeUpload: React.FC<Props> = ({ classId, teacherId, students, onUploaded
     }
 
     const downloadTemplate = () => {
-        gradeUploadService.generateTemplate(students.map((s) => ({ email: s.email, full_name: s.full_name })))
+        gradeUploadService.generateTemplate(students.map((s) => ({ upi_number: s.upi_number, full_name: s.full_name })))
     }
 
     return (
@@ -136,7 +136,7 @@ const GradeUpload: React.FC<Props> = ({ classId, teacherId, students, onUploaded
                             <Download className="w-3.5 h-3.5" /> Download Template
                         </Button>
                         <p className="text-xs text-foreground-muted">
-                            Required columns: student_email, subject_name, term, grade_value
+                            Required columns: student_upi, subject_name, term, grade_value
                         </p>
                     </div>
                 </div>
@@ -184,7 +184,7 @@ const GradeUpload: React.FC<Props> = ({ classId, teacherId, students, onUploaded
                                 <tbody>
                                     {validation.valid.slice(0, 50).map((row, i) => (
                                         <tr key={i} className="border-t border-card-border">
-                                            <td className="px-3 py-2 text-foreground">{row.student_email}</td>
+                                            <td className="px-3 py-2 text-foreground">{row.student_upi}</td>
                                             <td className="px-3 py-2 text-foreground">{row.subject_name}</td>
                                             <td className="px-3 py-2 text-foreground">{row.term}</td>
                                             <td className="px-3 py-2 text-foreground">{row.academic_year}</td>

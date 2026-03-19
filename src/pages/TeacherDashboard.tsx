@@ -9,9 +9,10 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import {
-  Bot, LogOut, BookOpen, Users, GraduationCap,
-  ChevronRight, RefreshCw, Plus, FileSpreadsheet
+  LogOut, BookOpen, Users, GraduationCap,
+  ChevronRight, RefreshCw, Plus, FileSpreadsheet, AlertCircle
 } from 'lucide-react'
+
 
 const TeacherDashboard: React.FC = () => {
   const navigate = useNavigate()
@@ -130,18 +131,27 @@ const TeacherDashboard: React.FC = () => {
           ))}
         </div>
 
+        {/* No-school guard */}
+        {!loading && !school && (
+          <Card className="bg-gradient-surface border-card-border">
+            <CardContent className="py-12 text-center">
+              <AlertCircle className="w-10 h-10 text-warning mx-auto mb-3" />
+              <p className="font-semibold text-foreground mb-1">No school linked to your account</p>
+              <p className="text-sm text-foreground-muted">Contact your school admin to resend your invite, or make sure you accepted the invite link correctly.</p>
+            </CardContent>
+          </Card>
+        )}
+
         {/* Classes list */}
+        {school && (
         <Card className="bg-gradient-surface border-card-border">
-          <CardHeader className="flex flex-row items-center justify-between">
+          <CardHeader>
             <div>
               <CardTitle className="flex items-center gap-2">
                 <BookOpen className="w-5 h-5 text-primary" /> My Classes
               </CardTitle>
               <CardDescription>Click a class to view students, grades, and upload marks</CardDescription>
             </div>
-            {user && school && (
-              <CreateClass schoolId={school.id} teacherId={user.id} onCreated={loadData} />
-            )}
           </CardHeader>
           <CardContent>
             {loading ? (
@@ -187,6 +197,7 @@ const TeacherDashboard: React.FC = () => {
             )}
           </CardContent>
         </Card>
+        )}
       </main>
     </div>
   )
