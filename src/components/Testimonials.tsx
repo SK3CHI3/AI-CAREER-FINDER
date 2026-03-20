@@ -31,9 +31,6 @@ const Testimonials = () => {
     <section className="py-24">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-14">
-          <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-primary/10 text-primary">
-            Real Stories
-          </span>
           <h2 className="mt-4 text-3xl sm:text-5xl font-bold tracking-tight">
             Trusted by students, teachers & schools
           </h2>

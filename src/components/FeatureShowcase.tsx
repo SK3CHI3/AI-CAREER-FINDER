@@ -172,11 +172,6 @@ const FeatureShowcase = () => {
           
           {/* Left Content */}
           <div className="space-y-8">
-            <div className="flex items-center space-x-2 text-secondary">
-              <Building2 className="w-5 h-5" />
-              <span className="text-sm font-bold uppercase tracking-wider">For Schools & Educators</span>
-            </div>
-            
             <h2 className="text-4xl md:text-5xl font-bold font-serif text-foreground leading-tight">
               What do schools get?
             </h2>

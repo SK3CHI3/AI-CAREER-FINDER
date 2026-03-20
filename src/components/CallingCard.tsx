@@ -27,10 +27,6 @@ const CallingCard = () => {
                         {/* Content Section */}
                         <div className="p-8 md:p-12 lg:p-16 space-y-8">
                             <div className="space-y-4">
-                                <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 text-primary text-sm font-bold border border-primary/20">
-                                    <Zap className="w-4 h-4 fill-current" />
-                                    The Institutional Standard
-                                </span>
                                 <h2 className="text-4xl md:text-5xl font-black text-foreground leading-[1.1]">
                                     Empower Your School with <span className="bg-gradient-text bg-clip-text text-transparent">AI Intelligence</span>
                                 </h2>
