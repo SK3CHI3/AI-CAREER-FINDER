@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://careerguide-ai.com/sitemap.xml
+Sitemap: https://careerguideai.co.ke/sitemap.xml
