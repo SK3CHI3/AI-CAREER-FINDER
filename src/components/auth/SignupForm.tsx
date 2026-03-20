@@ -12,7 +12,7 @@ import { useAuth } from '@/contexts/AuthContext'
 
 const signupSchema = z.object({
   fullName: z.string().min(2, 'Full name must be at least 2 characters'),
-  email: z.string().email('Please enter a valid email address'),
+  email: z.string().email('Please enter a valid email address').optional().or(z.literal('')),
   upiOrPhone: z.string().min(4, 'Please enter your UPI number or phone number'),
   role: z.enum(['student', 'school']),
   password: z.string().min(6, 'Password must be at least 6 characters'),
@@ -20,6 +20,13 @@ const signupSchema = z.object({
 }).refine((data) => data.password === data.confirmPassword, {
   message: "Passwords don't match",
   path: ["confirmPassword"],
+}).refine((data) => {
+  // Email is required for schools
+  if (data.role === 'school' && !data.email) return false;
+  return true;
+}, {
+  message: "Email is required for schools",
+  path: ["email"],
 })
 
 type SignupFormData = z.infer<typeof signupSchema>
@@ -58,12 +65,25 @@ export const SignupForm: React.FC<SignupFormProps> = ({ onToggleMode, defaultRol
     setSuccess(null)
 
     try {
-      const { error } = await signUp(data.email, data.password, data.fullName, data.upiOrPhone, data.role)
+      let finalEmail = data.email;
+      const isStudent = data.role === 'student';
+      
+      // Generate internal ID for students without email
+      if (isStudent && !finalEmail) {
+        const cleanUPI = data.upiOrPhone.trim().toUpperCase();
+        finalEmail = `${cleanUPI.toLowerCase()}@internal.careerguideai.com`;
+      }
+
+      const { error } = await signUp(finalEmail || '', data.password, data.fullName, data.upiOrPhone, data.role)
 
       if (error) {
         setError(error.message)
       } else {
-        setSuccess('Account created successfully! Please check your email to verify your account.')
+        if (isStudent && !data.email) {
+          setSuccess('Account created successfully! You can now sign in using your UPI and password.')
+        } else {
+          setSuccess('Account created successfully! Please check your email to verify your account.')
+        }
       }
     } catch (err) {
       setError('An unexpected error occurred. Please try again.')
@@ -158,11 +178,11 @@ export const SignupForm: React.FC<SignupFormProps> = ({ onToggleMode, defaultRol
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
+            <Label htmlFor="email">Email {selectedRole === 'student' && <span className="text-muted-foreground font-normal">(Optional)</span>}</Label>
             <Input
               id="email"
               type="email"
-              placeholder="Enter your email"
+              placeholder={selectedRole === 'student' ? 'Enter your email (optional)' : 'Enter your email'}
               {...register('email')}
               disabled={isLoading}
             />

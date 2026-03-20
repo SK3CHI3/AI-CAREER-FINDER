@@ -94,7 +94,7 @@ const PaymentGate: React.FC<PaymentGateProps> = ({ children }) => {
     // Additional validation for career interests
     const careerInterestsComplete = profile.career_interests &&
       Array.isArray(profile.career_interests) &&
-      profile.career_interests.length >= 2 // Minimum 2 career interests required
+      profile.career_interests.length >= 1 // Minimum 1 career interest required (updated for v2.3.2)
 
     console.log('Profile completion check details:', {
       basicFieldsComplete,
@@ -149,10 +149,9 @@ const PaymentGate: React.FC<PaymentGateProps> = ({ children }) => {
     return <ProfileSetup onComplete={handleProfileComplete} />
   }
 
-  // Show payment wall if profile is complete but payment is not
-  if (!isPaymentComplete) {
-    return <PaymentWall onPaymentSuccess={handlePaymentSuccess} />
-  }
+  // Students now always proceed to the dashboard after profile setup (v2.3.5)
+  // Individual payment prompts will now appear inside the dashboard as alerts/banners.
+  return <>{children}</>
 
   // Show main app if everything is complete
   return <>{children}</>

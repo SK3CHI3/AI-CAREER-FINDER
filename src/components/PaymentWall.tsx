@@ -150,7 +150,7 @@ const PaymentWall: React.FC<PaymentWallProps> = ({ onPaymentSuccess }) => {
           payment_status: 'completed',
           payment_reference: results.reference || `PAY_${Date.now()}`,
           payment_date: new Date().toISOString(),
-          payment_amount: 1000.00,
+          payment_amount: 10.00,
           payment_currency: 'KES',
           intasend_transaction_id: results.transaction_id || results.id
         })
@@ -203,7 +203,7 @@ const PaymentWall: React.FC<PaymentWallProps> = ({ onPaymentSuccess }) => {
     try {
       // Trigger the payment using IntaSend's run method
       intaSendInstance.run({
-        amount: 1000,
+        amount: 10,
         currency: 'KES',
         email: profile?.email || user?.email || '',
         phone_number: '254700000000',
@@ -298,7 +298,7 @@ const PaymentWall: React.FC<PaymentWallProps> = ({ onPaymentSuccess }) => {
             <div className="space-y-3">
               <div className="flex justify-between items-center">
                 <span className="text-gray-600">AI Career Finder Access</span>
-                <span className="font-semibold">KSh 1,000</span>
+                <span className="font-semibold text-primary text-xl">KSh 10</span>
               </div>
               <div className="flex justify-between items-center text-sm text-gray-500">
                 <span>Includes:</span>
@@ -309,7 +309,7 @@ const PaymentWall: React.FC<PaymentWallProps> = ({ onPaymentSuccess }) => {
             <div className="mt-4 pt-4 border-t border-gray-200">
               <div className="flex justify-between items-center text-lg font-bold">
                 <span>Total</span>
-                <span className="text-green-600">KSh 1,000</span>
+                <span className="text-primary">KSh 10</span>
               </div>
             </div>
           </div>
@@ -376,7 +376,7 @@ const PaymentWall: React.FC<PaymentWallProps> = ({ onPaymentSuccess }) => {
                 ) : (
                   <>
                     <CreditCard className="w-4 h-4 mr-2" />
-                    Pay KSh 1,000 Now
+                    Pay KSh 10 Now
                   </>
                 )}
               </button>

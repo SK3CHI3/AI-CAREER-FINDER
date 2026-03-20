@@ -36,8 +36,12 @@ import {
   TrendingDown,
   Activity,
   BookMarked,
-  DollarSign
+  DollarSign,
+  Lock,
+  XCircle,
+  Lightbulb
 } from 'lucide-react'
+import PaymentWall from '@/components/PaymentWall'
 import { ThemeToggle } from '@/components/ThemeToggle'
 import AIChat from '@/components/AIChat'
 import { ReportGenerator } from '@/lib/report-generator'
@@ -178,12 +182,13 @@ const StudentDashboard = () => {
   const [careerData, setCareerData] = useState<CareerDataItem[]>(defaultCareerData)
   const [isLoadingRecommendations, setIsLoadingRecommendations] = useState(false)
   const [dynamicStats, setDynamicStats] = useState<UserStat[]>([])
-  const [dynamicActivities, setDynamicActivities] = useState<UserActivity[]>([])
   const [isLoadingStats, setIsLoadingStats] = useState(true)
-  const [isLoadingActivities, setIsLoadingActivities] = useState(true)
   const [selectedCareer, setSelectedCareer] = useState<CareerDataItem | null>(null)
   const [isCareerModalOpen, setIsCareerModalOpen] = useState(false)
   const [isGradesModalOpen, setIsGradesModalOpen] = useState(false)
+  const [isSchoolSubscribed, setIsSchoolSubscribed] = useState(false)
+  const [isPaid, setIsPaid] = useState(false)
+  const [isPaymentWallOpen, setIsPaymentWallOpen] = useState(false)
 
   // Activity tracking
   const { trackPageView, trackButtonClick, trackAIChat } = useActivityTracking({
@@ -198,9 +203,28 @@ const StudentDashboard = () => {
   useEffect(() => {
     if (user && profile) {
       loadDashboardData();
+      checkAccessStatus();
       trackPageView('Student Dashboard');
     }
   }, [user, profile])
+
+  const checkAccessStatus = async () => {
+    if (!profile) return;
+    const paid = profile.payment_status === 'completed';
+    setIsPaid(paid);
+
+    if (profile.school_id) {
+      try {
+        const { schoolService } = await import('@/lib/school-service');
+        const hasSub = await schoolService.hasActiveSubscription(profile.school_id);
+        setIsSchoolSubscribed(hasSub);
+      } catch (err) {
+        console.error('Error checking school subscription:', err);
+      }
+    }
+  }
+
+  const isAuthorized = isPaid || isSchoolSubscribed;
 
   // Load all dashboard data
   const loadDashboardData = async () => {
@@ -208,31 +232,19 @@ const StudentDashboard = () => {
 
     try {
       setIsLoadingStats(true);
-      setIsLoadingActivities(true);
 
-      // Load user stats and activities in parallel
-      const [stats, activities] = await Promise.all([
-        dashboardService.calculateUserStats(user.id, profile),
-        dashboardService.getUserActivities(user.id, 10)
-      ]);
+      // Load user stats
+      const stats = await dashboardService.calculateUserStats(user.id, profile);
 
       setDynamicStats(stats);
-      setDynamicActivities(activities);
 
       // Load career recommendations
       await loadCareerRecommendations(profile);
-
-      // Generate additional activities if none exist
-      if (activities.length === 0) {
-        const generatedActivities = await dashboardService.generateDynamicActivities(user.id, profile);
-        setDynamicActivities(generatedActivities);
-      }
 
     } catch (error) {
       console.error('Failed to load dashboard data:', error);
     } finally {
       setIsLoadingStats(false);
-      setIsLoadingActivities(false);
     }
   };
 
@@ -256,68 +268,6 @@ const StudentDashboard = () => {
     return Math.round((completedFields.length / fields.length) * 100);
   };
 
-  // Generate dynamic activities based on user data
-  const generateDynamicActivities = (profileData: any) => {
-    const activities = [];
-    const now = new Date();
-
-    // Add profile-based activities
-    if (profileData.cbe_subjects && profileData.cbe_subjects.length > 0) {
-      activities.push({
-        id: 1,
-        type: 'profile',
-        title: 'CBE Subjects Updated',
-        description: `Added ${profileData.cbe_subjects.length} subjects to your profile`,
-        time: '2 hours ago',
-        icon: BookMarked,
-        color: 'text-blue-500',
-        bgColor: 'bg-blue-50',
-        progress: 100
-      });
-    }
-
-    if (profileData.career_interests && profileData.career_interests.length > 0) {
-      activities.push({
-        id: 2,
-        type: 'interests',
-        title: 'Career Interests Defined',
-        description: `Explored ${profileData.career_interests.length} career areas`,
-        time: '1 day ago',
-        icon: Target,
-        color: 'text-green-500',
-        bgColor: 'bg-green-50',
-        progress: 90
-      });
-    }
-
-    // Add AI-generated activities
-    activities.push({
-      id: 3,
-      type: 'ai',
-      title: 'AI Career Analysis',
-      description: 'Received personalized career recommendations',
-      time: '3 days ago',
-      icon: Bot,
-      color: 'text-purple-500',
-      bgColor: 'bg-purple-50',
-      progress: 95
-    });
-
-    // Add assessment activity
-    activities.push({
-      id: 4,
-      type: 'assessment',
-      title: 'Profile Assessment',
-      description: `Completed ${calculateProfileCompleteness(profileData)}% of your career profile`,
-      time: '1 week ago',
-      icon: Trophy,
-      color: 'text-orange-500',
-      bgColor: 'bg-orange-50',
-      progress: calculateProfileCompleteness(profileData)
-    });
-
-    setDynamicActivities(activities);
-  };
 
   // Helper functions for career data enhancement
   const getCareerDescription = (careerName: string) => {
@@ -679,6 +629,27 @@ const StudentDashboard = () => {
 
       {/* Main Content */}
       <main className="max-w-7xl w-full mx-auto px-2 sm:px-6 lg:px-8 py-4 sm:py-8">
+        {!isAuthorized && (
+          <div className="mb-8 p-6 rounded-[2.5rem] bg-gradient-to-r from-primary/10 via-blue-500/10 to-indigo-500/10 border-2 border-primary/20 backdrop-blur-sm animate-in fade-in slide-in-from-top-4 duration-700">
+            <div className="flex flex-col md:flex-row items-center justify-between gap-6">
+              <div className="flex items-center gap-5">
+                <div className="w-16 h-16 rounded-3xl bg-primary flex items-center justify-center shadow-lg shadow-primary/30">
+                  <Sparkles className="w-8 h-8 text-white" />
+                </div>
+                <div>
+                  <h3 className="text-xl sm:text-2xl font-black tracking-tight">Unlock Your Full Career Potential! 🚀</h3>
+                  <p className="text-foreground-muted text-base sm:text-lg">Get personalized AI guidance, detailed reports, and expert career mapping for just <span className="text-primary font-bold">KSh 10</span>.</p>
+                </div>
+              </div>
+                <Button 
+                onClick={() => setIsPaymentWallOpen(true)}
+                className="h-14 px-8 text-lg rounded-2xl bg-primary hover:bg-primary/90 text-white shadow-xl shadow-primary/20 font-bold w-full md:w-auto transition-transform hover:scale-105"
+              >
+                Unlock Premium Now (10 KES)
+              </Button>
+            </div>
+          </div>
+        )}
         {/* Welcome Section */}
         <div className="mb-6 sm:mb-8">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0">
@@ -856,96 +827,9 @@ const StudentDashboard = () => {
                         </RadarChart>
                       </ResponsiveContainer>
                     </div>
-                    <div className="mt-4 p-3 rounded-lg bg-primary/5 border border-primary/10">
-                      <p className="text-xs font-semibold text-primary uppercase tracking-wider mb-1">Dominant Type</p>
-                      <p className="text-sm font-bold text-foreground">
-                        {Array.isArray(dominantType) ? dominantType.join(' / ') : dominantType}
-                      </p>
-                      <p className="text-xs text-foreground-muted mt-1">
-                        Your profile shows a strong alignment with {Array.isArray(dominantType) ? dominantType.join(', ').toLowerCase() : dominantType.toLowerCase()} environments.
-                      </p>
-                    </div>
                   </CardContent>
                 </Card>
               )}
-
-              {/* Recent Activity */}
-              <Card className="bg-card border-card-border">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Activity className="w-5 h-5 text-blue-500" />
-                    Recent Activity
-                  </CardTitle>
-                  <CardDescription>Your recent platform activity</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  {isLoadingActivities ? (
-                    // Loading skeleton for activities
-                    Array.from({ length: 3 }).map((_, index) => (
-                      <div key={index} className="flex items-start gap-3 p-3 rounded-lg">
-                        <div className="w-10 h-10 bg-muted rounded-lg animate-pulse"></div>
-                        <div className="flex-1 min-w-0">
-                          <div className="h-4 bg-muted rounded animate-pulse mb-2"></div>
-                          <div className="h-3 bg-muted rounded animate-pulse mb-2 w-3/4"></div>
-                          <div className="flex items-center justify-between">
-                            <div className="h-3 bg-muted rounded animate-pulse w-1/4"></div>
-                            <div className="h-3 bg-muted rounded animate-pulse w-1/6"></div>
-                          </div>
-                        </div>
-                      </div>
-                    ))
-                  ) : (
-                    dynamicActivities.slice(0, 3).map((activity) => {
-                      const activityConfig = {
-                        'profile': { icon: User, color: 'text-blue-500', bgColor: 'bg-blue-50' },
-                        'interests': { icon: Target, color: 'text-green-500', bgColor: 'bg-green-50' },
-                        'ai': { icon: Bot, color: 'text-purple-500', bgColor: 'bg-purple-50' },
-                        'assessment': { icon: Trophy, color: 'text-orange-500', bgColor: 'bg-orange-50' },
-                        'career': { icon: Briefcase, color: 'text-indigo-500', bgColor: 'bg-indigo-50' },
-                        'learning': { icon: BookOpen, color: 'text-emerald-500', bgColor: 'bg-emerald-50' }
-                      }[activity.activity_type] || { icon: Activity, color: 'text-gray-500', bgColor: 'bg-gray-50' };
-
-                      const IconComponent = activityConfig.icon;
-                      const timeAgo = getTimeAgo(activity.created_at);
-
-                      return (
-                        <div key={activity.id} className="flex items-start gap-3 p-3 rounded-lg hover:bg-muted/50 transition-colors duration-200">
-                          <div className={`w-10 h-10 rounded-lg ${activityConfig.bgColor} flex items-center justify-center flex-shrink-0`}>
-                            <IconComponent className={`w-5 h-5 ${activityConfig.color}`} />
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <p className="font-medium text-sm text-foreground truncate">{activity.activity_title}</p>
-                            <p className="text-xs text-foreground-muted mt-1">{activity.activity_description}</p>
-                            <div className="flex items-center justify-between mt-2">
-                              <p className="text-xs text-foreground-muted">{timeAgo}</p>
-                              {activity.progress_percentage && activity.progress_percentage > 0 ? (
-                                <div className="flex flex-col gap-1 w-24">
-                                  <Progress
-                                    value={activity.progress_percentage}
-                                    className="h-1.5 bg-muted"
-                                    indicatorClassName="bg-gradient-to-r from-blue-500 to-purple-500"
-                                  />
-                                  <span className="text-[10px] font-medium text-foreground-muted text-right">{activity.progress_percentage}%</span>
-                                </div>
-                              ) : (
-                                <div className="text-xs text-foreground-muted">Completed</div>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                      );
-                    })
-                  )}
-                  <Button
-                    variant="ghost"
-                    className="w-full mt-4"
-                    size="sm"
-                    onClick={() => trackButtonClick('View All Activity', 'Recent Activity')}
-                  >
-                    View All Activity <ArrowRight className="w-4 h-4 ml-1" />
-                  </Button>
-                </CardContent>
-              </Card>
             </div>
 
             {/* Action Cards */}
@@ -1110,9 +994,20 @@ const StudentDashboard = () => {
                     </div>
 
                     {/* Action Button */}
-                    <Button variant="outline" className="w-full group-hover:bg-primary group-hover:text-primary-foreground transition-colors duration-200">
-                      <Target className="w-4 h-4 mr-2" />
-                      Get Detailed Insights
+                    <Button 
+                      variant="outline" 
+                      className="w-full group-hover:bg-primary group-hover:text-primary-foreground transition-colors duration-200"
+                      onClick={() => {
+                        if (isAuthorized) {
+                          // Already handled by parent Card? No, let's trigger detail modal
+                          handleCareerDetailClick(career)
+                        } else {
+                          setIsPaymentWallOpen(true)
+                        }
+                      }}
+                    >
+                      {isAuthorized ? <Target className="w-4 h-4 mr-2" /> : <Lock className="w-4 h-4 mr-2" />}
+                      {isAuthorized ? 'Get Detailed Insights' : 'Unlock Insights'}
                       <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform duration-200" />
                     </Button>
                   </CardContent>
@@ -1123,7 +1018,25 @@ const StudentDashboard = () => {
 
           {/* Chat Tab */}
           <TabsContent value="chat" className="w-full mx-auto px-2 sm:px-0">
-            <AIChat />
+            {isAuthorized ? (
+              <AIChat />
+            ) : (
+              <Card className="p-12 text-center border-2 border-dashed border-primary/30 bg-primary/5 rounded-[3rem]">
+                <div className="max-w-md mx-auto space-y-6">
+                  <div className="w-24 h-24 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-6">
+                    <Lock className="w-12 h-12 text-primary" />
+                  </div>
+                  <h3 className="text-3xl font-black">AI Career Mentor is Locked</h3>
+                  <p className="text-lg text-foreground-muted">Upgrade to Premium to chat with our AI Career Mentor. Get personalized advice on subjects, universities, and your 10 KES one-time payment covers everything!</p>
+                  <Button 
+                    onClick={() => setIsPaymentWallOpen(true)}
+                    className="h-16 px-10 text-xl rounded-2xl bg-primary text-white shadow-2xl shadow-primary/30 font-bold"
+                  >
+                    Unlock for KSh 10
+                  </Button>
+                </div>
+              </Card>
+            )}
           </TabsContent>
 
           {/* Progress Tab */}
@@ -1212,6 +1125,10 @@ const StudentDashboard = () => {
                       variant="outline"
                       className="w-full min-h-[44px]"
                       onClick={async () => {
+                        if (!isAuthorized) {
+                          setIsPaymentWallOpen(true)
+                          return
+                        }
                         const profileData = profile || ({} as any)
                         const html = ReportGenerator.generatePDFReport(
                           {
@@ -1229,7 +1146,8 @@ const StudentDashboard = () => {
                         trackButtonClick('Download PDF', 'Journey Actions')
                       }}
                     >
-                      Download PDF
+                      {isAuthorized ? <FileText className="w-4 h-4 mr-2" /> : <Lock className="w-4 h-4 mr-2" />}
+                      {isAuthorized ? 'Download PDF' : 'Unlock Report (10 KES)'}
                     </Button>
                   </div>
                 </CardContent>
@@ -1253,6 +1171,30 @@ const StudentDashboard = () => {
       </main>
 
       {/* Career Detail Modal */}
+      {/* Modals and Overlays */}
+      {isPaymentWallOpen && (
+        <div className="fixed inset-0 z-[100] bg-background/80 backdrop-blur-sm animate-in fade-in duration-300">
+          <div className="fixed inset-0 flex items-center justify-center p-4">
+            <div className="relative w-full max-w-2xl bg-card rounded-[3rem] shadow-2xl border-2 border-card-border overflow-hidden animate-in zoom-in-95 duration-300">
+              <button 
+                onClick={() => setIsPaymentWallOpen(false)}
+                className="absolute top-6 right-6 p-2 rounded-full hover:bg-muted transition-colors z-10"
+              >
+                <XCircle className="w-8 h-8 text-foreground-muted" />
+              </button>
+              <div className="max-h-[90vh] overflow-y-auto">
+                <div className="p-2">
+                  <PaymentWall onPaymentSuccess={() => {
+                    setIsPaymentWallOpen(false);
+                    checkAccessStatus();
+                  }} />
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {selectedCareer && (
         <CareerDetailModal
           isOpen={isCareerModalOpen}

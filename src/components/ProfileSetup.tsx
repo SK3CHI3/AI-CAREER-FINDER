@@ -18,11 +18,10 @@ import { dashboardService, CbeSubject, CareerInterest } from '@/lib/dashboard-se
 import { RIASEC_ACTIVITIES, RIASEC_LABELS, CAREER_VALUES, CONTEXTUAL_CONSTRAINTS } from '@/data/riasec-assessment'
 
 const profileSchema = z.object({
-  phone: z.string().min(10, 'Please enter a valid phone number (e.g. 0712345678)'),
   schoolLevel: z.enum(['primary', 'secondary', 'tertiary']),
   currentGrade: z.string().optional(),
   subjects: z.array(z.string()).min(3, 'Please select at least 3 CBE subjects'),
-  interests: z.array(z.string()).min(2, 'Please select at least 2 career interests'),
+  interests: z.array(z.string()).min(1, 'Please select at least one pathway or exploration path'),
   careerGoals: z.string().optional(),
 })
 
@@ -96,52 +95,20 @@ export const ProfileSetup: React.FC<ProfileSetupProps> = ({ onComplete }) => {
   const [selectedInterests, setSelectedInterests] = useState<string[]>([])
   const [selectedActivities, setSelectedActivities] = useState<string[]>([])
   const [selectedValues, setSelectedValues] = useState<string[]>([])
-  const [selectedConstraints, setSelectedConstraints] = useState<string[]>([])
   const [currentStep, setCurrentStep] = useState(1)
   const [dynamicSubjects, setDynamicSubjects] = useState<CbeSubject[]>([])
   const [dynamicInterests, setDynamicInterests] = useState<CareerInterest[]>([])
   const [isLoadingData, setIsLoadingData] = useState(true)
 
-  const calculateRiasec = () => {
-    const scores = {
-      realistic: 0,
-      investigative: 0,
-      artistic: 0,
-      social: 0,
-      enterprising: 0,
-      conventional: 0
-    };
-
-    selectedActivities.forEach(id => {
-      const activity = RIASEC_ACTIVITIES.find(a => a.id === id);
-      if (activity) {
-        if (activity.code === 'R') scores.realistic++;
-        if (activity.code === 'I') scores.investigative++;
-        if (activity.code === 'A') scores.artistic++;
-        if (activity.code === 'S') scores.social++;
-        if (activity.code === 'E') scores.enterprising++;
-        if (activity.code === 'C') scores.conventional++;
-      }
-    });
-
-    const sortedTypes = Object.entries(scores)
-      .sort((a, b) => b[1] - a[1])
-      .filter(([_, score]) => score > 0)
-      .map(([type]) => RIASEC_LABELS[type.charAt(0).toUpperCase()]);
-
-    return { scores, personalityTypes: sortedTypes };
-  }
-
   const {
     register,
     handleSubmit,
-    formState: { errors },
     setValue,
     watch
   } = useForm<ProfileFormData>({
     resolver: zodResolver(profileSchema),
     defaultValues: {
-      phone: user?.user_metadata?.phone || '',
+      schoolLevel: 'secondary',
       subjects: [],
       interests: []
     }
@@ -149,48 +116,50 @@ export const ProfileSetup: React.FC<ProfileSetupProps> = ({ onComplete }) => {
 
   const schoolLevel = watch('schoolLevel')
 
-  // Load dynamic data on component mount
   useEffect(() => {
-    const loadDynamicData = async () => {
+    const loadData = async () => {
       try {
         setIsLoadingData(true)
-        const [subjects, interests] = await Promise.all([
+        const [s, i] = await Promise.all([
           dashboardService.getCbeSubjects(),
           dashboardService.getCareerInterests()
         ])
-        setDynamicSubjects(subjects)
-        setDynamicInterests(interests)
-      } catch (error) {
-        console.error('Failed to load dynamic data:', error)
-        // Fallback to hardcoded data if API fails
-        setDynamicSubjects(cbeSubjects.map(name => ({ id: name, subject_name: name, subject_code: '', category: 'General', description: '', is_active: true, created_at: '' })))
-        setDynamicInterests(careerInterests.map(name => ({ id: name, interest_name: name, category: 'General', description: '', related_subjects: [], is_active: true, created_at: '' })))
+        setDynamicSubjects(s)
+        setDynamicInterests(i)
+      } catch (e) {
+        setDynamicSubjects(cbeSubjects.map(n => ({ id: n, subject_name: n, subject_code: '', category: 'Core', description: '', is_active: true, created_at: '' })))
+        setDynamicInterests(careerInterests.map(n => ({ id: n, interest_name: n, category: 'General', description: '', related_subjects: [], is_active: true, created_at: '' })))
       } finally {
         setIsLoadingData(false)
       }
     }
-
-    loadDynamicData()
+    loadData()
   }, [])
 
-  const onSubmit = async (data: ProfileFormData) => {
-    if (!user) return
+  const calculateRiasec = () => {
+    const scores = { realistic: 0, investigative: 0, artistic: 0, social: 0, enterprising: 0, conventional: 0 }
+    selectedActivities.forEach(id => {
+      const activity = RIASEC_ACTIVITIES.find(a => a.id === id)
+      if (activity) {
+        const key = activity.code === 'R' ? 'realistic' : activity.code === 'I' ? 'investigative' : activity.code === 'A' ? 'artistic' : activity.code === 'S' ? 'social' : activity.code === 'E' ? 'enterprising' : 'conventional'
+        scores[key]++
+      }
+    })
+    const sortedTypes = Object.entries(scores).sort((a, b) => b[1] - a[1]).filter(s => s[1] > 0).map(s => RIASEC_LABELS[s[0].charAt(0).toUpperCase()])
+    return { scores, personalityTypes: sortedTypes }
+  }
 
+  const handleFinalSubmit = async () => {
+    // Manually trigger zod validation if needed, but since we control nextStep, 
+    // we already know basic fields are mostly valid. We'll do a final check.
+    if (!user) return
     setIsLoading(true)
     setError(null)
-
     try {
-      const { scores, personalityTypes } = calculateRiasec();
-
-      // Check if profile already exists
-      const { data: existingProfile } = await supabase
-        .from('profiles')
-        .select('id')
-        .eq('id', user.id)
-        .single()
-
+      const data = watch()
+      const { scores, personalityTypes } = calculateRiasec()
       const profileData = {
-        phone: data.phone,
+        email: user.email,
         school_level: data.schoolLevel,
         current_grade: data.currentGrade || null,
         cbe_subjects: selectedSubjects,
@@ -202,393 +171,262 @@ export const ProfileSetup: React.FC<ProfileSetupProps> = ({ onComplete }) => {
           interests: selectedInterests,
           subjects: selectedSubjects,
           values: selectedValues,
-          constraints: selectedConstraints,
+          customAspiration: data.careerGoals || null,
+          constraints: [],
         },
         updated_at: new Date().toISOString()
       }
 
-      if (existingProfile) {
-        // Update existing profile
-        const { error } = await supabase
-          .from('profiles')
-          .update(profileData)
-          .eq('id', user.id)
+      const { error } = await supabase.from('profiles').upsert({ id: user.id, ...profileData } as any)
+      if (error) throw error
 
-        if (error) throw error
-      } else {
-        // Create new profile
-        const { error } = await supabase
-          .from('profiles')
-          .insert(profileData)
-
-        if (error) throw error
-      }
-
-      // Refresh profile in auth context to get latest data
-      console.log('Profile saved successfully, refreshing auth context...')
       await refreshProfile()
-
-      // Check payment status after profile completion
-      const { data: updatedProfile } = await supabase
-        .from('profiles')
-        .select('payment_status')
-        .eq('id', user.id)
-        .single()
-
-      console.log('Payment status after profile completion:', updatedProfile?.payment_status)
-
-      // Call onComplete with payment status
-      onComplete(updatedProfile?.payment_status === 'completed')
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to save profile')
+      const { data: p } = await supabase.from('profiles').select('payment_status').eq('id', user.id).single()
+      onComplete(p?.payment_status === 'completed')
+    } catch (e: any) {
+      console.error('Submission error:', e)
+      setError(e.message)
     } finally {
       setIsLoading(false)
     }
   }
 
-  const handleSubjectToggle = (subject: string) => {
-    const updated = selectedSubjects.includes(subject)
-      ? selectedSubjects.filter(s => s !== subject)
-      : [...selectedSubjects, subject]
-
-    setSelectedSubjects(updated)
-    setValue('subjects', updated)
+  const nextStep = () => {
+    if (currentStep === 1 && !schoolLevel) {
+      setError('Please select your education level')
+      return
+    }
+    if (currentStep === 2 && selectedSubjects.length < 3) {
+      setError('Please select at least 3 subjects')
+      return
+    }
+    if (currentStep === 3 && selectedInterests.length < 1 && !watch('careerGoals')) {
+      setError('Please pick a path or tell us about your dream')
+      return
+    }
+    setError(null)
+    setCurrentStep(s => s + 1)
   }
 
-  const handleInterestToggle = (interest: string) => {
-    const updated = selectedInterests.includes(interest)
-      ? selectedInterests.filter(i => i !== interest)
-      : [...selectedInterests, interest]
-
-    setSelectedInterests(updated)
-    setValue('interests', updated)
-  }
-
-  const handleValueToggle = (valueId: string) => {
-    setSelectedValues(prev =>
-      prev.includes(valueId) ? prev.filter(v => v !== valueId) : [...prev, valueId]
-    )
-  }
-
-  const handleConstraintToggle = (constraintId: string) => {
-    setSelectedConstraints(prev =>
-      prev.includes(constraintId) ? prev.filter(c => c !== constraintId) : [...prev, constraintId]
+  if (isLoadingData) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[400px] space-y-4">
+        <Loader2 className="w-12 h-12 text-primary animate-spin" />
+        <p className="text-foreground-muted animate-pulse">Initializing your guidance experience...</p>
+      </div>
     )
   }
 
   return (
-    <div className="max-w-4xl mx-auto p-6">
-      <Card className="bg-gradient-surface border-card-border">
-        <CardHeader className="text-center">
-          <div className="w-16 h-16 bg-gradient-primary rounded-full flex items-center justify-center mx-auto mb-4">
-            <User className="w-8 h-8 text-primary-foreground" />
-          </div>
-          <CardTitle className="text-2xl">Complete Your CBE Profile</CardTitle>
-          <CardDescription>
-            Help us understand your CBE learning journey and interests to provide personalized career guidance aligned with Kenya's education system
-          </CardDescription>
-        </CardHeader>
+    <div className="max-w-2xl mx-auto p-4 sm:p-8 min-h-[600px] flex flex-col justify-center">
+      <div className="mb-12 text-center">
+        <div className="flex justify-center gap-2 mb-4">
+          {[1, 2, 3, 4, 5].map(s => (
+            <div key={s} className={`h-1.5 w-12 rounded-full transition-all ${currentStep >= s ? 'bg-primary shadow-[0_0_10px_rgba(var(--primary),0.5)]' : 'bg-muted'}`} />
+          ))}
+        </div>
+        <p className="text-sm font-bold text-primary uppercase tracking-widest">Phase {currentStep} of 5</p>
+      </div>
 
-        <CardContent>
-          {/* Step Indicator */}
-          <div className="flex items-center justify-center gap-3 mb-10">
-            {[1, 2, 3, 4].map((s) => (
-              <div key={s} className="flex items-center">
-                <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold transition-all ${currentStep === s ? 'bg-primary text-primary-foreground scale-110 shadow-lg' :
-                  currentStep > s ? 'bg-green-500 text-white' : 'bg-muted text-foreground-muted'
-                  }`}>
-                  {currentStep > s ? <CheckCircle className="w-5 h-5" /> : s}
-                </div>
-                {s < 4 && <div className={`h-0.5 w-12 mx-1 rounded-full ${currentStep > s ? 'bg-green-500' : 'bg-muted'}`} />}
+      <div className="space-y-8">
+        {error && <Alert variant="destructive" className="border-destructive/50 bg-destructive/5"><AlertDescription>{error}</AlertDescription></Alert>}
+        {console.log('Current Step:', currentStep)}
+        <div className="space-y-8">
+          {currentStep === 1 && (
+            <div className="space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-500">
+              <div className="text-center space-y-4">
+                <h2 className="text-5xl font-extrabold tracking-tight bg-gradient-to-r from-primary to-blue-600 bg-clip-text text-transparent pb-2">Start Your Journey</h2>
+                <p className="text-xl text-foreground-muted">What is your current education level?</p>
               </div>
-            ))}
-          </div>
-
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
-            {error && (
-              <Alert variant="destructive">
-                <AlertDescription>{error}</AlertDescription>
-              </Alert>
-            )}
-
-            {/* STEP 1: Basic Info */}
-            {currentStep === 1 && (
-              <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
-                <div className="flex items-center space-x-3 mb-4">
-                  <div className="p-2 bg-primary/10 rounded-lg">
-                    <User className="w-5 h-5 text-primary" />
-                  </div>
-                  <div>
-                    <h3 className="text-lg font-semibold">Basic Information</h3>
-                    <p className="text-sm text-foreground-muted">Tell us who you are and where you are in school</p>
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="phone">Phone Number</Label>
-                  <Input
-                    id="phone"
-                    type="tel"
-                    placeholder="e.g. 0712345678"
-                    {...register('phone')}
-                    className="bg-background/50"
-                  />
-                  {errors.phone && <p className="text-sm text-destructive">{errors.phone.message}</p>}
-                  <p className="text-xs text-foreground-muted">Link your profile to school records</p>
-                </div>
-
-                <div className="space-y-3">
-                  <Label>CBE Education Level</Label>
-                  <div className="grid grid-cols-1 gap-3">
-                    {[
-                      { value: 'primary', label: 'Primary Education', sub: 'Grades 1-6' },
-                      { value: 'secondary', label: 'Junior Secondary', sub: 'Grades 7-9' },
-                      { value: 'tertiary', label: 'Senior Secondary / Tertiary', sub: 'Grades 10-12+' }
-                    ].map((level) => (
-                      <div
-                        key={level.value}
-                        onClick={() => setValue('schoolLevel', level.value as any)}
-                        className={`p-4 rounded-xl border-2 cursor-pointer transition-all flex items-center justify-between group ${schoolLevel === level.value
-                          ? 'border-primary bg-primary/5'
-                          : 'border-card-border hover:border-primary/40'
-                          }`}
-                      >
+              <div className="space-y-6">
+                <div className="grid gap-4">
+                  {[
+                    { v: 'primary', l: 'Primary School', d: 'Grade 1-6' },
+                    { v: 'secondary', l: 'Junior Secondary', d: 'Grade 7-9' },
+                    { v: 'tertiary', l: 'Senior Secondary / Tertiary', d: 'Grade 10-12+' }
+                  ].map(level => (
+                    <button
+                      key={level.v} type="button"
+                      onClick={() => setValue('schoolLevel', level.v as any)}
+                      className={`p-6 sm:p-8 rounded-[2.5rem] border-2 text-left transition-all ${schoolLevel === level.v ? 'border-primary bg-primary/5 ring-2 ring-primary/20' : 'border-card-border hover:border-primary/50'}`}
+                    >
+                      <div className="flex justify-between items-center">
                         <div>
-                          <p className="font-semibold">{level.label}</p>
-                          <p className="text-xs text-foreground-muted">{level.sub}</p>
+                          <p className="text-xl sm:text-2xl font-bold">{level.l}</p>
+                          <p className="text-base text-foreground-muted">{level.d}</p>
                         </div>
-                        {schoolLevel === level.value && <CheckCircle className="w-5 h-5 text-primary" />}
+                        {schoolLevel === level.v && <CheckCircle className="w-8 h-8 text-primary" />}
                       </div>
-                    ))}
-                  </div>
-                  {errors.schoolLevel && <p className="text-sm text-destructive">{errors.schoolLevel.message}</p>}
-                </div>
-
-                {schoolLevel && (
-                  <div className="space-y-2">
-                    <Label htmlFor="currentGrade">Current Grade/Year</Label>
-                    <Input
-                      id="currentGrade"
-                      placeholder="e.g., Grade 8"
-                      {...register('currentGrade')}
-                      className="bg-background/50"
-                    />
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* STEP 2: Subjects & Interests */}
-            {currentStep === 2 && (
-              <div className="space-y-8 animate-in fade-in slide-in-from-right-4 duration-300">
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-3">
-                      <div className="p-2 bg-blue-500/10 rounded-lg">
-                        <BookOpen className="w-5 h-5 text-blue-500" />
-                      </div>
-                      <div>
-                        <h3 className="text-lg font-semibold">Learning Areas</h3>
-                        <p className="text-sm text-foreground-muted">What are you studying?</p>
-                      </div>
-                    </div>
-                    <Badge variant="outline" className={selectedSubjects.length >= 3 ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700'}>
-                      {selectedSubjects.length}/3 Selected
-                    </Badge>
-                  </div>
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                    {dynamicSubjects.map((s) => (
-                      <div
-                        key={s.id}
-                        onClick={() => handleSubjectToggle(s.subject_name)}
-                        className={`p-3 rounded-lg border text-center cursor-pointer transition-all text-sm font-medium ${selectedSubjects.includes(s.subject_name)
-                          ? 'bg-primary text-primary-foreground border-primary shadow-sm'
-                          : 'bg-background border-card-border hover:border-primary/50'
-                          }`}
-                      >
-                        {s.subject_name}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-3">
-                      <div className="p-2 bg-green-500/10 rounded-lg">
-                        <Target className="w-5 h-5 text-green-500" />
-                      </div>
-                      <div>
-                        <h3 className="text-lg font-semibold">Career Interests</h3>
-                        <p className="text-sm text-foreground-muted">Where do you want to go?</p>
-                      </div>
-                    </div>
-                    <Badge variant="outline" className={selectedInterests.length >= 2 ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700'}>
-                      {selectedInterests.length}/2 Selected
-                    </Badge>
-                  </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    {dynamicInterests.map((interest) => (
-                      <div
-                        key={interest.id}
-                        onClick={() => handleInterestToggle(interest.interest_name)}
-                        className={`p-3 rounded-xl border-2 transition-all cursor-pointer flex items-center justify-between group ${selectedInterests.includes(interest.interest_name)
-                          ? 'bg-secondary/10 border-secondary text-secondary-foreground shadow-sm'
-                          : 'bg-background border-card-border hover:border-secondary/50'
-                          }`}
-                      >
-                        <span className="text-sm font-medium">{interest.interest_name}</span>
-                        {selectedInterests.includes(interest.interest_name) && <CheckCircle className="w-4 h-4" />}
-                      </div>
-                    ))}
-                  </div>
+                    </button>
+                  ))}
                 </div>
               </div>
-            )}
-
-            {/* STEP 4: Values & Real-World Constraints */}
-            {currentStep === 4 && (
-              <div className="space-y-8 animate-in fade-in slide-in-from-right-4 duration-300">
-                <div className="space-y-6">
-                  <div className="flex items-center space-x-3">
-                    <div className="p-2 bg-pink-500/10 rounded-lg">
-                      <Heart className="w-5 h-5 text-pink-500" />
-                    </div>
-                    <div>
-                      <h3 className="text-lg font-semibold">What Matters to You?</h3>
-                      <p className="text-sm text-foreground-muted">Select 3-5 values that define your ideal career</p>
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    {CAREER_VALUES.map((value) => (
-                      <div
-                        key={value.id}
-                        onClick={() => handleValueToggle(value.id)}
-                        className={`p-4 rounded-xl border-2 transition-all cursor-pointer flex items-center justify-between group ${selectedValues.includes(value.id)
-                          ? 'bg-pink-500/10 border-pink-500/50 shadow-sm'
-                          : 'bg-background border-card-border hover:border-pink-300'
-                          }`}
-                      >
-                        <div className="flex items-center gap-3">
-                          <div className={`p-2 rounded-lg ${selectedValues.includes(value.id) ? 'bg-pink-500 text-white' : 'bg-muted'}`}>
-                            {value.id === 'v1' && <User className="w-4 h-4" />}
-                            {value.id === 'v2' && <Shield className="w-4 h-4" />}
-                            {value.id === 'v3' && <Globe className="w-4 h-4" />}
-                            {value.id === 'v4' && <Lightbulb className="w-4 h-4" />}
-                            {value.id === 'v5' && <Coins className="w-4 h-4" />}
-                            {value.id === 'v6' && <Heart className="w-4 h-4" />}
-                            {value.id === 'v7' && <Target className="w-4 h-4" />}
-                          </div>
-                          <div>
-                            <p className="text-sm font-semibold">{value.text}</p>
-                            <p className="text-xs text-foreground-muted">{value.description}</p>
-                          </div>
-                        </div>
-                        {selectedValues.includes(value.id) && <CheckCircle className="w-4 h-4 text-pink-500" />}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="space-y-6">
-                  <div className="flex items-center space-x-3">
-                    <div className="p-2 bg-orange-500/10 rounded-lg">
-                      <Compass className="w-5 h-5 text-orange-500" />
-                    </div>
-                    <div>
-                      <h3 className="text-lg font-semibold">Real-World Context</h3>
-                      <p className="text-sm text-foreground-muted">Any specific constraints or needs we should know about?</p>
-                    </div>
-                  </div>
-
-                  <div className="flex flex-wrap gap-2">
-                    {CONTEXTUAL_CONSTRAINTS.map((c) => (
-                      <Badge
-                        key={c.id}
-                        variant={selectedConstraints.includes(c.id) ? 'default' : 'outline'}
-                        className={`cursor-pointer py-2 px-4 text-sm font-medium transition-all ${selectedConstraints.includes(c.id)
-                          ? 'bg-orange-500 text-white hover:bg-orange-600'
-                          : 'hover:border-orange-500 hover:text-orange-500'
-                          }`}
-                        onClick={() => handleConstraintToggle(c.id)}
-                      >
-                        {c.text}
-                      </Badge>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="careerGoals" className="flex items-center gap-2">
-                    <Lightbulb className="w-4 h-4 text-primary" /> Career Aspirations (Optional)
-                  </Label>
-                  <Textarea
-                    id="careerGoals"
-                    placeholder="Tell us about your dreams, challenges, or specific goals..."
-                    {...register('careerGoals')}
-                    className="bg-background/50"
-                    rows={3}
-                  />
-                </div>
-              </div>
-            )}
-
-            {/* Navigation Buttons */}
-            <div className="flex justify-between items-center pt-8 border-t border-card-border">
-              {currentStep > 1 ? (
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => setCurrentStep(prev => prev - 1)}
-                  disabled={isLoading}
-                >
-                  <ChevronLeft className="mr-2 w-4 h-4" /> Back
-                </Button>
-              ) : (
-                <div /> // Spacer
-              )}
-
-              {currentStep < 4 ? (
-                <Button
-                  type="button"
-                  className="bg-gradient-primary text-primary-foreground min-w-[120px]"
-                  onClick={() => {
-                    if (currentStep === 1 && (!watch('schoolLevel') || !watch('phone'))) {
-                      setError('Please complete the basic information');
-                      return;
-                    }
-                    if (currentStep === 2 && (selectedSubjects.length < 3 || selectedInterests.length < 2)) {
-                      setError('Please select the required subjects and interests');
-                      return;
-                    }
-                    if (currentStep === 3 && selectedActivities.length === 0) {
-                      setError('Please select at least a few activities you enjoy');
-                      return;
-                    }
-                    setError(null);
-                    setCurrentStep(prev => prev + 1);
-                  }}
-                >
-                  Continue <ChevronRight className="ml-2 w-4 h-4" />
-                </Button>
-              ) : (
-                <Button
-                  type="submit"
-                  disabled={isLoading || selectedValues.length < 1}
-                  className="bg-gradient-primary hover:opacity-90 text-primary-foreground px-8 shadow-lg shadow-primary/20"
-                >
-                  {isLoading ? (
-                    <><Loader2 className="mr-2 h-5 w-5 animate-spin" /> Analyzing Realities...</>
-                  ) : (
-                    <><Sparkles className="mr-2 h-5 w-5" /> Generate Actionable Guidance</>
-                  )}
-                </Button>
-              )}
             </div>
-          </form>
-        </CardContent>
-      </Card>
+          )}
+
+          {currentStep === 2 && (
+            <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+              <div className="text-center space-y-3">
+                <h2 className="text-4xl font-extrabold tracking-tight">Learning Areas</h2>
+                <p className="text-lg text-foreground-muted">Pick 3 or more subjects you find exciting.</p>
+              </div>
+              <div className="grid grid-cols-2 gap-3 max-h-[450px] overflow-y-auto p-2 custom-scrollbar pr-4">
+                {dynamicSubjects.map(s => (
+                  <button
+                    key={s.id} type="button"
+                    onClick={() => {
+                      const upd = selectedSubjects.includes(s.subject_name) ? selectedSubjects.filter(i => i !== s.subject_name) : [...selectedSubjects, s.subject_name]
+                      setSelectedSubjects(upd); setValue('subjects', upd)
+                    }}
+                    className={`p-5 rounded-2xl border-2 transition-all text-sm font-bold ${selectedSubjects.includes(s.subject_name) ? 'border-primary bg-primary text-primary-foreground shadow-lg shadow-primary/20 scale-[0.98]' : 'border-card-border hover:border-primary/30'}`}
+                  >
+                    {s.subject_name}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {currentStep === 3 && (
+            <div className="space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-500">
+              <div className="text-center space-y-4">
+                <h2 className="text-5xl font-extrabold tracking-tight bg-gradient-to-r from-primary to-blue-600 bg-clip-text text-transparent pb-2">Future Aspirations</h2>
+                <p className="text-xl text-foreground-muted italic">"Your future is as bright as your curiosity."</p>
+                <p className="text-lg font-medium">Which career path sparks your interest?</p>
+              </div>
+
+              <div className="grid gap-4">
+                {[
+                  {
+                    id: 'stem',
+                    name: 'Science, Tech, Engineering & Math (STEM)',
+                    desc: 'For explorers of how things work, coding, and scientific discovery.',
+                    icon: <Brain className="w-8 h-8" />
+                  },
+                  {
+                    id: 'social_sciences',
+                    name: 'Social Sciences & Humanities',
+                    desc: 'For those interested in people, history, law, and social change.',
+                    icon: <Globe className="w-8 h-8" />
+                  },
+                  {
+                    id: 'arts_sports',
+                    name: 'Arts & Sports Science',
+                    desc: 'For creative souls, designers, performers, and athletes.',
+                    icon: <Sparkles className="w-8 h-8" />
+                  },
+                  {
+                    id: 'exploring',
+                    name: 'I\'m Still Exploring / Mixed Path',
+                    desc: 'You have multiple interests and aren\'t ready to pick just one!',
+                    icon: <Compass className="w-8 h-8" />
+                  }
+                ].map((interest) => (
+                  <button
+                    key={interest.id} type="button"
+                    onClick={() => {
+                      const newInterests = selectedInterests.includes(interest.id) ? selectedInterests.filter(i => i !== interest.id) : [...selectedInterests, interest.id]
+                      setSelectedInterests(newInterests)
+                      setValue('interests', newInterests as any)
+                    }}
+                    className={`p-6 sm:p-8 rounded-[2.5rem] border-2 text-left transition-all flex items-start gap-6 ${selectedInterests.includes(interest.id) ? 'border-primary bg-primary/5 ring-2 ring-primary/20' : 'border-card-border hover:border-primary/50'}`}
+                  >
+                    <div className={`p-4 rounded-2xl flex-shrink-0 ${selectedInterests.includes(interest.id) ? 'bg-primary text-white shadow-lg shadow-primary/30' : 'bg-muted text-foreground-muted'}`}>
+                      {interest.icon}
+                    </div>
+                    <div className="space-y-1">
+                      <p className="text-xl sm:text-2xl font-bold">{interest.name}</p>
+                      <p className="text-base text-foreground-muted leading-relaxed">{interest.desc}</p>
+                    </div>
+                  </button>
+                ))}
+              </div>
+
+              <div className="pt-8 border-t border-card-border/50">
+                <div className="space-y-4 max-w-2xl mx-auto">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Target className="w-5 h-5 text-primary" />
+                    <Label className="text-lg font-bold">Write Your Own (Optional)</Label>
+                  </div>
+                  <Textarea
+                    {...register('careerGoals')}
+                    placeholder="Tell us more about your specific dream career or passions..."
+                    className="min-h-[140px] text-lg rounded-[2rem] border-2 p-6 focus-visible:ring-primary bg-muted/20"
+                  />
+                  <p className="text-sm text-foreground-muted text-center px-4">
+                    Don't worry if you don't have it all figured out yet. This helps us personalize your guidance.
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {currentStep === 4 && (
+            <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+              <div className="text-center space-y-3">
+                <h2 className="text-4xl font-extrabold tracking-tight">Your Values</h2>
+                <p className="text-lg text-foreground-muted">What matters most in your future job?</p>
+              </div>
+              <div className="grid gap-4">
+                {CAREER_VALUES.slice(0, 6).map(v => (
+                  <button
+                    key={v.id} type="button"
+                    onClick={() => setSelectedValues(p => p.includes(v.id) ? p.filter(x => x !== v.id) : [...p, v.id])}
+                    className={`p-6 rounded-3xl border-2 transition-all flex items-center gap-5 ${selectedValues.includes(v.id) ? 'border-pink-500 bg-pink-500/5 ring-1 ring-pink-500' : 'border-card-border hover:border-pink-300'}`}
+                  >
+                    <div className={`w-14 h-14 rounded-2xl flex items-center justify-center transition-all ${selectedValues.includes(v.id) ? 'bg-pink-500 text-white rotate-6' : 'bg-muted text-foreground-muted'}`}>
+                      <Heart className="w-7 h-7" />
+                    </div>
+                    <div className="text-left flex-1">
+                      <p className="text-lg font-bold">{v.text}</p>
+                      <p className="text-sm text-foreground-muted">{v.description}</p>
+                    </div>
+                    {selectedValues.includes(v.id) && <CheckCircle className="w-6 h-6 text-pink-500" />}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {currentStep === 5 && (
+            <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+              <div className="text-center space-y-3">
+                <h2 className="text-4xl font-extrabold tracking-tight">Final Step: Work Styles</h2>
+                <p className="text-lg text-foreground-muted">Which of these activities sounds fun to you?</p>
+              </div>
+              <div className="grid grid-cols-1 gap-3 max-h-[450px] overflow-y-auto p-2 pr-4">
+                {RIASEC_ACTIVITIES.map(a => (
+                  <button
+                    key={a.id} type="button"
+                    onClick={() => setSelectedActivities(p => p.includes(a.id) ? p.filter(x => x !== a.id) : [...p, a.id])}
+                    className={`p-5 rounded-2xl border-2 transition-all text-left flex items-center gap-4 ${selectedActivities.includes(a.id) ? 'border-primary bg-primary/5 ring-1 ring-primary' : 'border-card-border hover:border-primary/20'}`}
+                  >
+                    <div className={`w-3 h-3 rounded-full ${selectedActivities.includes(a.id) ? 'bg-primary' : 'bg-muted'}`} />
+                    <p className="text-base font-bold">{a.text}</p>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          <div className="flex gap-4 pt-8">
+            {currentStep > 1 && (
+              <Button type="button" variant="outline" onClick={() => setCurrentStep(s => s - 1)} className="h-16 px-10 text-lg rounded-3xl border-2 hover:bg-muted font-bold">
+                <ChevronLeft className="mr-2 w-5 h-5" /> Back
+              </Button>
+            )}
+            {currentStep < 5 ? (
+              <Button type="button" onClick={nextStep} className="flex-1 h-16 text-xl rounded-3xl bg-primary text-primary-foreground shadow-2xl shadow-primary/30 font-bold">
+                Continue <ChevronRight className="ml-2 w-5 h-5" />
+              </Button>
+            ) : (
+              <Button type="button" onClick={handleFinalSubmit} disabled={isLoading} className="flex-1 h-16 text-xl rounded-3xl bg-gradient-to-r from-primary via-blue-600 to-indigo-600 text-white shadow-2xl shadow-primary/40 font-bold border-none hover:opacity-90">
+                {isLoading ? <><Loader2 className="mr-3 w-6 h-6 animate-spin text-white" /> Crafting Your Future...</> : <><Sparkles className="mr-3 w-6 h-6" /> Complete My Profile</>}
+              </Button>
+            )}
+          </div>
+        </div>
+      </div>
     </div>
   )
 }
