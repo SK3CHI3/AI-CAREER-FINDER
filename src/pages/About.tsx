@@ -1,7 +1,10 @@
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
 import BackgroundGradient from "@/components/BackgroundGradient";
-import { Users, Target, BookOpen, Sparkles, Building2, ShieldCheck, ArrowRight } from "lucide-react";
+import { 
+  Users, Target, BookOpen, Sparkles, Building2, ShieldCheck, 
+  ArrowRight, Linkedin, Twitter, ExternalLink 
+} from "lucide-react";
 import { motion } from "framer-motion";
 import { Helmet } from "react-helmet-async";
 
@@ -9,30 +12,21 @@ export default function About() {
   const sections = [
     {
       id: "mission",
-      icon: Target,
+      image: "/images/about_mission.png",
       title: "Our Mission",
       desc: "To provide accessible, personalized, and data-driven career guidance to every Kenyan student, regardless of their background or location. We believe that clarity in the classroom leads to success in the workforce.",
-      color: "from-primary/20 to-primary/5",
-      iconColor: "text-primary",
-      accent: "bg-primary"
     },
     {
       id: "cbc",
-      icon: BookOpen,
+      image: "/images/about_cbc.png",
       title: "The CBC Advantage",
       desc: "We deeply integrate with Kenya's Competency-Based Education (CBE) curriculum, mapping student strengths directly to learning areas to ensure realistic and actionable pathways. No more guessing—just precision guidance.",
-      color: "from-secondary/20 to-secondary/5",
-      iconColor: "text-secondary",
-      accent: "bg-secondary"
     },
     {
       id: "schools",
-      icon: Building2,
+      image: "/images/about_schools.png",
       title: "For Schools",
       desc: "We empower teachers and administrators with powerful insights, making career guidance manageable and scalable for the thousands of students in their care. Our dashboards turn raw data into institutional intelligence.",
-      color: "from-accent/20 to-accent/5",
-      iconColor: "text-accent",
-      accent: "bg-accent"
     }
   ];
 
@@ -109,13 +103,13 @@ export default function About() {
                   transition={{ duration: 0.8 }}
                   className="flex-1 w-full"
                 >
-                  <div className={`relative aspect-[4/3] rounded-[3rem] bg-gradient-to-br ${section.color} border border-card-border overflow-hidden group shadow-2xl`}>
-                    <div className="absolute inset-0 bg-grid-white/[0.05] bg-[size:32px]" />
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <div className={`w-32 h-32 rounded-[2rem] bg-background border border-card-border shadow-2xl flex items-center justify-center transition-transform duration-700 group-hover:scale-110 group-hover:rotate-12`}>
-                        <section.icon className={`w-14 h-14 ${section.iconColor}`} />
-                      </div>
-                    </div>
+                  <div className={`relative aspect-[4/3] rounded-[3rem] border border-card-border overflow-hidden group shadow-2xl`}>
+                    <img 
+                      src={section.image} 
+                      alt={section.title} 
+                      className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" 
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
                   </div>
                 </motion.div>
 
@@ -154,16 +148,23 @@ export default function About() {
               { 
                 name: "Omollo Victor", 
                 role: "Founder & Lead Dev", 
+                image: "/images/victor.jpg",
+                linkedin: "https://www.linkedin.com/in/omollo-victor-28b942356/",
+                twitter: "https://x.com/omollo_20",
                 bio: "Full-stack engineer with a vision to democratize elite career guidance."
               },
               { 
                 name: "Christabel Nekesa", 
                 role: "Data Systems", 
+                image: "/images/christabel.jpg",
+                linkedin: "https://www.linkedin.com/in/christabel-nekesa-a18534292/",
                 bio: "Expert in CBE educational structures and student performance datasets."
               },
               { 
                 name: "Precious Diana", 
                 role: "Operations Strategy", 
+                image: "/images/precious.jpg",
+                linkedin: "https://www.linkedin.com/in/precious-diana-b322b3315/",
                 bio: "Scaling our reach across East Africa and managing institutional relations."
               }
             ].map((member, i) => (
@@ -174,12 +175,45 @@ export default function About() {
                 transition={{ delay: i * 0.1 }}
                 className="group relative bg-card hover:bg-surface border border-card-border p-10 rounded-[3rem] transition-all hover:shadow-2xl text-center"
               >
-                <div className="w-24 h-24 rounded-full bg-primary/10 mx-auto mb-6 flex items-center justify-center text-primary font-black text-2xl group-hover:bg-primary group-hover:text-white transition-colors">
-                  {member.name.split(' ').map(n => n[0]).join('')}
+                <div className="w-32 h-32 rounded-3xl overflow-hidden mx-auto mb-6 border-2 border-primary/20 shadow-xl group-hover:scale-105 transition-transform duration-500">
+                  {member.image ? (
+                    <img 
+                      src={member.image} 
+                      alt={member.name} 
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <div className="w-full h-full bg-primary/10 flex items-center justify-center text-primary font-black text-2xl">
+                      {member.name.split(' ').map(n => n[0]).join('')}
+                    </div>
+                  )}
                 </div>
                 <h3 className="text-2xl font-bold mb-2">{member.name}</h3>
                 <p className="text-primary font-bold text-sm uppercase tracking-tighter mb-4">{member.role}</p>
-                <p className="text-foreground-muted text-sm font-medium leading-relaxed">{member.bio}</p>
+                <p className="text-foreground-muted text-sm font-medium leading-relaxed mb-6">{member.bio}</p>
+                
+                <div className="flex justify-center gap-4">
+                  {member.linkedin && (
+                    <a 
+                      href={member.linkedin} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="p-2.5 rounded-xl bg-muted hover:bg-primary hover:text-white transition-all text-foreground-muted"
+                    >
+                      <Linkedin className="w-5 h-5" />
+                    </a>
+                  )}
+                  {member.twitter && (
+                    <a 
+                      href={member.twitter} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="p-2.5 rounded-xl bg-muted hover:bg-black hover:text-white transition-all text-foreground-muted"
+                    >
+                      <Twitter className="w-5 h-5" />
+                    </a>
+                  )}
+                </div>
               </motion.div>
             ))}
           </div>
