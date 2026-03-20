@@ -41,7 +41,8 @@ import {
   XCircle,
   Lightbulb,
   RefreshCw,
-  School
+  School,
+  X
 } from 'lucide-react'
 import PaymentWall from '@/components/PaymentWall'
 import { ThemeToggle } from '@/components/ThemeToggle'
@@ -85,6 +86,7 @@ const StudentDashboard = () => {
   const [isSchoolSubscribed, setIsSchoolSubscribed] = useState(false)
   const [isPaid, setIsPaid] = useState(false)
   const [isPaymentWallOpen, setIsPaymentWallOpen] = useState(false)
+  const [isBannerVisible, setIsBannerVisible] = useState(true)
   const [schoolInfo, setSchoolInfo] = useState<{ name: string; status: string } | null>(null)
 
   // Activity tracking
@@ -449,8 +451,16 @@ const StudentDashboard = () => {
 
       {/* Main Content */}
       <main className="max-w-7xl w-full mx-auto px-2 sm:px-6 lg:px-8 py-4 sm:py-8">
-        {!isAuthorized && (
-          <div className="mb-8 p-6 rounded-[2.5rem] bg-gradient-to-r from-primary/10 via-blue-500/10 to-indigo-500/10 border-2 border-primary/20 backdrop-blur-sm animate-in fade-in slide-in-from-top-4 duration-700">
+        {!isAuthorized && isBannerVisible && (
+          <div className="mb-8 p-6 rounded-[2.5rem] bg-gradient-to-r from-primary/10 via-blue-500/10 to-indigo-500/10 border-2 border-primary/20 backdrop-blur-sm animate-in fade-in slide-in-from-top-4 duration-700 relative group/banner">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="absolute top-4 right-4 h-8 w-8 rounded-full bg-white/50 hover:bg-white text-primary opacity-0 group-hover/banner:opacity-100 transition-opacity"
+              onClick={() => setIsBannerVisible(false)}
+            >
+              <X className="w-4 h-4" />
+            </Button>
             <div className="flex flex-col md:flex-row items-center justify-between gap-6">
               <div className="flex items-center gap-5">
                 <div className="w-16 h-16 rounded-3xl bg-primary flex items-center justify-center shadow-lg shadow-primary/30">
