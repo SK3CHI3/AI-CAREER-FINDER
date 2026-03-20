@@ -9,47 +9,37 @@ export default function HowItWorks() {
   const steps = [
     {
       id: "01",
-      icon: UserCircle,
+      image: "/images/how_it_works_01.png",
       title: "Digital Onboarding",
       desc: "Begin by constructing your academic DNA. Our secure portal captures your grades, interests, and extracurricular passions to create a unique baseline for guidance.",
-      color: "from-primary/20 to-primary/5",
-      iconColor: "text-primary",
       accent: "bg-primary"
     },
     {
       id: "02",
-      icon: BrainCircuit,
+      image: "/images/how_it_works_02.png",
       title: "RIASEC Diagnostics",
       desc: "Engage with a world-class psychometric assessment. We map your personality across the RIASEC spectrum to identify the hidden drivers of your career satisfaction.",
-      color: "from-secondary/20 to-secondary/5",
-      iconColor: "text-secondary",
       accent: "bg-secondary"
     },
     {
       id: "03",
-      icon: Bot,
+      image: "/images/how_it_works_03.png",
       title: "AI Analysis Engine",
       desc: "Our proprietary AI doesn't just guess; it predicts. By cross-referencing your profile with Kenya's market trends, we deliver precision-targeted career matches.",
-      color: "from-accent/20 to-accent/5",
-      iconColor: "text-accent",
       accent: "bg-accent"
     },
     {
       id: "04",
-      icon: Map,
+      image: "/images/how_it_works_04.png",
       title: "Curriculum Mapping",
       desc: "Abstract matches become concrete actions. We reverse-engineer your chosen career into CBE learning areas, telling you exactly which subjects to master.",
-      color: "from-purple-500/20 to-purple-500/5",
-      iconColor: "text-purple-500",
       accent: "bg-purple-500"
     },
     {
       id: "05",
-      icon: School,
+      image: "/images/how_it_works_05.png",
       title: "Institutional Sync",
       desc: "Schools receive aggregated analytics to drive institutional success. Teachers can now organize specialized career immersion days with surgical precision.",
-      color: "from-emerald-500/20 to-emerald-500/5",
-      iconColor: "text-emerald-500",
       accent: "bg-emerald-500"
     }
   ];
@@ -124,15 +114,16 @@ export default function HowItWorks() {
                   transition={{ duration: 0.8 }}
                   className="flex-1 w-full"
                 >
-                  <div className={`relative aspect-[4/3] rounded-[3rem] bg-gradient-to-br ${step.color} border border-card-border overflow-hidden group shadow-2xl`}>
-                    <div className="absolute inset-0 bg-grid-white/[0.05] bg-[size:32px]" />
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <div className={`w-32 h-32 rounded-[2rem] bg-background border border-card-border shadow-2xl flex items-center justify-center transition-transform duration-700 group-hover:scale-110 group-hover:rotate-12`}>
-                        <step.icon className={`w-14 h-14 ${step.iconColor}`} />
-                      </div>
-                    </div>
+                  <div className={`relative aspect-[4/3] rounded-[3rem] border border-card-border overflow-hidden group shadow-2xl`}>
+                    <img 
+                      src={step.image} 
+                      alt={step.title} 
+                      className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" 
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent opacity-80" />
+                    
                     {/* Watermark Number */}
-                    <div className="absolute -bottom-10 -right-10 text-[12rem] font-black text-foreground/5 leading-none select-none">
+                    <div className="absolute bottom-4 right-8 text-[8rem] font-black text-white/20 leading-none select-none drop-shadow-lg">
                       {step.id}
                     </div>
                   </div>
