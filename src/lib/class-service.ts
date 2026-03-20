@@ -122,7 +122,7 @@ class ClassService {
         student_upi,
         enrolled_at,
         source,
-        profiles:student_user_id ( full_name, email, upi_number )
+        profiles!student_user_id ( full_name, email, upi_number )
       `)
             .eq('class_id', classId)
             .order('enrolled_at', { ascending: false })
@@ -208,18 +208,30 @@ class ClassService {
             .from('student_grades')
             .select(`
         *,
-        profiles:user_id ( full_name, email, upi_number )
+        profiles!user_id ( full_name, email, upi_number )
       `)
 
-        // Need to construct our query carefully to allow OR conditions over nested IN
-        if (studentIds.length > 0 && studentUPIs.length > 0) {
-            query = query.or(`user_id.in.(${studentIds.join(',')}),student_upi.in.(${studentUPIs.map(upi => `"${upi}"`).join(',')})`)
-        } else if (studentIds.length > 0) {
-            query = query.in('user_id', studentIds)
-        } else if (studentUPIs.length > 0) {
-            query = query.in('student_upi', studentUPIs)
+        // Construct the query based on available identifiers
+        const conditions = []
+        if (studentIds.length > 0) {
+            conditions.push(`user_id.in.(${studentIds.join(',')})`)
+        }
+        if (studentUPIs.length > 0) {
+            conditions.push(`student_upi.in.(${studentUPIs.map(upi => `"${upi}"`).join(',')})`)
+        }
+
+        if (conditions.length === 0) return []
+
+        if (conditions.length > 1) {
+            query = query.or(conditions.join(','))
         } else {
-            return []
+            // If only one condition, apply it directly
+            const [condition] = conditions
+            if (condition.startsWith('user_id')) {
+                query = query.in('user_id', studentIds)
+            } else {
+                query = query.in('student_upi', studentUPIs)
+            }
         }
 
         const { data, error } = await query
