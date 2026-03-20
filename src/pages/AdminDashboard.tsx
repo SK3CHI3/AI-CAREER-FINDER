@@ -47,7 +47,7 @@ interface School {
   code: string
   subscription_tier: string
   created_at: string
-  logo_url: string | null
+  logo_url?: string | null
   student_count?: number
   teacher_count?: number
 }
