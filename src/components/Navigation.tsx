@@ -71,6 +71,7 @@ const Navigation = () => {
                   <div className="py-2 flex flex-col">
                     <button onClick={() => navigate('/about')} className="px-4 py-2.5 text-left text-sm hover:bg-muted text-foreground-muted hover:text-foreground transition-colors">About Us</button>
                     <button onClick={() => navigate('/faq')} className="px-4 py-2.5 text-left text-sm hover:bg-muted text-foreground-muted hover:text-foreground transition-colors">FAQ</button>
+                    <button onClick={() => navigate('/blog')} className="px-4 py-2.5 text-left text-sm hover:bg-muted text-foreground-muted hover:text-foreground transition-colors">Blog</button>
                   </div>
                 </div>
               </div>
@@ -139,6 +140,9 @@ const Navigation = () => {
               </button>
               <button onClick={() => { navigate('/faq'); setIsOpen(false); }} className="block w-full text-left px-3 py-2 text-foreground-muted hover:text-foreground transition-colors">
                 FAQ
+              </button>
+              <button onClick={() => { navigate('/blog'); setIsOpen(false); }} className="block w-full text-left px-3 py-2 text-foreground-muted hover:text-foreground transition-colors">
+                Blog
               </button>
               <div className="pt-4 border-t border-card-border">
                 {user ? (

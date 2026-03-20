@@ -19,11 +19,12 @@ import {
   MessageCircle, CheckCircle2, Bug, Lightbulb, HelpCircle,
   LayoutDashboard, Settings, Bell, Menu, X, ChevronRight,
   Database, LineChart, PieChart as PieChartIcon, Loader2,
-  MessageSquarePlus
+  MessageSquarePlus, FileText
 } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { motion, AnimatePresence } from 'framer-motion'
 import { ThemeToggle } from '@/components/ThemeToggle'
+import { BlogManagement } from '@/components/BlogManagement'
 
 interface AdminStats {
   totalStudents: number
@@ -125,6 +126,7 @@ const AdminDashboard = () => {
     { id: 'schools', label: 'Schools', icon: Building2 },
     { id: 'analytics', label: 'Analytics', icon: LineChart },
     { id: 'feedbacks', label: 'Feedbacks', icon: MessageCircle },
+    { id: 'blog', label: 'Blog', icon: FileText },
     { id: 'settings', label: 'Settings', icon: Settings },
   ]
 
@@ -1162,6 +1164,8 @@ const AdminDashboard = () => {
                   </div>
                 </div>
               )}
+
+              {activeTab === 'blog' && <BlogManagement />}
             </motion.div>
           </AnimatePresence>
         </div>
