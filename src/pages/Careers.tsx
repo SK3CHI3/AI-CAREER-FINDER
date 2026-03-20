@@ -188,7 +188,11 @@ const Careers = () => {
       
       <div className="bg-primary/5 py-20 border-y border-primary/10">
         <div className="max-w-4xl mx-auto px-4 text-center">
-          <Bot className="w-12 h-12 text-primary mx-auto mb-6" />
+          <img 
+            src="/logos/CareerGuide_Logo.png" 
+            alt="CareerGuide AI" 
+            className="h-16 w-auto mx-auto mb-6" 
+          />
           <h2 className="text-3xl font-bold mb-4 italic">"Not sure where to start?"</h2>
           <p className="text-lg text-foreground-muted mb-8">
             Tell our AI counselor about your interests and we'll map out the perfect path for you.

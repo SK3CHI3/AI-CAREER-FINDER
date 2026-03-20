@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Send, Bot, User, Sparkles, Loader2, AlertCircle, Download, ArrowRight, RefreshCw } from "lucide-react";
+import { Send, User, Sparkles, Loader2, AlertCircle, Download, ArrowRight, RefreshCw } from "lucide-react";
 import { aiCareerService, type ChatMessage } from "@/lib/ai-service";
 import { ReportGenerator, type GuestProfile } from "@/lib/report-generator";
 import Navigation from "@/components/Navigation";
@@ -169,7 +169,15 @@ const QuickAssessment = () => {
                                                 ? 'bg-gradient-to-br from-primary to-primary-hover text-white' 
                                                 : 'bg-gradient-to-br from-secondary to-secondary-hover text-white'
                                             }`}>
-                                                {msg.role === 'user' ? <User className="w-5 h-5" /> : <Bot className="w-5 h-5" />}
+                                                {msg.role === 'user' ? (
+                                                  <User className="w-5 h-5" />
+                                                ) : (
+                                                  <img 
+                                                    src="/logos/CareerGuide_Logo.png" 
+                                                    alt="AI" 
+                                                    className="w-6 h-auto" 
+                                                  />
+                                                )}
                                             </div>
                                             <div className={`p-4 rounded-[1.25rem] shadow-sm leading-relaxed ${
                                                 msg.role === 'user' 
@@ -183,8 +191,12 @@ const QuickAssessment = () => {
                                 ))}
                                 {isLoading && (
                                     <div className="flex justify-start items-center gap-3">
-                                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-secondary to-secondary-hover text-white flex items-center justify-center animate-pulse shadow-glow">
-                                            <Bot className="w-5 h-5" />
+                                        <div className="w-10 h-10 rounded-full bg-white/5 text-white flex items-center justify-center animate-pulse shadow-sm">
+                                            <img 
+                                              src="/logos/CareerGuide_Logo.png" 
+                                              alt="AI" 
+                                              className="w-6 h-auto" 
+                                            />
                                         </div>
                                         <div className="bg-muted/40 p-4 rounded-[1.25rem] rounded-bl-none flex items-center gap-2">
                                             <div className="flex gap-1">

@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Send, Bot, User, Sparkles, Loader2, AlertCircle, RefreshCw } from "lucide-react";
+import { Send, User, Sparkles, Loader2, AlertCircle, RefreshCw } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { aiCareerService, type ChatMessage, type UserContext } from "@/lib/ai-service";
 import { dashboardService } from "@/lib/dashboard-service";
@@ -346,8 +346,12 @@ What subjects do you enjoy most in your current studies? 🎯`,
         <CardHeader className="border-b border-card-border p-4 sm:p-6 bg-card/50">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 bg-gradient-primary rounded-xl flex items-center justify-center shadow-lg shadow-primary/20">
-                <Bot className="w-5 h-5 text-primary-foreground" />
+              <div className="w-10 h-10 bg-white/5 border border-white/10 rounded-xl flex items-center justify-center shadow-lg">
+                <img 
+                  src="/logos/CareerGuide_Logo.png" 
+                  alt="AI" 
+                  className="w-6 h-auto" 
+                />
               </div>
               <div>
                 <CardTitle className="text-base sm:text-lg font-bold">Career Counselor AI</CardTitle>
@@ -393,7 +397,15 @@ What subjects do you enjoy most in your current studies? 🎯`,
                       ? 'bg-primary text-primary-foreground'
                       : 'bg-gradient-primary text-primary-foreground'
                       }`}>
-                      {msg.role === 'user' ? <User className="w-4 h-4" /> : <Bot className="w-4 h-4" />}
+                      {msg.role === 'user' ? (
+                        <User className="w-4 h-4" />
+                      ) : (
+                        <img 
+                          src="/logos/CareerGuide_Logo.png" 
+                          alt="AI" 
+                          className="w-4 h-auto" 
+                        />
+                      )}
                     </div>
                     <div className={`p-3 sm:p-4 rounded-2xl shadow-sm ${msg.role === 'user'
                       ? 'bg-primary text-primary-foreground rounded-br-none'
@@ -411,8 +423,12 @@ What subjects do you enjoy most in your current studies? 🎯`,
               {isLoading && (
                 <div className="flex justify-start">
                   <div className="flex gap-2 sm:gap-3">
-                    <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-gradient-primary text-primary-foreground flex items-center justify-center">
-                      <Bot className="w-4 h-4" />
+                    <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-white/5 flex items-center justify-center border border-white/10">
+                      <img 
+                        src="/logos/CareerGuide_Logo.png" 
+                        alt="AI" 
+                        className="w-4 h-auto" 
+                      />
                     </div>
                     <div className="bg-background border border-card-border p-3 sm:p-4 rounded-2xl">
                       <div className="flex items-center space-x-2">
