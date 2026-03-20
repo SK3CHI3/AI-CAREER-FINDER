@@ -1,4 +1,6 @@
 import { supabase } from './supabase'
+import * as cacheUtils from './cache-utils'
+import { dashboardService } from './dashboard-service'
 
 export interface CachedCareerRecommendation {
   id?: string
@@ -44,10 +46,19 @@ class AICacheService {
   private readonly CACHE_DURATION_HOURS = 24 // Cache for 24 hours
   private readonly CACHE_DURATION_MS = this.CACHE_DURATION_HOURS * 60 * 60 * 1000
 
-  // Check if cache is valid (not expired and not invalidated)
-  private async isCacheValid(userId: string, cacheType: string): Promise<boolean> {
+  // Check if cache is valid (not expired, not invalidated, and matches context hash)
+  private async isCacheValid(userId: string, cacheType: string, currentHash?: string): Promise<boolean> {
     try {
-      // Check if cache was invalidated recently
+      // 1. Check L1 Cookie Fingerprint
+      if (currentHash) {
+        const storedHash = cacheUtils.getCacheFingerprint(userId);
+        if (storedHash !== currentHash) {
+          console.log(`Cache fingerprint mismatch for ${userId}. Cache is invalid.`);
+          return false;
+        }
+      }
+
+      // 2. Check Database Invalidation
       // @ts-ignore - Database types not fully generated
       const { data: invalidation, error } = await supabase
         .from('cache_invalidation')
@@ -104,12 +115,25 @@ class AICacheService {
     }
   }
 
-  // Career Recommendations Caching
-  async getCachedCareerRecommendations(userId: string): Promise<CachedCareerRecommendation[] | null> {
+  // Career Recommendations Caching with Hybrid L1/L2
+  async getCachedCareerRecommendations(userId: string, currentHash?: string): Promise<CachedCareerRecommendation[] | null> {
     try {
-      const isValid = await this.isCacheValid(userId, 'career_recommendations')
+      // 1. Try L1 Cache (LocalStorage) - Zero Latency
+      if (currentHash) {
+        const fingerPrint = cacheUtils.getCacheFingerprint(userId);
+        if (fingerPrint === currentHash) {
+          const l1Data = cacheUtils.getFromL1(userId, 'career_recommendations');
+          if (l1Data) {
+            console.log('L1 Cache Hit: Career Recommendations (Cookies/Local)');
+            return l1Data;
+          }
+        }
+      }
+
+      // 2. Fallback to L2 Cache (Supabase)
+      const isValid = await this.isCacheValid(userId, 'career_recommendations', currentHash)
       if (!isValid) {
-        console.log('Career recommendations cache is invalid, returning null')
+        console.log('Cache is invalid, returning null for re-fetch')
         return null
       }
 
@@ -132,8 +156,13 @@ class AICacheService {
     }
   }
 
-  async saveCareerRecommendations(userId: string, recommendations: Record<string, unknown>[]): Promise<void> {
+  async saveCareerRecommendations(userId: string, recommendations: Record<string, unknown>[], hash?: string): Promise<void> {
     try {
+      // 1. Save to L1 Cache (LocalStorage + Cookie)
+      cacheUtils.saveToL1(userId, 'career_recommendations', recommendations);
+      if (hash) cacheUtils.setCacheFingerprint(userId, hash);
+
+      // 2. Save to L2 Cache (Supabase)
       // Clear existing recommendations for this user
       // @ts-ignore - Database types not fully generated
       const { error: deleteError } = await supabase
@@ -148,13 +177,13 @@ class AICacheService {
       // Insert new recommendations
       const recommendationsToSave = recommendations.map(rec => ({
         user_id: userId,
-        career_name: rec.title || rec.name,
-        match_percentage: rec.matchPercentage || rec.value || 0,
-        description: rec.description,
-        salary_range: rec.salaryRange,
-        education: rec.education,
-        growth: rec.growth,
-        why_recommended: rec.whyRecommended
+        career_name: (rec.career_name || rec.title || rec.name || '').toString(),
+        match_percentage: Number(rec.match_percentage || rec.matchPercentage || rec.value || 0),
+        description: (rec.description || '').toString(),
+        salary_range: (rec.salary_range || rec.salaryRange || '').toString(),
+        education: (rec.education || rec.education_required || '').toString(),
+        growth: (rec.growth || rec.growth_prospect || '').toString(),
+        why_recommended: (rec.why_recommended || rec.whyRecommended || '').toString()
       }))
 
       // @ts-ignore
@@ -163,21 +192,34 @@ class AICacheService {
         .insert(recommendationsToSave as any)
 
       if (error) {
-        console.warn('Error saving career recommendations:', error)
+        console.warn('Error saving career recommendations to L2:', error)
       } else {
-        console.log(`Saved ${recommendationsToSave.length} career recommendations to cache`)
+        console.log(`Saved ${recommendationsToSave.length} career recommendations to Hybrid Cache (L1+L2)`)
       }
     } catch (error) {
       console.error('Error saving career recommendations:', error)
     }
   }
 
-  // Career Details Caching
-  async getCachedCareerDetails(userId: string, careerName: string): Promise<Record<string, unknown> | null> {
+  // Career Details Caching with Hybrid L1/L2
+  async getCachedCareerDetails(userId: string, careerName: string, currentHash?: string): Promise<Record<string, unknown> | null> {
     try {
-      const isValid = await this.isCacheValid(userId, 'career_details')
+      // 1. Try L1 Cache
+      if (currentHash) {
+        const fingerPrint = cacheUtils.getCacheFingerprint(userId);
+        if (fingerPrint === currentHash) {
+          const l1Data = cacheUtils.getFromL1(userId, `career_details_${careerName}`);
+          if (l1Data) {
+            console.log(`L1 Cache Hit: Career Details for ${careerName}`);
+            return l1Data;
+          }
+        }
+      }
+
+      // 2. Fallback to L2
+      const isValid = await this.isCacheValid(userId, 'career_details', currentHash)
       if (!isValid) {
-        console.log('Career details cache is invalid, returning null')
+        console.log(`Career details cache for ${careerName} is missing/invalid`)
         return null
       }
 
@@ -190,19 +232,31 @@ class AICacheService {
         .maybeSingle()
 
       if (error) {
-        console.warn('Error fetching cached career details:', error)
+        console.warn('Error fetching cached career details from L2:', error)
         return null
       }
 
-      return (data?.details as Record<string, unknown>) ?? null
+      const details = (data?.details as Record<string, unknown>) ?? null;
+      
+      // Sync L1 if we found it in L2
+      if (details && currentHash) {
+        cacheUtils.saveToL1(userId, `career_details_${careerName}`, details);
+      }
+
+      return details;
     } catch (error) {
       console.error('Error getting cached career details:', error)
       return null
     }
   }
 
-  async saveCareerDetails(userId: string, careerName: string, details: Record<string, unknown>): Promise<void> {
+  async saveCareerDetails(userId: string, careerName: string, details: Record<string, unknown>, hash?: string): Promise<void> {
     try {
+      // 1. Save to L1
+      cacheUtils.saveToL1(userId, `career_details_${careerName}`, details);
+      if (hash) cacheUtils.setCacheFingerprint(userId, hash);
+
+      // 2. Save to L2
       // @ts-ignore
       const { error } = await supabase
         .from('cached_career_details')
@@ -213,21 +267,34 @@ class AICacheService {
         })
 
       if (error) {
-        console.warn('Error saving career details:', error)
+        console.warn('Error saving career details to L2:', error)
       } else {
-        console.log(`Saved career details for ${careerName} to cache`)
+        console.log(`Saved career details for ${careerName} to Hybrid Cache`)
       }
     } catch (error) {
       console.error('Error saving career details:', error)
     }
   }
 
-  // Course Recommendations Caching
-  async getCachedCourseRecommendations(userId: string): Promise<Record<string, unknown>[] | null> {
+  // Course Recommendations Caching with Hybrid L1/L2
+  async getCachedCourseRecommendations(userId: string, currentHash?: string): Promise<Record<string, unknown>[] | null> {
     try {
-      const isValid = await this.isCacheValid(userId, 'course_recommendations')
+      // 1. Try L1 Cache
+      if (currentHash) {
+        const fingerPrint = cacheUtils.getCacheFingerprint(userId);
+        if (fingerPrint === currentHash) {
+          const l1Data = cacheUtils.getFromL1(userId, 'course_recommendations');
+          if (l1Data) {
+            console.log('L1 Cache Hit: Course Recommendations');
+            return l1Data;
+          }
+        }
+      }
+
+      // 2. Fallback to L2
+      const isValid = await this.isCacheValid(userId, 'course_recommendations', currentHash)
       if (!isValid) {
-        console.log('Course recommendations cache is invalid, returning null')
+        console.log('Course recommendations cache is missing/invalid')
         return null
       }
 
@@ -239,19 +306,31 @@ class AICacheService {
         .maybeSingle()
 
       if (error) {
-        console.warn('Error fetching cached course recommendations:', error)
+        console.warn('Error fetching cached course recommendations from L2:', error)
         return null
       }
 
-      return (data?.courses as Record<string, unknown>[]) ?? null
+      const courses = (data?.courses as Record<string, unknown>[]) ?? null;
+
+      // Sync L1 if we found it in L2
+      if (courses && currentHash) {
+        cacheUtils.saveToL1(userId, 'course_recommendations', courses);
+      }
+
+      return courses;
     } catch (error) {
       console.error('Error getting cached course recommendations:', error)
       return null
     }
   }
 
-  async saveCourseRecommendations(userId: string, courses: Record<string, unknown>[]): Promise<void> {
+  async saveCourseRecommendations(userId: string, courses: Record<string, unknown>[], hash?: string): Promise<void> {
     try {
+      // 1. Save to L1
+      cacheUtils.saveToL1(userId, 'course_recommendations', courses);
+      if (hash) cacheUtils.setCacheFingerprint(userId, hash);
+
+      // 2. Save to L2
       // @ts-ignore
       const { error } = await supabase
         .from('cached_course_recommendations')
@@ -261,9 +340,9 @@ class AICacheService {
         })
 
       if (error) {
-        console.warn('Error saving course recommendations:', error)
+        console.warn('Error saving course recommendations to L2:', error)
       } else {
-        console.log(`Saved ${courses.length} course recommendations to cache`)
+        console.log(`Saved ${courses.length} course recommendations to Hybrid Cache`)
       }
     } catch (error) {
       console.error('Error saving course recommendations:', error)
@@ -272,6 +351,10 @@ class AICacheService {
 
   // Invalidate all caches for a user (useful when profile or grades change)
   async invalidateAllCaches(userId: string, reason: string = 'profile_updated'): Promise<void> {
+    // Clear L1
+    cacheUtils.clearL1(userId);
+    cacheUtils.clearCacheFingerprint(userId);
+
     const cacheTypes = ['career_recommendations', 'career_details', 'course_recommendations']
 
     for (const cacheType of cacheTypes) {

@@ -2,6 +2,7 @@
 import { supabase } from './supabase'
 import { aiCacheService } from './ai-cache-service'
 import { aiCareerService } from './ai-service'
+import { generateContextHash } from './cache-utils'
 
 export interface UserActivity {
   id: string
@@ -174,14 +175,18 @@ class DashboardService {
     }
   }
 
-  // Career Recommendations - Now uses caching
+  // Career Recommendations - Now uses Hybrid Caching with Context Hashing
   async getCareerRecommendations(userId: string): Promise<CareerRecommendation[]> {
     try {
-      // First try to get from cache
-      const cachedRecommendations = await aiCacheService.getCachedCareerRecommendations(userId)
+      // 1. Generate Context Hash for fingerprinting
+      const profile = await this.getProfile(userId)
+      const grades = await this.getUserGrades(userId)
+      const currentHash = generateContextHash(userId, profile, grades)
+
+      // 2. Try to get from Hybrid Cache (L1 or L2)
+      const cachedRecommendations = await aiCacheService.getCachedCareerRecommendations(userId, currentHash)
 
       if (cachedRecommendations && cachedRecommendations.length > 0) {
-        console.log(`Using cached career recommendations for user ${userId}`)
         return cachedRecommendations.map(rec => ({
           id: rec.id || '',
           user_id: rec.user_id,
@@ -193,12 +198,11 @@ class DashboardService {
           education_required: rec.education || '',
           skills_required: [],
           created_at: rec.created_at || new Date().toISOString(),
-          expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString() // 24 hours from now
+          expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
         }))
       }
 
-      // If no cache, try to get from old table as fallback
-      console.log(`No cached career recommendations found for user ${userId}, checking old table`)
+      // 3. Fallback to old table (legacy sync) if no AI cache exists
       const { data, error } = await supabase
         .from('career_recommendations')
         .select('*')
@@ -207,7 +211,7 @@ class DashboardService {
         .order('match_percentage', { ascending: false })
 
       if (error) {
-        console.error('Error fetching career recommendations:', error)
+        console.error('Error fetching legacy career recommendations:', error)
         return []
       }
 
@@ -218,36 +222,96 @@ class DashboardService {
     }
   }
 
+  // Helper to get user profile
+  private async getProfile(userId: string) {
+    const { data } = await supabase.from('profiles').select('*').eq('id', userId).maybeSingle()
+    return data
+  }
+
   async saveCareerRecommendations(userId: string, recommendations: Omit<CareerRecommendation, 'id' | 'user_id' | 'created_at' | 'expires_at'>[]): Promise<CareerRecommendation[]> {
     try {
-      // Save to cache first (primary storage)
-      await aiCacheService.saveCareerRecommendations(userId, recommendations)
+      // 1. Generate Context Hash
+      const profile = await this.getProfile(userId)
+      const grades = await this.getUserGrades(userId)
+      const currentHash = generateContextHash(userId, profile, grades)
 
-      // Also save to old table for backward compatibility
-      await supabase
-        .from('career_recommendations')
-        .delete()
-        .eq('user_id', userId)
+      // 2. Save to Hybrid Cache (L1 + L2)
+      await aiCacheService.saveCareerRecommendations(userId, recommendations as any, currentHash)
 
-      const recommendationsWithUserId = recommendations.map(rec => ({
-        ...rec,
-        user_id: userId,
-        expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString() // 30 days from now
-      }))
+      // Also save to old table for backward compatibility (Legacy Sync)
+      try {
+        await supabase
+          .from('career_recommendations')
+          .delete()
+          .eq('user_id', userId)
 
-      const { data, error } = await supabase
-        .from('career_recommendations')
-        .insert(recommendationsWithUserId)
-        .select()
+        const recommendationsWithUserId = recommendations.map(rec => ({
+          ...rec,
+          user_id: userId,
+          expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
+        }))
 
-      if (error) {
-        console.error('Error saving to old career_recommendations table:', error)
+        await supabase.from('career_recommendations').insert(recommendationsWithUserId)
+      } catch (e) {
+        console.warn('Legacy sync failed:', e)
       }
 
-      return data || []
+      return recommendations as any
     } catch (error) {
       console.error('Error saving career recommendations:', error)
       return []
+    }
+  }
+
+  // Get Career Details with Perfect Caching
+  async getCareerDetails(userId: string, careerName: string): Promise<any | null> {
+    try {
+      const profile = await this.getProfile(userId)
+      const grades = await this.getUserGrades(userId)
+      const currentHash = generateContextHash(userId, profile, grades)
+
+      return await aiCacheService.getCachedCareerDetails(userId, careerName, currentHash)
+    } catch (error) {
+      console.error('Error in getCareerDetails:', error)
+      return null
+    }
+  }
+
+  // Get Course Recommendations with Perfect Caching
+  async getCourseRecommendations(userId: string): Promise<any[] | null> {
+    try {
+      const profile = await this.getProfile(userId)
+      const grades = await this.getUserGrades(userId)
+      const currentHash = generateContextHash(userId, profile, grades)
+
+      return await aiCacheService.getCachedCourseRecommendations(userId, currentHash)
+    } catch (error) {
+      console.error('Error in getCourseRecommendations:', error)
+      return null
+    }
+  }
+
+  async saveCourseRecommendations(userId: string, courses: any[]): Promise<void> {
+    try {
+      const profile = await this.getProfile(userId)
+      const grades = await this.getUserGrades(userId)
+      const currentHash = generateContextHash(userId, profile, grades)
+
+      await aiCacheService.saveCourseRecommendations(userId, courses, currentHash)
+    } catch (error) {
+      console.error('Error in saveCourseRecommendations:', error)
+    }
+  }
+
+  async saveCareerDetails(userId: string, careerName: string, details: any): Promise<void> {
+    try {
+      const profile = await this.getProfile(userId)
+      const grades = await this.getUserGrades(userId)
+      const currentHash = generateContextHash(userId, profile, grades)
+
+      await aiCacheService.saveCareerDetails(userId, careerName, details, currentHash)
+    } catch (error) {
+      console.error('Error in saveCareerDetails:', error)
     }
   }
 
