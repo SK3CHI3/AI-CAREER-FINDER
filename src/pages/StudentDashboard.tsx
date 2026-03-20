@@ -328,9 +328,9 @@ const StudentDashboard = () => {
   // RIASEC Data for Chart
   const riasecChartData = profile?.assessment_results?.riasec_scores ?
     Object.entries(profile.assessment_results.riasec_scores).map(([key, value]) => ({
-      subject: RIASEC_LABELS[key] || key,
+      subject: key.charAt(0).toUpperCase() + key.slice(1),
       A: value,
-      fullMark: 5, // Assuming max 5 activities selected per type
+      fullMark: 5,
     })) : []
 
   const dominantType = profile?.assessment_results?.personality_type || 'Discovery Pending'
@@ -639,20 +639,28 @@ const StudentDashboard = () => {
                   <CardContent>
                     <div className="h-[200px] -mt-4">
                       <ResponsiveContainer width="100%" height="100%">
-                        <RadarChart cx="50%" cy="50%" outerRadius="70%" data={riasecChartData}>
-                          <PolarGrid stroke="var(--card-border)" />
-                          <PolarAngleAxis
-                            dataKey="subject"
-                            tick={{ fill: 'var(--foreground-muted)', fontSize: 10 }}
-                          />
-                          <Radar
-                            name="Personality"
-                            dataKey="A"
-                            stroke="var(--primary)"
-                            fill="var(--primary)"
-                            fillOpacity={0.6}
-                          />
-                        </RadarChart>
+                          <RadarChart cx="50%" cy="50%" outerRadius="70%" data={riasecChartData}>
+                            <PolarGrid stroke="var(--card-border)" />
+                            <PolarAngleAxis
+                              dataKey="subject"
+                              tick={{ fill: 'var(--foreground-muted)', fontSize: 10 }}
+                            />
+                            <Tooltip
+                              formatter={(value) => [`${value}/5`, 'Score']}
+                              contentStyle={{
+                                backgroundColor: 'var(--background)',
+                                border: '1px solid var(--border)',
+                                borderRadius: '8px'
+                              }}
+                            />
+                            <Radar
+                              name="Personality"
+                              dataKey="A"
+                              stroke="var(--primary)"
+                              fill="var(--primary)"
+                              fillOpacity={0.6}
+                            />
+                          </RadarChart>
                       </ResponsiveContainer>
                     </div>
                   </CardContent>
