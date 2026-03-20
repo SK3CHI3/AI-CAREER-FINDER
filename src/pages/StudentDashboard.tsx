@@ -244,8 +244,8 @@ const StudentDashboard = () => {
           color: index === 0 ? '#3b82f6' : index === 1 ? '#10b981' : '#f59e0b',
           description: rec.description || "Exciting career opportunity aligned with your interests and skills.",
           salaryRange: rec.salary_range || 'KES 40K - 100K',
-          growth: rec.growth_prospect || 'Moderate Growth',
-          education: rec.education_required || "Bachelor's Degree or Diploma Required",
+          growth: rec.growth || 'Moderate Growth',
+          education: rec.education || "Bachelor's Degree or Diploma Required",
           actionabilityScore: rec.actionability_score || 85
         }));
 
