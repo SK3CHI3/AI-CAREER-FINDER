@@ -23,6 +23,7 @@ import Dashboard from "./pages/Dashboard";
 import SchoolInsightsPage from "./pages/SchoolInsightsPage";
 import QuickAssessment from "./pages/QuickAssessment";
 import Careers from "./pages/Careers";
+import HowItWorks from "./pages/HowItWorks";
 import NotFound from "./pages/NotFound";
 import ScrollToTop from "./components/ScrollToTop";
 import FeedbackWidget from "./components/FeedbackWidget";
@@ -42,6 +43,7 @@ const App = () => (
             <Route path="/" element={<Index />} />
             <Route path="/auth" element={<Auth />} />
             <Route path="/about" element={<About />} />
+            <Route path="/how-it-works" element={<HowItWorks />} />
             <Route path="/careers" element={<Careers />} />
             <Route path="/faq" element={<FAQ />} />
             <Route path="/quick-assessment" element={<QuickAssessment />} />

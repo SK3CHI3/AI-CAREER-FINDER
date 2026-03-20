@@ -68,7 +68,7 @@ const CallingCard = () => {
                         <div className="relative bg-primary/5 lg:border-l border-card-border p-8 md:p-12 lg:p-16 flex flex-col items-center justify-center text-center">
                             <div className="absolute inset-0 opacity-10 pointer-events-none overflow-hidden">
                                 <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full">
-                                    <ShieldCheck className="w-full h-full text-primary rotate-12" />
+                                    <ShieldCheck className="w-full h-full text-primary" />
                                 </div>
                             </div>
 

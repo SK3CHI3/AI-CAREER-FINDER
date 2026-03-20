@@ -1,9 +1,12 @@
 import { CheckCircle2, ShieldCheck, BarChart3, Bot, BookOpen, Target, ArrowRight, Building2, UserCircle2, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useNavigate } from "react-router-dom";
 
 const FeatureShowcase = () => {
+  const navigate = useNavigate();
+
   return (
-    <section className="py-24 bg-surface relative overflow-hidden font-sans">
+    <section id="features" className="py-24 bg-surface relative overflow-hidden font-sans">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-32">
         
         {/* For Students Section */}
@@ -107,7 +110,10 @@ const FeatureShowcase = () => {
             </div>
             
             <div className="pt-6">
-              <Button className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-full px-8 py-6 text-[15px] font-semibold border-none shadow-sm transition-all shadow-glow">
+              <Button 
+                className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-full px-8 py-6 text-[15px] font-semibold border-none shadow-sm transition-all shadow-glow"
+                onClick={() => navigate('/auth')}
+              >
                 Start your journey <ArrowRight className="w-4 h-4 ml-2" />
               </Button>
             </div>
@@ -162,7 +168,10 @@ const FeatureShowcase = () => {
             </div>
             
             <div className="flex items-center gap-6 pt-6">
-              <Button className="bg-secondary hover:bg-secondary/90 text-secondary-foreground rounded-full px-7 py-6 text-[15px] font-semibold shadow-sm transition-all border-none">
+              <Button 
+                className="bg-secondary hover:bg-secondary/90 text-secondary-foreground rounded-full px-7 py-6 text-[15px] font-semibold shadow-sm transition-all border-none"
+                onClick={() => navigate('/auth')}
+              >
                 Onboard my school <ArrowRight className="w-4 h-4 ml-2" />
               </Button>
             </div>

@@ -57,6 +57,7 @@ const Navigation = () => {
                 <div className="absolute top-full left-0 mt-[-0.5rem] w-48 bg-background/95 backdrop-blur-xl border border-card-border rounded-xl shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50 overflow-hidden">
                   <div className="py-2 flex flex-col">
                     <button onClick={() => handleNavClick('features')} className="px-4 py-2.5 text-left text-sm hover:bg-muted text-foreground-muted hover:text-foreground transition-colors">Features</button>
+                    <button onClick={() => navigate('/how-it-works')} className="px-4 py-2.5 text-left text-sm hover:bg-muted text-foreground-muted hover:text-foreground transition-colors">How it works</button>
                     <button onClick={() => handleNavClick('careers')} className="px-4 py-2.5 text-left text-sm hover:bg-muted text-foreground-muted hover:text-foreground transition-colors">Career Paths</button>
                   </div>
                 </div>
@@ -126,6 +127,9 @@ const Navigation = () => {
             <div className="px-2 pt-2 pb-3 space-y-1 bg-surface rounded-lg mt-2 shadow-card">
               <button onClick={() => handleNavClick('features')} className="block w-full text-left px-3 py-2 text-foreground-muted hover:text-foreground transition-colors">
                 Features
+              </button>
+              <button onClick={() => { navigate('/how-it-works'); setIsOpen(false); }} className="block w-full text-left px-3 py-2 text-foreground-muted hover:text-foreground transition-colors">
+                How it works
               </button>
               <button onClick={() => handleNavClick('careers')} className="block w-full text-left px-3 py-2 text-foreground-muted hover:text-foreground transition-colors">
                 Career Paths
