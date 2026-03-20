@@ -3,7 +3,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { TrendingUp, DollarSign, Search, ArrowRight, Bot, Filter, Sparkles } from "lucide-react";
+import { TrendingUp, DollarSign, Search, ArrowRight, Filter, Sparkles } from "lucide-react";
 import { dashboardService, CareerPath } from "@/lib/dashboard-service";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
