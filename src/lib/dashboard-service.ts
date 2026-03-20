@@ -268,8 +268,14 @@ class DashboardService {
       const isStale = !latestEntry || (new Date().getTime() - new Date(latestEntry.created_at).getTime() > ONE_WEEK);
 
       if (isStale) {
-        console.log('Career paths are stale or missing. Refreshing from AI...');
-        await this.syncCareerPathsWithAI();
+        console.log('Career paths are stale or missing. Attempting refresh from AI...');
+        try {
+          await this.syncCareerPathsWithAI();
+        } catch (syncError) {
+          console.warn('AI Sync failed, continuing with existing database content:', 
+            syncError instanceof Error ? syncError.message : String(syncError)
+          );
+        }
       }
 
       // 2. Fetch data

@@ -163,6 +163,12 @@ CRITICAL: Ask only ONE question per response. Be curious, realistic, and empathe
           statusText: response.statusText,
           error: errorText
         });
+        
+        // Specific handling for 402 Payment Required
+        if (response.status === 402) {
+          throw new Error('AI service billing issue (402). Please check DeepSeek API credits.')
+        }
+        
         throw new Error(`AI service error: ${response.status} - ${response.statusText}`)
       }
 

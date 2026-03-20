@@ -5,57 +5,6 @@ import { TrendingUp, DollarSign, Clock, ArrowRight } from "lucide-react";
 import { useState, useEffect } from "react";
 import { dashboardService, CareerPath } from "@/lib/dashboard-service";
 
-const careerPaths = [
-  {
-    title: "Software Engineering",
-    demand: "High",
-    salaryRange: "KES 80K - 300K",
-    growth: "+25%",
-    skills: ["Programming", "Problem Solving", "System Design"],
-    description: "Build the digital future with cutting-edge software solutions."
-  },
-  {
-    title: "Data Science",
-    demand: "Very High",
-    salaryRange: "KES 100K - 400K",
-    growth: "+30%",
-    skills: ["Analytics", "Machine Learning", "Statistics"],
-    description: "Transform data into actionable insights for business growth."
-  },
-  {
-    title: "Healthcare Technology",
-    demand: "High",
-    salaryRange: "KES 70K - 250K",
-    growth: "+20%",
-    skills: ["Medical Knowledge", "Technology", "Innovation"],
-    description: "Revolutionize healthcare delivery through technology."
-  },
-  {
-    title: "Renewable Energy",
-    demand: "Growing",
-    salaryRange: "KES 60K - 200K",
-    growth: "+35%",
-    skills: ["Engineering", "Sustainability", "Project Management"],
-    description: "Lead Kenya's transition to sustainable energy solutions."
-  },
-  {
-    title: "Digital Marketing",
-    demand: "High",
-    salaryRange: "KES 50K - 180K",
-    growth: "+22%",
-    skills: ["Creativity", "Analytics", "Communication"],
-    description: "Drive business growth through innovative digital strategies."
-  },
-  {
-    title: "Agricultural Technology",
-    demand: "Emerging",
-    salaryRange: "KES 55K - 190K",
-    growth: "+28%",
-    skills: ["Agriculture", "Technology", "Innovation"],
-    description: "Transform farming with smart technology and data."
-  }
-];
-
 const getDemandColor = (demand: string) => {
   switch (demand) {
     case "Very High": return "bg-success/20 text-success border-success/30";
@@ -79,23 +28,8 @@ const CareerPaths = () => {
         setDynamicCareerPaths(paths)
       } catch (err) {
         console.error('Failed to load career paths:', err)
-        setError('Failed to load career paths')
-        // Fallback to hardcoded data
-        setDynamicCareerPaths(careerPaths.map((career, index) => ({
-          id: index.toString(),
-          title: career.title,
-          category: "Technology",
-          demand_level: career.demand,
-          salary_range: career.salaryRange,
-          growth_percentage: career.growth,
-          skills_required: career.skills,
-          description: career.description,
-          education_requirements: "Bachelor's Degree",
-          career_level: "entry",
-          is_active: true,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        })))
+        setError('Real-time career paths are currently unavailable. Showing last available data.')
+        // dynamicCareerPaths will remain whatever it was from the DB (handled by service)
       } finally {
         setIsLoading(false)
       }
