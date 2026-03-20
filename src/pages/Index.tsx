@@ -15,14 +15,18 @@ import CallingCard from "@/components/CallingCard";
 
 const Index = () => {
   const location = useLocation();
-  const scrollTo = (location.state as { scrollTo?: string })?.scrollTo;
-
   useEffect(() => {
-    if (scrollTo) {
-      const el = document.getElementById(scrollTo);
-      if (el) el.scrollIntoView({ behavior: "smooth" });
+    if (location.state && (location.state as any).scrollTo) {
+      const sectionId = (location.state as any).scrollTo;
+      // Add a small delay to ensure the page has rendered
+      setTimeout(() => {
+        const el = document.getElementById(sectionId);
+        if (el) el.scrollIntoView({ behavior: "smooth" });
+      }, 100);
+      // Clear the state so it doesn't scroll again on refresh
+      window.history.replaceState({}, document.title);
     }
-  }, [scrollTo]);
+  }, [location]);
 
   return (
     <div className="min-h-screen text-foreground overflow-x-hidden relative">

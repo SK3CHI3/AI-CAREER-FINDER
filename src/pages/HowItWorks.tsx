@@ -64,27 +64,15 @@ export default function HowItWorks() {
       <BackgroundGradient />
       <Navigation />
       
-      <main className="flex-1 pt-32 pb-24">
+      <main className="flex-1 pt-32 pb-24 text-center">
         {/* Hero Section */}
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-32">
-          <div className="max-w-3xl">
-            <motion.div
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-primary text-xs font-bold uppercase tracking-wider mb-6"
-            >
-              <span className="relative flex h-2 w-2">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
-              </span>
-              The Process
-            </motion.div>
-            
+          <div className="max-w-4xl mx-auto">
             <motion.h1 
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6 }}
-              className="text-5xl md:text-7xl font-black mb-8 leading-[1.05] tracking-tight"
+              className="text-5xl md:text-8xl font-black mb-8 leading-[0.95] tracking-tight"
             >
               From Potential <br />
               <span className="bg-gradient-text bg-clip-text text-transparent italic font-serif">to Profession</span>
@@ -94,7 +82,7 @@ export default function HowItWorks() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.2 }}
-              className="text-xl text-foreground-muted font-medium leading-relaxed"
+              className="text-xl text-foreground-muted font-medium leading-relaxed max-w-2xl mx-auto"
             >
               An end-to-end framework designed to eliminate career uncertainty for every Kenyan student in the CBE system.
             </motion.p>

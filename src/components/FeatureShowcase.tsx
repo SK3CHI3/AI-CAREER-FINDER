@@ -1,6 +1,26 @@
-import { CheckCircle2, ShieldCheck, BarChart3, Bot, BookOpen, Target, ArrowRight, Building2, UserCircle2, Sparkles } from "lucide-react";
+import { CheckCircle2, ShieldCheck, BarChart3, Bot, BookOpen, Target, ArrowRight, Building2, UserCircle2, Sparkles, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
+import { motion, useInView, animate } from "framer-motion";
+import { useEffect, useRef, useState } from "react";
+
+const Counter = ({ value, duration = 2 }: { value: number; duration?: number }) => {
+  const [count, setCount] = useState(0);
+  const ref = useRef(null);
+  const isInView = useInView(ref, { once: true });
+
+  useEffect(() => {
+    if (isInView) {
+      const controls = animate(0, value, {
+        duration,
+        onUpdate: (latest) => setCount(Math.floor(latest)),
+      });
+      return () => controls.stop();
+    }
+  }, [value, duration, isInView]);
+
+  return <span ref={ref}>{count.toLocaleString()}</span>;
+};
 
 const FeatureShowcase = () => {
   const navigate = useNavigate();
@@ -13,7 +33,7 @@ const FeatureShowcase = () => {
         <div className="grid lg:grid-cols-2 gap-16 items-center">
           
           {/* Left Dashboard Mockup (Students) */}
-          <div className="order-2 lg:order-1 bg-card rounded-2xl shadow-elevated border border-border overflow-hidden h-auto min-h-[600px] flex flex-col">
+          <div className="order-2 lg:order-1 bg-card rounded-2xl shadow-elevated border border-border overflow-hidden h-auto min-h-[600px] flex flex-col group/dashboard">
             <div className="bg-primary px-6 py-6 flex-shrink-0 flex items-center gap-3.5 text-primary-foreground">
               <div className="bg-white/10 border border-white/20 p-2 rounded-lg shrink-0">
                 <UserCircle2 className="w-6 h-6 text-primary-foreground/90" />
@@ -24,36 +44,63 @@ const FeatureShowcase = () => {
               </div>
             </div>
             
-            <div className="p-8 flex-1 flex flex-col justify-between">
-              <div>
+            <div className="p-8 flex-1 flex flex-col justify-between relative">
+              {/* Looping Graphic Background */}
+              <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 h-64 opacity-[0.03] pointer-events-none overflow-hidden flex items-center justify-center">
+                 <motion.div 
+                  animate={{ 
+                    rotate: 360,
+                    scale: [1, 1.2, 1],
+                  }}
+                  transition={{ 
+                    duration: 20, 
+                    repeat: Infinity, 
+                    ease: "linear" 
+                  }}
+                  className="w-[500px] h-[500px] border-8 border-dashed border-primary rounded-full"
+                 />
+              </div>
+
+              <div className="relative z-10">
                 <h4 className="text-[15px] font-bold text-foreground mb-6">Top Career Matches</h4>
                 <div className="space-y-4 mb-4">
-                  <div className="flex justify-between items-center p-4 border border-border rounded-xl bg-card shadow-sm">
+                  <motion.div 
+                    initial={{ x: -20, opacity: 0 }}
+                    whileInView={{ x: 0, opacity: 1 }}
+                    viewport={{ margin: "-50px" }}
+                    className="flex justify-between items-center p-4 border border-border rounded-xl bg-card shadow-sm"
+                  >
                     <div className="flex items-center gap-4">
                       <div className="w-10 h-10 bg-primary/10 text-primary rounded-full flex items-center justify-center">
                         <Target className="w-5 h-5" />
                       </div>
                       <span className="font-bold text-foreground text-[14px]">Software Engineer</span>
                     </div>
-                    <span className="text-primary font-black text-[14px]">95% Match</span>
-                  </div>
-                  <div className="flex justify-between items-center p-4 border border-border rounded-xl bg-card shadow-sm">
+                    <span className="text-primary font-black text-[14px]"><Counter value={95} />% Match</span>
+                  </motion.div>
+                  <motion.div 
+                    initial={{ x: -20, opacity: 0 }}
+                    whileInView={{ x: 0, opacity: 1 }}
+                    viewport={{ margin: "-50px" }}
+                    transition={{ delay: 0.1 }}
+                    className="flex justify-between items-center p-4 border border-border rounded-xl bg-card shadow-sm"
+                  >
                     <div className="flex items-center gap-4">
                       <div className="w-10 h-10 bg-secondary/10 text-secondary rounded-full flex items-center justify-center">
                         <BarChart3 className="w-5 h-5" />
                       </div>
                       <span className="font-bold text-foreground text-[14px]">Data Analyst</span>
                     </div>
-                    <span className="text-primary font-black text-[14px]">88% Match</span>
-                  </div>
+                    <span className="text-primary font-black text-[14px]"><Counter value={88} />% Match</span>
+                  </motion.div>
                 </div>
               </div>
               
-              <div className="pt-6 border-t border-border mt-auto">
+              <div className="pt-6 border-t border-border mt-auto relative z-10">
                 <h4 className="text-[15px] font-bold text-foreground mb-4">CBE Subject Selection Guide</h4>
                 <div className="p-5 bg-primary/5 border border-primary/20 rounded-xl">
                   <div className="flex items-center gap-2 mb-2">
-                    <div className="w-2 h-2 rounded-full bg-primary"></div>
+                    <div className="w-2 h-2 rounded-full bg-primary animate-pulse"></div>
                     <h5 className="font-bold text-foreground text-[14px]">STEM Pathway Recommended</h5>
                   </div>
                   <p className="text-sm text-foreground-muted font-medium mb-4 pl-4 leading-relaxed">Focus on Computer Science and Mathematics for your desired career.</p>
@@ -178,9 +225,9 @@ const FeatureShowcase = () => {
           </div>
           
           {/* Right Dashboard Mockup */}
-          <div className="bg-card rounded-2xl shadow-elevated border border-border overflow-hidden h-[540px] flex flex-col">
+          <div className="bg-card rounded-2xl shadow-elevated border border-border overflow-hidden h-[540px] flex flex-col group/school relative">
             {/* Header */}
-            <div className="bg-secondary px-6 py-[18px] flex-shrink-0 flex items-center gap-3.5 text-secondary-foreground">
+            <div className="bg-secondary px-6 py-[18px] flex-shrink-0 flex items-center gap-3.5 text-secondary-foreground relative z-20">
               <div className="bg-white/10 border border-white/20 p-2 rounded-lg shrink-0">
                 <Building2 className="w-5 h-5 text-secondary-foreground/90" />
               </div>
@@ -191,44 +238,65 @@ const FeatureShowcase = () => {
             </div>
             
             {/* Body */}
-            <div className="p-8 flex-1 flex flex-col justify-between overflow-hidden">
-              <div className="flex justify-between items-center pb-6 border-b border-border">
+            <div className="p-8 flex-1 flex flex-col justify-between overflow-hidden relative z-10">
+              {/* Looping Graphic Background */}
+              <div className="absolute inset-x-0 bottom-0 h-64 opacity-[0.04] pointer-events-none overflow-hidden flex items-center justify-center">
+                 <motion.div 
+                  animate={{ 
+                    scale: [1, 1.5, 1],
+                    y: [0, -20, 0]
+                  }}
+                  transition={{ 
+                    duration: 10, 
+                    repeat: Infinity, 
+                    ease: "easeInOut" 
+                  }}
+                  className="w-[600px] h-[600px] bg-secondary rounded-full blur-[100px]"
+                 />
+              </div>
+
+              <div className="flex justify-between items-center pb-6 border-b border-border relative z-20">
                 <div className="text-center w-1/3">
-                  <div className="text-2xl font-bold text-foreground leading-none mb-1">247</div>
+                  <div className="text-2xl font-bold text-foreground leading-none mb-1"><Counter value={247} /></div>
                   <div className="text-[12px] text-foreground-muted font-medium">Students</div>
                 </div>
                 <div className="text-center w-1/3">
-                  <div className="text-2xl font-bold text-foreground leading-none mb-1">1,842</div>
+                  <div className="text-2xl font-bold text-foreground leading-none mb-1"><Counter value={1842} /></div>
                   <div className="text-[12px] text-foreground-muted font-medium">Chats</div>
                 </div>
                 <div className="text-center w-1/3 border-r-0">
-                  <div className="text-2xl font-bold text-foreground leading-none mb-1">89%</div>
+                  <div className="text-2xl font-bold text-foreground leading-none mb-1"><Counter value={89} />%</div>
                   <div className="text-[12px] text-foreground-muted font-medium">Success</div>
                 </div>
               </div>
               
-              <div className="py-6 border-b border-border">
+              <div className="py-6 border-b border-border relative z-20">
                 <div className="flex justify-between items-end mb-4">
                   <h4 className="text-[13px] font-bold text-foreground">Grade Progress</h4>
                   <span className="text-[11px] text-foreground-muted font-medium">Active now</span>
                 </div>
                 <div className="space-y-3">
                   {[
-                    { label: "G10", val: "75%", width: "75%" },
-                    { label: "G11", val: "60%", width: "60%" }
+                    { label: "G10", val: 75, width: "75%" },
+                    { label: "G11", val: 60, width: "60%" }
                   ].map((row, i) => (
                     <div key={i} className="flex items-center text-[11px]">
                       <span className="w-10 text-foreground-muted font-medium">{row.label}</span>
                       <div className="flex-1 h-2 bg-surface-light rounded-full mx-3 overflow-hidden">
-                        <div className="bg-secondary h-full rounded-full" style={{ width: row.width }}></div>
+                        <motion.div 
+                          initial={{ width: 0 }}
+                          whileInView={{ width: row.width }}
+                          transition={{ duration: 1, delay: i * 0.2 }}
+                          className="bg-secondary h-full rounded-full"
+                        ></motion.div>
                       </div>
-                      <span className="w-8 text-right font-bold text-foreground">{row.val}</span>
+                      <span className="w-8 text-right font-bold text-foreground"><Counter value={row.val} />%</span>
                     </div>
                   ))}
                 </div>
               </div>
               
-              <div className="pt-6">
+              <div className="pt-6 relative z-20">
                 <h4 className="text-[13px] font-bold text-foreground mb-3">Recent Insights</h4>
                 <ul className="text-[12px] space-y-2 text-foreground-muted font-medium italic">
                   <li className="flex items-center gap-2">
