@@ -3,6 +3,7 @@ import Footer from "@/components/Footer";
 import BackgroundGradient from "@/components/BackgroundGradient";
 import { UserCircle, BrainCircuit, Bot, Map, School, CheckCircle2 } from "lucide-react";
 import { motion } from "framer-motion";
+import { Helmet } from "react-helmet-async";
 
 export default function HowItWorks() {
   const steps = [
@@ -55,6 +56,10 @@ export default function HowItWorks() {
 
   return (
     <div className="min-h-screen text-foreground overflow-x-hidden relative flex flex-col">
+      <Helmet>
+        <title>How It Works | CareerGuide AI Journey</title>
+        <meta name="description" content="Discover the step-by-step process of CareerGuide AI. From building a profile to matching with your dream career and syncing with your school curriculum." />
+      </Helmet>
       <BackgroundGradient />
       <Navigation />
       
@@ -79,6 +84,23 @@ export default function HowItWorks() {
               See exactly how CareerGuide transforms abstract student interests into concrete, curriculum-aligned academic pathways.
             </motion.p>
           </div>
+
+          {/* YouTube Video Section */}
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.8, delay: 0.4 }}
+            className="mb-32 aspect-video rounded-3xl overflow-hidden shadow-2xl border-4 border-card-border bg-card relative group"
+          >
+            <iframe 
+              className="w-full h-full"
+              src="https://www.youtube.com/embed/dQw4w9WgXcQ" 
+              title="CareerGuide AI Overview"
+              frameBorder="0"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allowFullScreen
+            ></iframe>
+          </motion.div>
 
           {/* Timeline Container */}
           <div className="relative">
@@ -127,9 +149,17 @@ export default function HowItWorks() {
                           <step.icon className="w-7 h-7" />
                         </div>
                         <h3 className="text-2xl font-bold mb-3">{step.title}</h3>
-                        <p className="text-foreground-muted leading-relaxed font-medium">
+                        <p className="text-foreground-muted leading-relaxed font-medium mb-6">
                           {step.desc}
                         </p>
+                        
+                        {/* Image Placeholder */}
+                        <div className="aspect-[16/10] rounded-2xl bg-muted/30 border border-card-border overflow-hidden relative group-hover:border-primary/20 transition-colors">
+                          <div className="absolute inset-0 flex items-center justify-center text-foreground-muted/30">
+                            <step.icon className="w-16 h-16 opacity-20" />
+                          </div>
+                          <div className="absolute inset-0 bg-gradient-to-t from-background/20 to-transparent" />
+                        </div>
                       </div>
                     </motion.div>
 
