@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Menu, X, Bot } from "lucide-react";
+import { Menu, X, Bot, ChevronDown } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { getDashboardPathForRole } from "@/types/roles";
 import { ThemeToggle } from "@/components/ThemeToggle";
@@ -49,18 +49,31 @@ const Navigation = () => {
           {/* Desktop Navigation */}
           <div className="hidden md:block">
             <div className="ml-10 flex items-baseline space-x-8">
-              <button onClick={() => handleNavClick('features')} className="text-foreground-muted hover:text-foreground transition-colors">
-                Features
-              </button>
-              <button onClick={() => handleNavClick('careers')} className="text-foreground-muted hover:text-foreground transition-colors">
-                Career Paths
-              </button>
-              <button onClick={() => navigate('/about')} className="text-foreground-muted hover:text-foreground transition-colors">
-                About
-              </button>
-              <button onClick={() => navigate('/faq')} className="text-foreground-muted hover:text-foreground transition-colors">
-                FAQ
-              </button>
+              
+              <div className="relative group py-4">
+                <button className="text-foreground-muted group-hover:text-foreground transition-colors flex items-center gap-1 font-medium">
+                  Product <ChevronDown className="w-4 h-4 opacity-70 group-hover:rotate-180 transition-transform duration-200" />
+                </button>
+                <div className="absolute top-full left-0 mt-[-0.5rem] w-48 bg-background/95 backdrop-blur-xl border border-card-border rounded-xl shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50 overflow-hidden">
+                  <div className="py-2 flex flex-col">
+                    <button onClick={() => handleNavClick('features')} className="px-4 py-2.5 text-left text-sm hover:bg-muted text-foreground-muted hover:text-foreground transition-colors">Features</button>
+                    <button onClick={() => handleNavClick('careers')} className="px-4 py-2.5 text-left text-sm hover:bg-muted text-foreground-muted hover:text-foreground transition-colors">Career Paths</button>
+                  </div>
+                </div>
+              </div>
+
+              <div className="relative group py-4">
+                <button className="text-foreground-muted group-hover:text-foreground transition-colors flex items-center gap-1 font-medium">
+                  Company <ChevronDown className="w-4 h-4 opacity-70 group-hover:rotate-180 transition-transform duration-200" />
+                </button>
+                <div className="absolute top-full left-0 mt-[-0.5rem] w-48 bg-background/95 backdrop-blur-xl border border-card-border rounded-xl shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50 overflow-hidden">
+                  <div className="py-2 flex flex-col">
+                    <button onClick={() => navigate('/about')} className="px-4 py-2.5 text-left text-sm hover:bg-muted text-foreground-muted hover:text-foreground transition-colors">About Us</button>
+                    <button onClick={() => navigate('/faq')} className="px-4 py-2.5 text-left text-sm hover:bg-muted text-foreground-muted hover:text-foreground transition-colors">FAQ</button>
+                  </div>
+                </div>
+              </div>
+
             </div>
           </div>
 
