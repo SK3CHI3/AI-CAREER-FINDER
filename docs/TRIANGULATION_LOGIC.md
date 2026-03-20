@@ -21,8 +21,8 @@ Realistic Triangulation is the proprietary logic used by CareerPath AI to ensure
 
 ### 4. Market Reality (The "Reality")
 - **Framework**: Kenyan Economic Trends (Vision 2030).
-- **Knowledge Base**: Updates on Digital Superhighway, Manufacturing, and Healthcare booms.
-- **Logic**: Ensures students aren't steered toward oversaturated or automation-risky fields.
+- **Knowledge Base**: Updates on Digital Superhighway, Manufacturing, and **Creative Economy** (Content Creation, Digital Art, Gig Economy).
+- **Logic**: Ensures students aren't steered toward oversaturated or automation-risky fields, prioritizing emerging high-growth sectors where a degree might be secondary to skills.
 
 ## How the Logic works in Code
 In `src/lib/ai-service.ts`, the `generateCareerRecommendations` function constructs a prompt that explicitly requires the AI to:
@@ -30,7 +30,11 @@ In `src/lib/ai-service.ts`, the `generateCareerRecommendations` function constru
 2. Filter through constraints.
 3. Align with core values.
 4. Project a "Growth Trajectory."
-5. Return an **Actionability Score (1-100)**.
+5. **Prioritize Emerging Fields**: Explicitly look for "unconventional" but high-value roles like **Creative Economy** positions if they fit the profile.
+6. Return an **Actionability Score (1-100)**.
 
 ## Visualizing the Triangulation
 The Student Dashboard renders a Radar Chart to show the RIASEC profile and an Actionability Meter to show the feasibility of each recommendation, bringing the complex logic to a simple, understandable visual.
+
+---
+*For details on how these recommendations are cached and updated, see [HYBRID_CACHING_LOGIC.md](./HYBRID_CACHING_LOGIC.md).*

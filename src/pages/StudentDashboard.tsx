@@ -39,7 +39,9 @@ import {
   DollarSign,
   Lock,
   XCircle,
-  Lightbulb
+  Lightbulb,
+  RefreshCw,
+  School
 } from 'lucide-react'
 import PaymentWall from '@/components/PaymentWall'
 import { ThemeToggle } from '@/components/ThemeToggle'
@@ -83,6 +85,7 @@ const StudentDashboard = () => {
   const [isSchoolSubscribed, setIsSchoolSubscribed] = useState(false)
   const [isPaid, setIsPaid] = useState(false)
   const [isPaymentWallOpen, setIsPaymentWallOpen] = useState(false)
+  const [schoolInfo, setSchoolInfo] = useState<{ name: string; status: string } | null>(null)
 
   // Activity tracking
   const { trackPageView, trackButtonClick, trackAIChat } = useActivityTracking({
@@ -110,10 +113,17 @@ const StudentDashboard = () => {
     if (profile.school_id) {
       try {
         const { schoolService } = await import('@/lib/school-service');
-        const hasSub = await schoolService.hasActiveSubscription(profile.school_id);
+        const [hasSub, schoolData] = await Promise.all([
+          schoolService.hasActiveSubscription(profile.school_id),
+          schoolService.getSchoolById(profile.school_id)
+        ]);
+        
         setIsSchoolSubscribed(hasSub);
+        if (schoolData) {
+          setSchoolInfo({ name: schoolData.name, status: schoolData.status || 'active' });
+        }
       } catch (err) {
-        console.error('Error checking school subscription:', err);
+        console.error('Error checking school status:', err);
       }
     }
   }
@@ -297,11 +307,21 @@ const StudentDashboard = () => {
       }
     } catch (error) {
       console.error('Failed to load career recommendations:', error);
-
-      // Fallback to sample data on error
       setCareerData([]);
     } finally {
       setIsLoadingRecommendations(false)
+    }
+  }
+
+  const handleRefreshRecommendations = async () => {
+    if (!profile || !user) return;
+    try {
+      // Invalidate cache first
+      await aiCacheService.invalidateCache(user.id, 'career_recommendations', 'manually_refreshed');
+      // Load fresh
+      await loadCareerRecommendations(profile);
+    } catch (err) {
+      console.error('Refresh failed:', err);
     }
   }
 
@@ -470,7 +490,15 @@ const StudentDashboard = () => {
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4 sm:space-y-6">
           <TabsList className="grid w-full grid-cols-4 lg:w-auto lg:grid-cols-4">
             <TabsTrigger value="overview">Overview</TabsTrigger>
-            <TabsTrigger value="careers">Top Careers</TabsTrigger>
+                <TabsTrigger value="careers" className="relative">
+                  Careers
+                  {careerData.length > 0 && (
+                    <span className="absolute -top-1 -right-1 flex h-2 w-2">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
+                      <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-500"></span>
+                    </span>
+                  )}
+                </TabsTrigger>
             <TabsTrigger value="chat">AI Chat</TabsTrigger>
             <TabsTrigger value="progress">Progress</TabsTrigger>
           </TabsList>
@@ -534,20 +562,27 @@ const StudentDashboard = () => {
             {/* Main Dashboard Grid */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-2 sm:gap-6 w-full">
               {/* Career Recommendations Chart */}
-              <Card className="lg:col-span-2 bg-card border-card-border">
-                <CardHeader>
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <CardTitle className="flex items-center gap-2">
-                        <Sparkles className="w-5 h-5 text-yellow-500" />
-                        Your Top Career Matches
-                      </CardTitle>
-                      <CardDescription>Based on your CBE pathway and interests</CardDescription>
+              <Card className="col-span-1 lg:col-span-2 bg-card border-card-border overflow-hidden">
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2">
+                      <Sparkles className="w-5 h-5 text-yellow-500" />
+                      <CardTitle>AI Career Recommendations</CardTitle>
+                      <Badge variant="secondary" className="bg-blue-100 text-blue-700 hover:bg-blue-100 border-none px-2 py-0 text-[10px] uppercase font-bold tracking-wider">
+                        DeepSeek-V3 Engine
+                      </Badge>
                     </div>
-                    <Button variant="outline" size="sm">
-                      View All <ArrowRight className="w-4 h-4 ml-1" />
-                    </Button>
+                    <CardDescription>Based on your personality, grades, and Kenyan market reality</CardDescription>
                   </div>
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    className="h-8 w-8 text-muted-foreground hover:text-primary"
+                    onClick={handleRefreshRecommendations}
+                    disabled={isLoadingRecommendations}
+                  >
+                    <RefreshCw className={`w-4 h-4 ${isLoadingRecommendations ? 'animate-spin' : ''}`} />
+                  </Button>
                 </CardHeader>
                 <CardContent>
                   {isLoadingRecommendations ? (
@@ -948,12 +983,17 @@ const StudentDashboard = () => {
             </div>
 
             <Card className="w-full bg-card border-card-border">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
+              <CardHeader className="flex flex-row items-center justify-between">
+                <div className="flex items-center gap-2">
                   <GraduationCap className="w-5 h-5 text-purple-500" />
-                  Academic Insights
-                </CardTitle>
-                <CardDescription>View your academic performance and progress as verified by your school</CardDescription>
+                  <CardTitle>Academic Insights</CardTitle>
+                </div>
+                {schoolInfo && (
+                  <Badge variant="outline" className="bg-purple-50 text-purple-700 border-purple-200 flex items-center gap-1">
+                    <School className="w-3 h-3" />
+                    Verified by {schoolInfo.name}
+                  </Badge>
+                )}
               </CardHeader>
               <CardContent>
                 <GradesManager readOnly={true} onGradesUpdated={handleGradesUpdated} />
