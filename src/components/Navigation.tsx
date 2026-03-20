@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Menu, X, Bot } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { getDashboardPathForRole } from "@/types/roles";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 const scrollToSection = (id: string) => {
   const el = document.getElementById(id);
@@ -65,6 +66,7 @@ const Navigation = () => {
 
           {/* Desktop CTA */}
           <div className="hidden md:flex items-center space-x-4">
+            <ThemeToggle />
             {user ? (
               <Button
                 className="bg-gradient-primary hover:opacity-90 text-primary-foreground shadow-glow"
@@ -92,7 +94,8 @@ const Navigation = () => {
           </div>
 
           {/* Mobile menu button */}
-          <div className="md:hidden">
+          <div className="md:hidden flex items-center gap-2">
+            <ThemeToggle />
             <Button
               variant="ghost"
               size="sm"

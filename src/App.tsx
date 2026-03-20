@@ -8,6 +8,7 @@ import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import PaymentGate from "@/components/PaymentGate";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
+import { ThemeProvider } from "@/components/ThemeProvider";
 import About from "./pages/About";
 import FAQ from "./pages/FAQ";
 import StudentDashboard from "./pages/StudentDashboard";
@@ -32,9 +33,10 @@ const App = () => (
   <QueryClientProvider client={queryClient}>
     <AuthProvider>
       <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
+        <ThemeProvider defaultTheme="system" storageKey="vite-ui-theme">
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
           <ScrollToTop />
           <Routes>
             <Route path="/" element={<Index />} />
@@ -123,6 +125,7 @@ const App = () => (
           </Routes>
           <FeedbackWidget />
         </BrowserRouter>
+        </ThemeProvider>
       </TooltipProvider>
     </AuthProvider>
   </QueryClientProvider>

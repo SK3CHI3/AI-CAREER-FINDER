@@ -16,6 +16,7 @@ import {
   Calendar,
   MessageSquare
 } from 'lucide-react'
+import { ThemeToggle } from '@/components/ThemeToggle'
 
 const Dashboard = () => {
   const { user, profile, signOut } = useAuth()
@@ -95,6 +96,7 @@ const Dashboard = () => {
                   </Badge>
                 </div>
               </div>
+              <ThemeToggle />
               <Button variant="ghost" size="sm" onClick={handleSignOut}>
                 <LogOut className="w-4 h-4" />
               </Button>

@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { ArrowLeft, Bot, Download, Lightbulb, RefreshCw, Sparkles } from 'lucide-react'
+import { ThemeToggle } from '@/components/ThemeToggle'
 
 const DEEPSEEK_API_KEY = import.meta.env.VITE_DEEPSEEK_API_KEY
 const DEEPSEEK_URL = 'https://api.deepseek.com/chat/completions'
@@ -235,7 +236,8 @@ DO NOT use markdown formatting like ** or ##. Write in clean, natural, professio
                 School Insights
               </span>
             </div>
-            <div className="flex gap-2">
+            <div className="flex gap-2 items-center">
+              <ThemeToggle />
               <Button variant="outline" size="sm" onClick={generateInsights} disabled={loading}>
                 <RefreshCw className={`w-4 h-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
                 Regenerate

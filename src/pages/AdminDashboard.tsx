@@ -471,6 +471,7 @@ const AdminDashboard = () => {
           </div>
 
           <div className="flex items-center gap-4">
+            <ThemeToggle />
             <Button variant="ghost" size="sm" onClick={loadData} className="text-slate-300 hover:text-white hover:bg-white/5">
               <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
             </Button>

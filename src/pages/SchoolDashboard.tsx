@@ -15,6 +15,7 @@ import {
   Bot, Building2, LogOut, Users, BookOpen, GraduationCap,
   Plus, ChevronRight, Clock, Mail, Trash2, RefreshCw, CreditCard, Sparkles
 } from 'lucide-react'
+import { ThemeToggle } from '@/components/ThemeToggle'
 
 const SchoolDashboard: React.FC = () => {
   const navigate = useNavigate()
@@ -80,6 +81,7 @@ const SchoolDashboard: React.FC = () => {
               <Badge variant="outline" className="border-primary/30 text-primary bg-primary/5 mt-1">School Portal</Badge>
             </div>
             <div className="flex items-center space-x-4">
+              <ThemeToggle />
               <div className="flex items-center gap-2">
                 <Building2 className="w-4 h-4 text-primary" />
                 <span className="font-medium text-foreground text-sm">{school?.name ?? 'School'}</span>

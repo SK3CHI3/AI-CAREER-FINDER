@@ -11,6 +11,7 @@ import {
     ArrowLeft, Bot, Building2, LogOut, BookOpen,
     ChevronRight, RefreshCw, Users, Layers
 } from 'lucide-react'
+import { ThemeToggle } from '@/components/ThemeToggle'
 
 const SchoolClasses: React.FC = () => {
     const navigate = useNavigate()
@@ -76,6 +77,7 @@ const SchoolClasses: React.FC = () => {
                             </div>
                         </div>
                         <div className="ml-auto flex items-center gap-3">
+                            <ThemeToggle />
                             <Badge variant="secondary">School Admin</Badge>
                             <Button variant="ghost" size="icon" onClick={() => signOut()} title="Sign out">
                                 <LogOut className="w-4 h-4" />

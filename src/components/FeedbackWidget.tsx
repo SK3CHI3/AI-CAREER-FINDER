@@ -99,10 +99,10 @@ const FeedbackWidget = () => {
                                                 <CardDescription className="text-[10px]">Help us improve CareerGuide</CardDescription>
                                             </div>
                                         </div>
-                                        <Button 
-                                            variant="ghost" 
-                                            size="icon" 
-                                            className="h-8 w-8 rounded-full hover:bg-destructive/10 hover:text-destructive transition-colors" 
+                                        <Button
+                                            variant="ghost"
+                                            size="icon"
+                                            className="h-8 w-8 rounded-full hover:bg-destructive/10 hover:text-destructive transition-colors"
                                             onClick={() => setIsOpen(false)}
                                         >
                                             <X className="w-4 h-4" />
@@ -112,7 +112,7 @@ const FeedbackWidget = () => {
                                 <CardContent className="p-4">
                                     {submitted ? (
                                         <div className="py-12 text-center space-y-4">
-                                            <motion.div 
+                                            <motion.div
                                                 initial={{ scale: 0 }}
                                                 animate={{ scale: 1 }}
                                                 className="w-16 h-16 bg-green-500/10 rounded-full flex items-center justify-center mx-auto"
@@ -135,11 +135,10 @@ const FeedbackWidget = () => {
                                                             key={cat.id}
                                                             type="button"
                                                             onClick={() => setCategory(cat.id as any)}
-                                                            className={`flex flex-col items-center gap-1.5 p-2 rounded-xl border transition-all ${
-                                                                isSelected 
-                                                                ? 'border-primary bg-primary/5 shadow-sm scale-105' 
-                                                                : 'border-card-border hover:bg-muted/50 grayscale opacity-70 hover:opacity-100 hover:grayscale-0'
-                                                            }`}
+                                                            className={`flex flex-col items-center gap-1.5 p-2 rounded-xl border transition-all ${isSelected
+                                                                    ? 'border-primary bg-primary/5 shadow-sm scale-105'
+                                                                    : 'border-card-border hover:bg-muted/50 grayscale opacity-70 hover:opacity-100 hover:grayscale-0'
+                                                                }`}
                                                         >
                                                             <Icon className={`w-4 h-4 ${isSelected ? cat.color : 'text-foreground-muted'}`} />
                                                             <span className={`text-[9px] font-black uppercase tracking-tighter ${isSelected ? 'text-foreground' : 'text-foreground-muted'}`}>
@@ -161,16 +160,16 @@ const FeedbackWidget = () => {
                                             )}
 
                                             <Textarea
-                                                placeholder="What's on your mind? Tell us anything..."
+                                                placeholder="Enter your feedback here..."
                                                 value={content}
                                                 onChange={(e) => setContent(e.target.value)}
                                                 className="min-h-[120px] bg-muted/20 border-card-border resize-none text-sm focus-visible:ring-primary/30"
                                                 required
                                             />
 
-                                            <Button 
-                                                type="submit" 
-                                                disabled={loading || !content.trim()} 
+                                            <Button
+                                                type="submit"
+                                                disabled={loading || !content.trim()}
                                                 className="w-full bg-primary hover:bg-primary/90 text-white font-bold h-10 shadow-glow transition-all active:scale-95"
                                             >
                                                 {loading ? (

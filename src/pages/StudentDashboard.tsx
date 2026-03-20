@@ -36,9 +36,9 @@ import {
   TrendingDown,
   Activity,
   BookMarked,
-  Lightbulb,
   DollarSign
 } from 'lucide-react'
+import { ThemeToggle } from '@/components/ThemeToggle'
 import AIChat from '@/components/AIChat'
 import { ReportGenerator } from '@/lib/report-generator'
 import { ProfileSetup } from '@/components/ProfileSetup'
@@ -668,6 +668,7 @@ const StudentDashboard = () => {
                   </Badge>
                 </div>
               </div>
+              <ThemeToggle />
               <Button variant="ghost" size="sm" onClick={handleSignOut}>
                 <LogOut className="w-4 h-4" />
               </Button>

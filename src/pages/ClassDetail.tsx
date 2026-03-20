@@ -18,9 +18,10 @@ import { Textarea } from '@/components/ui/textarea'
 import {
     ArrowLeft, Users, Upload, UserPlus, Trash2,
     Loader2, CheckCircle2, FileSpreadsheet, PencilLine,
-    BookOpen, RefreshCw, AlertCircle, Sparkles
+    BookOpen, RefreshCw, AlertCircle, Sparkles, Search
 } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
+import { ThemeToggle } from '@/components/ThemeToggle'
 
 const TERMS = ['Term 1', 'Term 2', 'Term 3']
 const EXAM_TYPES = ['End Term', 'Mid Term', 'CAT', 'Mock', 'KCPE/KCSE']
@@ -36,17 +37,24 @@ const ClassDetail: React.FC = () => {
     const [students, setStudents] = useState<StudentInClass[]>([])
     const [grades, setGrades] = useState<any[]>([])
     const [loading, setLoading] = useState(true)
-    const [activeTab, setActiveTab] = useState('students')
+
+    // Parse initial tab from URL if present
+    const searchParams = new URLSearchParams(window.location.search)
+    const initialTab = searchParams.get('tab') || 'students'
+    const [activeTab, setActiveTab] = useState(initialTab)
+
+    const [studentSearch, setStudentSearch] = useState('')
+    const [gradeSearch, setGradeSearch] = useState('')
 
     // Add student state
-    const [addPhone, setAddPhone] = useState('')
+    const [addUpi, setAddUpi] = useState('')
     const [addLoading, setAddLoading] = useState(false)
     const [addError, setAddError] = useState<string | null>(null)
 
     // Single grade entry state
     const [gradeDialogOpen, setGradeDialogOpen] = useState(false)
     const [selectedStudentId, setSelectedStudentId] = useState<string | null>(null)
-    const [selectedStudentPhone, setSelectedStudentPhone] = useState<string | null>(null)
+    const [selectedStudentUpi, setSelectedStudentUpi] = useState<string | null>(null)
     const [selectedStudentName, setSelectedStudentName] = useState('')
     const [gradeForm, setGradeForm] = useState({
         subject_name: '',
@@ -88,13 +96,13 @@ const ClassDetail: React.FC = () => {
         name ? name.split(' ').map((w) => w[0]).join('').toUpperCase().slice(0, 2) : '?'
 
     const handleAddStudent = async () => {
-        if (!classId || !addPhone.trim()) return
+        if (!classId || !addUpi.trim()) return
         setAddLoading(true)
         setAddError(null)
         try {
-            await classService.addStudentByPhone(classId, addPhone.trim())
-            setAddPhone('')
-            toast({ title: 'Student added', description: `${addPhone} enrolled in class.` })
+            await classService.addStudentByUPI(classId, addUpi.trim())
+            setAddUpi('')
+            toast({ title: 'Student added', description: `${addUpi.toUpperCase()} enrolled in class.` })
             loadData()
         } catch (err) {
             setAddError(err instanceof Error ? err.message : 'Failed to add student')
@@ -117,8 +125,8 @@ const ClassDetail: React.FC = () => {
 
     const openGradeDialog = (student: StudentInClass) => {
         setSelectedStudentId(student.user_id || null)
-        setSelectedStudentPhone(student.phone || null)
-        setSelectedStudentName(student.full_name ?? student.phone ?? student.email ?? 'Unknown')
+        setSelectedStudentUpi(student.upi_number || null)
+        setSelectedStudentName(student.full_name ?? student.upi_number ?? student.email ?? 'Unknown')
         setGradeForm({ subject_name: '', term: 'Term 1', academic_year: CURRENT_YEAR, grade_value: '', max_marks: '100', exam_type: 'End Term', teacher_comment: '' })
         setEditingGradeId(null)
         setGradeDialogOpen(true)
@@ -130,14 +138,14 @@ const ClassDetail: React.FC = () => {
             return
         }
         setInsightStudentId(student.user_id)
-        setInsightStudentName(student.full_name ?? student.phone ?? student.email ?? 'Unknown Student')
+        setInsightStudentName(student.full_name ?? student.upi_number ?? student.email ?? 'Unknown Student')
         setInsightDialogOpen(true)
     }
 
     const openEditGrade = (grade: any) => {
         setSelectedStudentId(grade.user_id || null)
-        setSelectedStudentPhone(grade.student_phone || null)
-        setSelectedStudentName(grade.profiles?.full_name ?? grade.student_phone ?? grade.profiles?.email ?? '')
+        setSelectedStudentUpi(grade.student_upi || null)
+        setSelectedStudentName(grade.profiles?.full_name ?? grade.student_upi ?? grade.profiles?.email ?? '')
         setGradeForm({
             subject_name: grade.subject_name,
             term: grade.term,
@@ -156,7 +164,7 @@ const ClassDetail: React.FC = () => {
         setGradeLoading(true)
         try {
             await gradeUploadService.saveSingleGrade(
-                { user_id: selectedStudentId || null, phone: selectedStudentPhone || null },
+                { user_id: selectedStudentId || null, upi_number: selectedStudentUpi || null },
                 user.id,
                 {
                 subject_name: gradeForm.subject_name,
@@ -208,6 +216,17 @@ const ClassDetail: React.FC = () => {
         )
     }
 
+    const filteredStudents = students.filter(s =>
+        (s.full_name || '').toLowerCase().includes(studentSearch.toLowerCase()) ||
+        (s.upi_number || '').toLowerCase().includes(studentSearch.toLowerCase())
+    )
+
+    const filteredGrades = grades.filter(g =>
+        (g.profiles?.full_name || '').toLowerCase().includes(gradeSearch.toLowerCase()) ||
+        (g.student_upi || '').toLowerCase().includes(gradeSearch.toLowerCase()) ||
+        (g.subject_name || '').toLowerCase().includes(gradeSearch.toLowerCase())
+    )
+
     return (
         <div className="min-h-screen" style={{ background: 'var(--gradient-homepage)' }}>
             {/* Header */}
@@ -229,7 +248,8 @@ const ClassDetail: React.FC = () => {
                             <span className="font-semibold text-foreground">{cls.name}</span>
                             <span className="text-foreground-muted text-sm ml-2">{cls.grade_level} · {cls.academic_year}</span>
                         </div>
-                        <div className="ml-auto flex gap-2">
+                        <div className="ml-auto flex gap-2 items-center">
+                            <ThemeToggle />
                             <Button variant="ghost" size="icon" onClick={loadData} title="Refresh">
                                 <RefreshCw className="w-4 h-4" />
                             </Button>
@@ -260,18 +280,18 @@ const ClassDetail: React.FC = () => {
                                 <CardTitle className="flex items-center gap-2 text-base">
                                     <UserPlus className="w-4 h-4 text-primary" /> Add Student
                                 </CardTitle>
-                                <CardDescription>Add a student to this class by their phone number</CardDescription>
+                                <CardDescription>Add a student to this class by their NEMIS UPI number</CardDescription>
                             </CardHeader>
                             <CardContent>
                                 <div className="flex gap-3">
                                     <Input
-                                        placeholder="0712345678"
-                                        value={addPhone}
-                                        onChange={(e) => setAddPhone(e.target.value)}
+                                        placeholder="e.g. XXX8TXY1"
+                                        value={addUpi}
+                                        onChange={(e) => setAddUpi(e.target.value)}
                                         onKeyDown={(e) => e.key === 'Enter' && handleAddStudent()}
-                                        className="flex-1"
+                                        className="flex-1 uppercase"
                                     />
-                                    <Button onClick={handleAddStudent} disabled={!addPhone.trim() || addLoading} className="bg-gradient-primary">
+                                    <Button onClick={handleAddStudent} disabled={!addUpi.trim() || addLoading} className="bg-gradient-primary">
                                         {addLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <UserPlus className="w-4 h-4" />}
                                     </Button>
                                 </div>
@@ -281,45 +301,54 @@ const ClassDetail: React.FC = () => {
 
                         {/* Student roster */}
                         <Card className="bg-gradient-surface border-card-border">
-                            <CardHeader>
-                                <CardTitle className="flex items-center gap-2 text-base">
+                            <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                                <CardTitle className="flex items-center gap-2 text-base shrink-0">
                                     <Users className="w-4 h-4 text-primary" /> Student Roster
                                 </CardTitle>
+                                <div className="relative w-full sm:w-64">
+                                    <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-foreground-muted" />
+                                    <Input
+                                        placeholder="Search by name or UPI..."
+                                        className="pl-9 h-9 text-sm"
+                                        value={studentSearch}
+                                        onChange={(e) => setStudentSearch(e.target.value)}
+                                    />
+                                </div>
                             </CardHeader>
                             <CardContent>
-                                {students.length === 0 ? (
+                                {filteredStudents.length === 0 ? (
                                     <div className="text-center py-8">
                                         <Users className="w-10 h-10 text-foreground-muted mx-auto mb-3" />
-                                        <p className="text-foreground-muted text-sm">No students yet. Add students above or use bulk upload.</p>
+                                        <p className="text-foreground-muted text-sm">No students found. Add students above or use bulk upload.</p>
                                     </div>
                                 ) : (
                                     <div className="space-y-2">
-                                        {students.map((s) => (
+                                        {filteredStudents.map((s) => (
                                             <div key={s.id} className="flex items-center justify-between p-3 rounded-xl bg-muted/30 border border-card-border">
                                                 <div className="flex items-center gap-3">
                                                     <Avatar className="w-8 h-8">
                                                         <AvatarFallback className="text-xs">{initials(s.full_name)}</AvatarFallback>
                                                     </Avatar>
                                                     <div>
-                                                        <p className="text-sm font-medium text-foreground">{s.full_name ?? s.phone}</p>
-                                                        <p className="text-xs text-foreground-muted">{s.phone}</p>
+                                                        <p className="text-sm font-medium text-foreground">{s.full_name ?? s.upi_number}</p>
+                                                        <p className="text-xs text-foreground-muted">{s.upi_number}</p>
                                                     </div>
                                                 </div>
                                                 <div className="flex items-center gap-2">
                                                     <Badge variant="outline" className="text-xs">{s.source}</Badge>
                                                     <Button
-                                                        variant="ghost"
+                                                        variant="default"
                                                         size="sm"
-                                                        className="gap-1 text-primary hover:text-primary hover:bg-primary/10"
+                                                        className="gap-1 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-md disabled:opacity-50 disabled:shadow-none"
                                                         onClick={() => openInsightDialog(s)}
                                                         disabled={!s.user_id}
                                                     >
-                                                        <Sparkles className="w-3.5 h-3.5" /> AI Insights
+                                                        <Sparkles className="w-3.5 h-3.5" /> Insights
                                                     </Button>
                                                     <Button variant="ghost" size="sm" className="gap-1 text-foreground-muted" onClick={() => openGradeDialog(s)}>
                                                         <PencilLine className="w-3.5 h-3.5" /> Add Grade
                                                     </Button>
-                                                    <Button variant="ghost" size="icon" className="w-8 h-8 text-destructive" onClick={() => handleRemoveStudent(s.id, s.full_name ?? s.phone ?? '')}>
+                                                    <Button variant="ghost" size="icon" className="w-8 h-8 text-destructive" onClick={() => handleRemoveStudent(s.id, s.full_name ?? s.upi_number ?? '')}>
                                                         <Trash2 className="w-3.5 h-3.5" />
                                                     </Button>
                                                 </div>
@@ -334,17 +363,28 @@ const ClassDetail: React.FC = () => {
                     {/* ── GRADES TAB ── */}
                     <TabsContent value="grades">
                         <Card className="bg-gradient-surface border-card-border">
-                            <CardHeader>
-                                <CardTitle className="flex items-center gap-2 text-base">
-                                    <BookOpen className="w-4 h-4 text-primary" /> Grade Records
-                                </CardTitle>
-                                <CardDescription>All grades for students in this class</CardDescription>
+                            <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                                <div>
+                                    <CardTitle className="flex items-center gap-2 text-base">
+                                        <BookOpen className="w-4 h-4 text-primary" /> Grade Records
+                                    </CardTitle>
+                                    <CardDescription>All grades for students in this class</CardDescription>
+                                </div>
+                                <div className="relative w-full sm:w-64">
+                                    <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-foreground-muted" />
+                                    <Input
+                                        placeholder="Search by student, subject..."
+                                        className="pl-9 h-9 text-sm"
+                                        value={gradeSearch}
+                                        onChange={(e) => setGradeSearch(e.target.value)}
+                                    />
+                                </div>
                             </CardHeader>
                             <CardContent>
-                                {grades.length === 0 ? (
+                                {filteredGrades.length === 0 ? (
                                     <div className="text-center py-8">
                                         <BookOpen className="w-10 h-10 text-foreground-muted mx-auto mb-3" />
-                                        <p className="text-foreground-muted text-sm">No grades yet. Use Bulk Upload or add individual grades from the Students tab.</p>
+                                        <p className="text-foreground-muted text-sm">No grades found. Use Bulk Upload to add grades.</p>
                                     </div>
                                 ) : (
                                     <div className="overflow-x-auto">
@@ -357,7 +397,7 @@ const ClassDetail: React.FC = () => {
                                                 </tr>
                                             </thead>
                                             <tbody>
-                                                {grades.map((g) => (
+                                                {filteredGrades.map((g) => (
                                                     <tr key={g.id} className="border-b border-card-border/50 hover:bg-muted/20 transition-colors">
                                                         <td className="py-2.5 pr-4">
                                                             <p className="font-medium">{g.profiles?.full_name ?? g.student_phone ?? g.profiles?.email ?? '—'}</p>
@@ -430,13 +470,22 @@ const ClassDetail: React.FC = () => {
                     </DialogHeader>
                     <div className="space-y-4 pt-2">
                         <div className="grid grid-cols-2 gap-4">
-                            <div className="col-span-2 space-y-2">
+                            <div className="space-y-2">
                                 <Label>Subject *</Label>
                                 <Input
                                     placeholder="e.g. Mathematics"
                                     value={gradeForm.subject_name}
                                     onChange={(e) => setGradeForm((f) => ({ ...f, subject_name: e.target.value }))}
                                 />
+                            </div>
+                            <div className="space-y-2">
+                                <Label>Exam Type</Label>
+                                <Select value={gradeForm.exam_type} onValueChange={(v) => setGradeForm((f) => ({ ...f, exam_type: v }))}>
+                                    <SelectTrigger><SelectValue /></SelectTrigger>
+                                    <SelectContent>
+                                        {EXAM_TYPES.map((t) => <SelectItem key={t} value={t}>{t}</SelectItem>)}
+                                    </SelectContent>
+                                </Select>
                             </div>
                             <div className="space-y-2">
                                 <Label>Term *</Label>
@@ -470,15 +519,6 @@ const ClassDetail: React.FC = () => {
                                     value={gradeForm.max_marks}
                                     onChange={(e) => setGradeForm((f) => ({ ...f, max_marks: e.target.value }))}
                                 />
-                            </div>
-                            <div className="col-span-2 space-y-2">
-                                <Label>Exam Type</Label>
-                                <Select value={gradeForm.exam_type} onValueChange={(v) => setGradeForm((f) => ({ ...f, exam_type: v }))}>
-                                    <SelectTrigger><SelectValue /></SelectTrigger>
-                                    <SelectContent>
-                                        {EXAM_TYPES.map((t) => <SelectItem key={t} value={t}>{t}</SelectItem>)}
-                                    </SelectContent>
-                                </Select>
                             </div>
                             <div className="col-span-2 space-y-2">
                                 <Label>Teacher Comment (optional)</Label>

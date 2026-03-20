@@ -10,13 +10,16 @@ import { Badge } from '@/components/ui/badge'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import {
   LogOut, BookOpen, Users, GraduationCap,
-  ChevronRight, RefreshCw, Plus, FileSpreadsheet, AlertCircle
+  ChevronRight, RefreshCw, Plus, FileSpreadsheet, AlertCircle, Trash2
 } from 'lucide-react'
+import { useToast } from '@/hooks/use-toast'
+import { ThemeToggle } from '@/components/ThemeToggle'
 
 
 const TeacherDashboard: React.FC = () => {
   const navigate = useNavigate()
   const { user, profile, signOut } = useAuth()
+  const { toast } = useToast()
 
   const [school, setSchool] = useState<School | null>(null)
   const [classes, setClasses] = useState<ClassRecord[]>([])
@@ -56,6 +59,18 @@ const TeacherDashboard: React.FC = () => {
 
   const totalStudents = Object.values(classCounts).reduce((a, b) => a + b, 0)
 
+  const handleDeleteClass = async (e: React.MouseEvent, classId: string, name: string) => {
+    e.stopPropagation()
+    if (!window.confirm(`Are you sure you want to delete the class "${name}"? This action cannot be undone.`)) return
+    try {
+        await classService.deleteClass(classId)
+        toast({ title: 'Class deleted', description: `"${name}" has been removed.` })
+        loadData()
+    } catch (err) {
+        toast({ title: 'Error', description: err instanceof Error ? err.message : 'Failed to delete class', variant: 'destructive' })
+    }
+  }
+
   return (
     <div className="min-h-screen" style={{ background: 'var(--gradient-homepage)' }}>
       {/* Header */}
@@ -76,6 +91,7 @@ const TeacherDashboard: React.FC = () => {
               )}
             </div>
             <div className="flex items-center gap-3">
+              <ThemeToggle />
               <Button variant="ghost" size="icon" onClick={loadData} title="Refresh">
                 <RefreshCw className="w-4 h-4" />
               </Button>
@@ -170,26 +186,47 @@ const TeacherDashboard: React.FC = () => {
                 {classes.map((cls) => (
                   <div
                     key={cls.id}
-                    className="p-4 rounded-xl bg-muted/30 border border-card-border hover:border-primary/40 cursor-pointer transition-all group"
+                    className="p-4 rounded-xl bg-muted/30 border border-card-border hover:border-primary/40 hover:shadow-md transform hover:-translate-y-0.5 cursor-pointer transition-all group"
                     onClick={() => navigate(`/teacher/class/${cls.id}`)}
                   >
                     <div className="flex items-start justify-between mb-3">
                       <div className="w-9 h-9 rounded-lg bg-gradient-primary flex items-center justify-center">
                         <BookOpen className="w-4 h-4 text-primary-foreground" />
                       </div>
-                      <ChevronRight className="w-4 h-4 text-foreground-muted group-hover:text-primary transition-colors" />
+                      <div className="flex items-center gap-1">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="w-7 h-7 text-foreground-muted hover:text-destructive hover:bg-destructive/10 opacity-0 group-hover:opacity-100 transition-opacity"
+                          onClick={(e) => handleDeleteClass(e, cls.id, cls.name)}
+                          title="Delete class"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </Button>
+                        <ChevronRight className="w-4 h-4 text-foreground-muted group-hover:text-primary transition-colors" />
+                      </div>
                     </div>
                     <p className="font-semibold text-foreground">{cls.name}</p>
                     <p className="text-xs text-foreground-muted mt-0.5">{cls.grade_level} · {cls.academic_year}</p>
-                    <div className="flex items-center gap-3 mt-3 pt-3 border-t border-card-border">
-                      <div className="flex items-center gap-1 text-xs text-foreground-muted">
+                    <div className="flex items-center gap-2 mt-3 pt-3 border-t border-card-border">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="flex-1 justify-start gap-1.5 h-8 px-2 text-xs text-foreground-muted hover:text-foreground hover:bg-muted/50"
+                        onClick={(e) => { e.stopPropagation(); navigate(`/teacher/class/${cls.id}?tab=students`) }}
+                      >
                         <Users className="w-3.5 h-3.5" />
                         {classCounts[cls.id] ?? 0} students
-                      </div>
-                      <div className="flex items-center gap-1 text-xs text-foreground-muted">
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="flex-1 justify-start gap-1.5 h-8 px-2 text-xs text-foreground-muted hover:text-primary hover:bg-primary/10"
+                        onClick={(e) => { e.stopPropagation(); navigate(`/teacher/class/${cls.id}?tab=upload`) }}
+                      >
                         <FileSpreadsheet className="w-3.5 h-3.5" />
                         Upload grades
-                      </div>
+                      </Button>
                     </div>
                   </div>
                 ))}

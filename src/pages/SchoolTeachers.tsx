@@ -11,6 +11,7 @@ import {
     Mail, Clock, Trash2, RefreshCw, Plus, UserPlus
 } from 'lucide-react'
 import InviteTeacher from '@/components/school/InviteTeacher'
+import { ThemeToggle } from '@/components/ThemeToggle'
 
 const SchoolTeachers: React.FC = () => {
     const navigate = useNavigate()
@@ -82,6 +83,7 @@ const SchoolTeachers: React.FC = () => {
                             </div>
                         </div>
                         <div className="ml-auto flex items-center gap-3">
+                            <ThemeToggle />
                             <Badge variant="secondary">School Admin</Badge>
                             <Button variant="ghost" size="icon" onClick={() => signOut()} title="Sign out">
                                 <LogOut className="w-4 h-4" />
