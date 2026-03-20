@@ -23,6 +23,7 @@ import {
 } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { motion, AnimatePresence } from 'framer-motion'
+import { ThemeToggle } from '@/components/ThemeToggle'
 
 interface AdminStats {
   totalStudents: number
