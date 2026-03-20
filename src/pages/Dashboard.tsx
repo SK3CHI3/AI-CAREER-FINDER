@@ -1,4 +1,5 @@
 import { useAuth } from '@/contexts/AuthContext'
+import { getSessionMetadata } from '@/lib/cache-utils'
 import { Navigate } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -19,7 +20,12 @@ import {
 import { ThemeToggle } from '@/components/ThemeToggle'
 
 const Dashboard = () => {
-  const { user, profile, signOut } = useAuth()
+  const { user, profile, signOut, loading, profileLoading } = useAuth()
+  const cachedMeta = getSessionMetadata()
+  
+  const displayName = profile?.full_name || cachedMeta?.name || 'User'
+  const displayRole = profile?.role || 'student'
+  const displayLevel = profile?.school_level || cachedMeta?.level || ''
 
   // Redirect based on user role
   if (profile?.role === 'admin') return <Navigate to="/admin" replace />
@@ -89,10 +95,10 @@ const Dashboard = () => {
                 </Avatar>
                 <div className="hidden md:block">
                   <p className="text-sm font-medium text-foreground">
-                    {profile?.full_name || 'User'}
+                    {displayName}
                   </p>
-                  <Badge className={getRoleBadgeColor(profile?.role || 'student')}>
-                    {profile?.role || 'student'}
+                  <Badge className={getRoleBadgeColor(displayRole)}>
+                    {displayRole}
                   </Badge>
                 </div>
               </div>
@@ -110,7 +116,7 @@ const Dashboard = () => {
         {/* Welcome Section */}
         <div className="mb-8">
           <h2 className="text-3xl font-bold text-foreground mb-2">
-            Welcome back, {profile?.full_name?.split(' ')[0] || 'there'}! 👋
+            Welcome back, {displayName.split(' ')[0] || 'there'}! 👋
           </h2>
           <p className="text-foreground-muted">
             Ready to continue your career discovery journey?

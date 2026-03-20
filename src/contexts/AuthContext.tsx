@@ -7,6 +7,7 @@ import { supabase } from '@/lib/supabase'
 import type { Database } from '@/types/supabase'
 import { getJWTClaims, hasMFAEnabled, validateJWTForSensitiveOperation } from '@/lib/auth-utils'
 import { isSessionValid, destroySessionManager } from '@/lib/session-utils'
+import { setSessionMetadata, clearSessionMetadata } from '@/lib/cache-utils'
 
 interface Profile {
   id: string
@@ -92,8 +93,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setProfileError(err)
         setProfile(null)
       } else {
-        setProfile(data as Profile)
+        const profileData = data as Profile
+        setProfile(profileData)
         setProfileError(null)
+        
+        // Save light metadata for instant UI on next load
+        setSessionMetadata({
+          name: profileData.full_name || '',
+          level: profileData.school_level || '',
+          score: 100, // Placeholder or calculated completeness
+          lastVisit: new Date().toISOString()
+        })
       }
     } catch (error) {
       setProfileError(error instanceof Error ? error : new Error(String(error)))
@@ -304,6 +314,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const signOut = async () => {
     try {
       destroySessionManager()
+      clearSessionMetadata()
       // Clear local state first
       setUser(null)
       setProfile(null)

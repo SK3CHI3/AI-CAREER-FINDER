@@ -79,3 +79,52 @@ export function clearL1(userId: string): void {
     .filter(key => key.startsWith(prefix))
     .forEach(key => localStorage.removeItem(key));
 }
+
+/**
+ * Session Metadata Cookies (Light Stuff)
+ * Used to populate UI immediately on page load before Auth/DB sync.
+ */
+const SESSION_METADATA_KEY = 'cg_session_meta';
+
+export interface SessionMetadata {
+  name?: string;
+  level?: string;
+  score?: number;
+  lastVisit?: string;
+}
+
+export function setSessionMetadata(meta: SessionMetadata): void {
+  // Store for 30 days
+  Cookies.set(SESSION_METADATA_KEY, JSON.stringify(meta), { expires: 30, SameSite: 'Strict' });
+}
+
+export function getSessionMetadata(): SessionMetadata | null {
+  try {
+    const raw = Cookies.get(SESSION_METADATA_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch (e) {
+    return null;
+  }
+}
+
+export function clearSessionMetadata(): void {
+  Cookies.remove(SESSION_METADATA_KEY);
+}
+
+/**
+ * Cookie Consent (Funny Policy)
+ */
+const COOKIE_CONSENT_KEY = 'cg_cookie_consent';
+
+export function setCookieConsent(accepted: boolean): void {
+  Cookies.set(COOKIE_CONSENT_KEY, accepted ? 'true' : 'false', { expires: 365, SameSite: 'Strict' });
+}
+
+export function getCookieConsent(): boolean | null {
+  const val = Cookies.get(COOKIE_CONSENT_KEY);
+  if (val === 'true') return true;
+  if (val === 'false') return false;
+  return null;
+}
+
+
