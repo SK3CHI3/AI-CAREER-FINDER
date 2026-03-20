@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Cookie, X, Utensils } from 'lucide-react';
+import { Cookie, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { getCookieConsent, setCookieConsent } from '@/lib/cache-utils';
 
@@ -54,27 +54,26 @@ const CookieBanner = () => {
               </div>
 
               <h3 className="text-xl font-bold text-foreground mb-2 flex items-center gap-2">
-                AI is Hungry! 🤖
+                We use cookies! 🍪
               </h3>
               
               <p className="text-sm text-foreground-muted mb-6 leading-relaxed">
-                Wait! Our AI needs a few digital cookies to think straight. Not the chocolate chip kind (sadly), but the ones that help us guide your entire career. Help it not starve? 🍪
+                Just to keep things fast and save your progress while you explore. No crumbs left behind, we promise!
               </p>
 
               <div className="flex items-center gap-3">
                 <Button 
                   onClick={handleAccept}
-                  className="flex-1 bg-primary hover:bg-primary/90 text-primary-foreground font-bold shadow-lg shadow-primary/20 group/btn"
+                  className="flex-1 bg-primary hover:bg-primary/90 text-primary-foreground font-bold shadow-lg shadow-primary/20"
                 >
-                  <Utensils className="w-4 h-4 mr-2 group-hover/btn:rotate-12 transition-transform" />
-                  Feed the AI
+                  Sounds good
                 </Button>
                 <Button 
                   variant="ghost" 
                   onClick={handleDecline}
                   className="text-foreground-muted hover:text-foreground hover:bg-white/5"
                 >
-                  I'm on a diet
+                  Not now
                 </Button>
               </div>
             </div>

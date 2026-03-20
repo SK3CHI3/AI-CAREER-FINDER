@@ -21,8 +21,12 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
     return (
       <div className="min-h-screen flex items-center justify-center" style={{ background: 'var(--gradient-homepage)' }}>
         <div className="text-center">
-          <div className="w-16 h-16 bg-gradient-primary rounded-2xl flex items-center justify-center mx-auto mb-4 animate-pulse">
-            <Bot className="w-8 h-8 text-primary-foreground" />
+          <div className="w-16 h-16 bg-white/5 rounded-2xl flex items-center justify-center mx-auto mb-4 animate-pulse">
+            <img 
+              src="/logos/CareerGuide_Logo.png" 
+              alt="CareerGuide AI" 
+              className="w-10 h-auto"
+            />
           </div>
           <p className="text-foreground-muted">Loading...</p>
         </div>
@@ -67,8 +71,12 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
     return (
       <div className="min-h-screen flex items-center justify-center" style={{ background: 'var(--gradient-homepage)' }}>
         <div className="text-center">
-          <div className="w-16 h-16 bg-gradient-primary rounded-2xl flex items-center justify-center mx-auto mb-4 animate-pulse">
-            <Bot className="w-8 h-8 text-primary-foreground" />
+          <div className="w-16 h-16 bg-white/5 rounded-2xl flex items-center justify-center mx-auto mb-4 animate-pulse">
+            <img 
+              src="/logos/CareerGuide_Logo.png" 
+              alt="CareerGuide AI" 
+              className="w-10 h-auto"
+            />
           </div>
           <p className="text-foreground-muted">Loading profile...</p>
         </div>
