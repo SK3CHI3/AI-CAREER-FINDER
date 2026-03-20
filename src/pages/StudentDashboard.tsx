@@ -68,118 +68,12 @@ interface CareerDataItem {
   actionabilityScore?: number
 }
 
-const defaultCareerData: CareerDataItem[] = [
-  { name: 'Complete Profile', value: 100, color: '#6b7280' },
-  { name: 'Take Assessment', value: 0, color: '#e5e7eb' },
-  { name: 'Get AI Guidance', value: 0, color: '#e5e7eb' },
-]
 
-const recentActivities = [
-  {
-    id: 1,
-    type: 'assessment',
-    title: 'Career Assessment Completed',
-    description: 'Discovered your strengths in STEM fields',
-    time: '2 hours ago',
-    icon: Brain,
-    color: 'text-blue-500',
-    bgColor: 'bg-blue-50',
-    progress: 100
-  },
-  {
-    id: 2,
-    type: 'recommendation',
-    title: 'New Career Matches',
-    description: '3 new careers aligned with your CBE pathway',
-    time: '1 day ago',
-    icon: Sparkles,
-    color: 'text-green-500',
-    bgColor: 'bg-green-50',
-    progress: 85
-  },
-  {
-    id: 3,
-    type: 'chat',
-    title: 'AI Career Guidance',
-    description: 'Explored university programs and requirements',
-    time: '3 days ago',
-    icon: Bot,
-    color: 'text-purple-500',
-    bgColor: 'bg-purple-50',
-    progress: 90
-  },
-  {
-    id: 4,
-    type: 'achievement',
-    title: 'Profile Milestone',
-    description: 'Completed 80% of your career profile',
-    time: '1 week ago',
-    icon: Trophy,
-    color: 'text-orange-500',
-    bgColor: 'bg-orange-50',
-    progress: 80
-  },
-  {
-    id: 5,
-    type: 'learning',
-    title: 'CBE Pathway Explored',
-    description: 'Learned about Senior Secondary options',
-    time: '2 weeks ago',
-    icon: GraduationCap,
-    color: 'text-indigo-500',
-    bgColor: 'bg-indigo-50',
-    progress: 75
-  }
-]
-
-// Quick stats data
-const quickStats = [
-  {
-    id: 1,
-    title: 'Career Matches',
-    value: '12',
-    change: '+3 this week',
-    icon: Target,
-    color: 'text-blue-600',
-    bgColor: 'bg-blue-100',
-    trend: 'up'
-  },
-  {
-    id: 2,
-    title: 'Profile Complete',
-    value: '85%',
-    change: '+15% this month',
-    icon: User,
-    color: 'text-green-600',
-    bgColor: 'bg-green-100',
-    trend: 'up'
-  },
-  {
-    id: 3,
-    title: 'AI Sessions',
-    value: '24',
-    change: '+8 this week',
-    icon: Bot,
-    color: 'text-purple-600',
-    bgColor: 'bg-purple-100',
-    trend: 'up'
-  },
-  {
-    id: 4,
-    title: 'Learning Hours',
-    value: '47h',
-    change: '+12h this week',
-    icon: BookMarked,
-    color: 'text-orange-600',
-    bgColor: 'bg-orange-100',
-    trend: 'up'
-  }
-]
 
 const StudentDashboard = () => {
   const { user, profile, signOut } = useAuth()
   const [activeTab, setActiveTab] = useState('overview')
-  const [careerData, setCareerData] = useState<CareerDataItem[]>(defaultCareerData)
+  const [careerData, setCareerData] = useState<CareerDataItem[]>([])
   const [isLoadingRecommendations, setIsLoadingRecommendations] = useState(false)
   const [dynamicStats, setDynamicStats] = useState<UserStat[]>([])
   const [isLoadingStats, setIsLoadingStats] = useState(true)
@@ -269,67 +163,6 @@ const StudentDashboard = () => {
   };
 
 
-  // Helper functions for career data enhancement
-  const getCareerDescription = (careerName: string) => {
-    const descriptions: { [key: string]: string } = {
-      'Software Engineer': "High demand in Kenya's tech sector with excellent growth prospects.",
-      'Data Scientist': "Growing field with opportunities in fintech and healthcare analytics.",
-      'Business Analyst': "Strategic role bridging technology and business needs.",
-      'Marketing Manager': "Creative field with opportunities in digital marketing and brand management.",
-      'Financial Advisor': "Growing demand in Kenya's expanding financial services sector.",
-      'Graphic Designer': "Creative opportunities in advertising, media, and digital design.",
-      'Engineering Technician': "Hands-on technical role supporting Kenya's infrastructure development.",
-      'Content Creator': "Emerging field with opportunities in social media and digital content.",
-      'Art Teacher': "Educational role combining creativity with teaching and mentorship."
-    };
-    return descriptions[careerName] || "Exciting career opportunity aligned with your interests and skills.";
-  };
-
-  const getCareerSalary = (careerName: string) => {
-    const salaries: { [key: string]: string } = {
-      'Software Engineer': 'KES 80K - 200K',
-      'Data Scientist': 'KES 70K - 180K',
-      'Business Analyst': 'KES 60K - 150K',
-      'Marketing Manager': 'KES 50K - 120K',
-      'Financial Advisor': 'KES 45K - 100K',
-      'Graphic Designer': 'KES 35K - 80K',
-      'Engineering Technician': 'KES 40K - 90K',
-      'Content Creator': 'KES 30K - 100K',
-      'Art Teacher': 'KES 35K - 70K'
-    };
-    return salaries[careerName] || 'KES 40K - 100K';
-  };
-
-  const getCareerGrowth = (careerName: string) => {
-    const growth: { [key: string]: string } = {
-      'Software Engineer': 'Very High Growth',
-      'Data Scientist': 'Very High Growth',
-      'Business Analyst': 'High Growth',
-      'Marketing Manager': 'High Growth',
-      'Financial Advisor': 'Moderate Growth',
-      'Graphic Designer': 'Moderate Growth',
-      'Engineering Technician': 'High Growth',
-      'Content Creator': 'Very High Growth',
-      'Art Teacher': 'Stable Growth'
-    };
-    return growth[careerName] || 'Moderate Growth';
-  };
-
-  const getCareerEducation = (careerName: string) => {
-    const education: { [key: string]: string } = {
-      'Software Engineer': "Bachelor's in Computer Science",
-      'Data Scientist': "Bachelor's + Data Analytics Certification",
-      'Business Analyst': "Bachelor's in Business/IT",
-      'Marketing Manager': "Bachelor's in Marketing/Communications",
-      'Financial Advisor': "Bachelor's in Finance/Economics",
-      'Graphic Designer': "Diploma/Bachelor's in Design",
-      'Engineering Technician': "Diploma in Engineering",
-      'Content Creator': "Diploma in Media/Communications",
-      'Art Teacher': "Bachelor's in Education (Arts)"
-    };
-    return education[careerName] || "Bachelor's Degree";
-  };
-
   // Fetch AI-powered insights for the dashboard
   const fetchAIInsights = async () => {
     if (!profile || !user) return;
@@ -399,10 +232,10 @@ const StudentDashboard = () => {
           name: rec.career_name,
           value: rec.match_percentage,
           color: index === 0 ? '#3b82f6' : index === 1 ? '#10b981' : '#f59e0b',
-          description: rec.description || getCareerDescription(rec.career_name),
-          salaryRange: rec.salary_range || getCareerSalary(rec.career_name),
-          growth: rec.growth || getCareerGrowth(rec.career_name),
-          education: rec.education || getCareerEducation(rec.career_name),
+          description: rec.description || "Exciting career opportunity aligned with your interests and skills.",
+          salaryRange: rec.salary_range || 'KES 40K - 100K',
+          growth: rec.growth_prospect || 'Moderate Growth',
+          education: rec.education_required || "Bachelor's Degree or Diploma Required",
           actionabilityScore: rec.actionability_score || 85
         }));
 
@@ -447,10 +280,10 @@ const StudentDashboard = () => {
           name: rec.title,
           value: rec.matchPercentage,
           color: index === 0 ? '#3b82f6' : index === 1 ? '#10b981' : '#f59e0b',
-          description: getCareerDescription(rec.title),
-          salaryRange: getCareerSalary(rec.title),
-          growth: getCareerGrowth(rec.title),
-          education: getCareerEducation(rec.title),
+          description: rec.description || "Exciting career opportunity aligned with your interests and skills.",
+          salaryRange: rec.salaryRange || 'KES 40K - 100K',
+          growth: rec.growth || 'Moderate Growth',
+          education: rec.education || "Bachelor's Degree or Diploma Required",
           actionabilityScore: rec.actionabilityScore || 80
         }));
 
@@ -460,46 +293,13 @@ const StudentDashboard = () => {
         // Track the AI recommendation generation
         trackButtonClick('AI Career Recommendations Generated', 'Dashboard');
       } else {
-        // Fallback to enhanced default data if no recommendations
-        setCareerData([
-          {
-            name: 'Software Engineer',
-            value: 85,
-            color: '#3b82f6',
-            description: "High demand in Kenya's tech sector with excellent growth prospects.",
-            salaryRange: 'KES 80K - 200K',
-            growth: 'High Growth',
-            education: "Bachelor's Required"
-          },
-          {
-            name: 'Data Scientist',
-            value: 78,
-            color: '#10b981',
-            description: "Growing field with opportunities in fintech and healthcare analytics.",
-            salaryRange: 'KES 70K - 180K',
-            growth: 'Very High Growth',
-            education: "Bachelor's + Certification"
-          },
-          {
-            name: 'Business Analyst',
-            value: 72,
-            color: '#f59e0b',
-            description: "Strategic role bridging technology and business needs.",
-            salaryRange: 'KES 60K - 150K',
-            growth: 'Moderate Growth',
-            education: "Bachelor's Required"
-          }
-        ]);
+        setCareerData([]);
       }
     } catch (error) {
       console.error('Failed to load career recommendations:', error);
 
       // Fallback to sample data on error
-      setCareerData([
-        { name: 'Complete Assessment', value: 100, color: '#6b7280' },
-        { name: 'Explore Careers', value: 0, color: '#e5e7eb' },
-        { name: 'Get AI Guidance', value: 0, color: '#e5e7eb' }
-      ]);
+      setCareerData([]);
     } finally {
       setIsLoadingRecommendations(false)
     }
@@ -662,14 +462,7 @@ const StudentDashboard = () => {
                 Continue your career discovery journey and unlock your potential.
               </p>
             </div>
-            <div className="hidden md:flex items-center gap-4">
-              <div className="text-right">
-                <p className="text-sm text-foreground-muted">Current Streak</p>
-                <p className="text-xl sm:text-2xl font-bold text-orange-500 flex items-center gap-1">
-                  <Zap className="w-5 h-5" /> 7 days
-                </p>
-              </div>
-            </div>
+
           </div>
         </div>
 
