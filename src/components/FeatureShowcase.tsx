@@ -112,9 +112,9 @@ const FeatureShowcase = () => {
 
           {/* Right Content */}
           <div className="order-1 lg:order-2 space-y-8">
-            <div className="inline-flex items-center space-x-2 bg-primary/10 text-primary px-3 py-1.5 rounded-full text-sm font-semibold border border-primary/20">
-              <UserCircle2 className="w-4 h-4" />
-              <span>For Students</span>
+            <div className="flex items-center space-x-2 text-primary">
+              <UserCircle2 className="w-5 h-5" />
+              <span className="text-sm font-bold uppercase tracking-wider">For Students</span>
             </div>
             
             <h2 className="text-4xl md:text-5xl font-bold font-serif text-foreground leading-tight">
@@ -147,7 +147,6 @@ const FeatureShowcase = () => {
                 <div className="pt-0.5">
                   <h4 className="text-lg font-bold text-card-foreground mb-1.5 flex items-center gap-2">
                     Career Days & Scholarships
-                    <span className="bg-primary/10 text-primary text-[10px] px-2 py-0.5 rounded-full border border-primary/20 h-4 flex items-center">New</span>
                   </h4>
                   <p className="text-sm text-foreground-muted leading-relaxed font-medium">
                     Spend a day with professionals in your target field and unlock exclusive scholarship opportunities to fund your dreams.
@@ -173,9 +172,9 @@ const FeatureShowcase = () => {
           
           {/* Left Content */}
           <div className="space-y-8">
-            <div className="inline-flex items-center space-x-2 bg-secondary/10 text-secondary px-3 py-1.5 rounded-full text-sm font-semibold border border-secondary/20">
-              <Building2 className="w-4 h-4" />
-              <span>For Schools & Educators</span>
+            <div className="flex items-center space-x-2 text-secondary">
+              <Building2 className="w-5 h-5" />
+              <span className="text-sm font-bold uppercase tracking-wider">For Schools & Educators</span>
             </div>
             
             <h2 className="text-4xl md:text-5xl font-bold font-serif text-foreground leading-tight">
