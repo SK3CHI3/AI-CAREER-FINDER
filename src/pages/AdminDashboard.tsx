@@ -733,64 +733,67 @@ const AdminDashboard = () => {
                   <Card className="bg-slate-950/40 backdrop-blur-md border-white/5 shadow-glass overflow-hidden">
                     <CardHeader className="border-b border-white/5 py-6">
                       <CardTitle className="text-lg font-black tracking-tight text-white flex items-center gap-2">
-                        <Activity className="w-5 h-5 text-primary" />
-                        System Activity Log
+                        <Users className="w-5 h-5 text-primary" />
+                        User Directory
                       </CardTitle>
-                      <CardDescription className="text-xs text-slate-300">Real-time platform interactions</CardDescription>
+                      <CardDescription className="text-xs text-slate-300">Manage all registered accounts</CardDescription>
                     </CardHeader>
                     <CardContent className="p-0">
                       <Table>
                         <TableHeader className="bg-white/[0.02]">
                           <TableRow className="hover:bg-transparent border-white/5">
-                            <TableHead className="py-5 px-6 font-black uppercase tracking-widest text-[10px] text-slate-300">Entity</TableHead>
-                            <TableHead className="font-black uppercase tracking-widest text-[10px] text-slate-300">Action</TableHead>
-                            <TableHead className="font-black uppercase tracking-widest text-[10px] text-slate-300">Details</TableHead>
-                            <TableHead className="font-black uppercase tracking-widest text-[10px] text-slate-300">Timeline</TableHead>
+                            <TableHead className="py-5 px-6 font-black uppercase tracking-widest text-[10px] text-slate-300">Identity</TableHead>
+                            <TableHead className="font-black uppercase tracking-widest text-[10px] text-slate-300">Role</TableHead>
+                            <TableHead className="font-black uppercase tracking-widest text-[10px] text-slate-300">Status</TableHead>
+                            <TableHead className="font-black uppercase tracking-widest text-[10px] text-slate-300">Joined</TableHead>
+                            <TableHead className="font-black uppercase tracking-widest text-[10px] text-slate-300 text-right pr-6">Management</TableHead>
                           </TableRow>
                         </TableHeader>
                         <TableBody>
-                          {stats.globalActivities.length === 0 ? (
+                          {filteredUsers.length === 0 ? (
                             <TableRow>
-                              <TableCell colSpan={4} className="text-center py-20">
-                                <Activity className="w-12 h-12 text-slate-700 mx-auto mb-4 opacity-20" />
-                                <p className="text-slate-500 font-bold uppercase tracking-widest text-xs italic">No system activity detected</p>
+                              <TableCell colSpan={5} className="text-center py-20">
+                                <Users className="w-12 h-12 text-slate-700 mx-auto mb-4 opacity-20" />
+                                <p className="text-slate-500 font-bold uppercase tracking-widest text-xs italic">No system participants match your criteria</p>
                               </TableCell>
                             </TableRow>
                           ) : (
-                            stats.globalActivities.map((act) => (
-                              <TableRow key={act.id} className="border-white/5 hover:bg-white/[0.02] transition-colors group">
+                            filteredUsers.map((u) => (
+                              <TableRow key={u.id} className="border-white/5 hover:bg-white/[0.02] transition-colors group">
                                 <TableCell className="py-4 px-6">
                                   <div className="flex items-center gap-4">
                                     <Avatar className="w-8 h-8 border border-white/5 shadow-inner">
                                       <AvatarFallback className="bg-slate-800 text-[10px] font-bold">
-                                        {getInitials(act.profiles?.full_name || 'U')}
+                                        {getInitials(u.name)}
                                       </AvatarFallback>
                                     </Avatar>
                                     <div>
-                                      <p className="font-bold text-xs text-white group-hover:text-primary transition-colors">{act.profiles?.full_name || 'Unknown User'}</p>
-                                      <p className="text-[10px] text-slate-400 font-mono tracking-tight">{act.profiles?.email || 'N/A'}</p>
+                                      <p className="font-bold text-xs text-white group-hover:text-primary transition-colors">{u.name}</p>
+                                      <p className="text-[10px] text-slate-400 font-mono tracking-tight">{u.email}</p>
                                     </div>
                                   </div>
                                 </TableCell>
                                 <TableCell>
                                   <Badge variant="outline" className={`text-[9px] uppercase font-black px-2 py-0 border-white/10 bg-white/5 ${
-                                    act.activity_type === 'login' ? 'text-emerald-400' : 
-                                    act.activity_type.includes('assessment') ? 'text-primary' : 
-                                    act.activity_type === 'chat' ? 'text-violet-400' : 'text-slate-300'
+                                    u.role === 'admin' ? 'text-rose-400' : 
+                                    u.role === 'school' ? 'text-amber-400' : 
+                                    u.role === 'teacher' ? 'text-blue-400' : 'text-slate-300'
                                   }`}>
-                                    {act.activity_type}
+                                    {u.role}
                                   </Badge>
                                 </TableCell>
                                 <TableCell>
-                                  <div>
-                                    <p className="text-xs font-bold text-slate-200">{act.activity_title}</p>
-                                    <p className="text-[10px] text-slate-400 truncate w-48">{act.activity_description}</p>
-                                  </div>
+                                  <Badge className="bg-emerald-500/10 text-emerald-500 border-none text-[9px] uppercase font-black px-2 py-0">
+                                    {u.status}
+                                  </Badge>
                                 </TableCell>
-                                <TableCell className="text-[10px] font-bold text-slate-300 uppercase tracking-tighter italic">
-                                  {new Date(act.created_at).toLocaleString('en-KE', { 
-                                    day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' 
-                                  })}
+                                <TableCell className="text-[10px] font-bold text-slate-300 tracking-tighter italic">
+                                  {u.joined}
+                                </TableCell>
+                                <TableCell className="text-right pr-6">
+                                  <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400 hover:text-white hover:bg-white/5">
+                                    <Shield className="w-4 h-4" />
+                                  </Button>
                                 </TableCell>
                               </TableRow>
                             ))
