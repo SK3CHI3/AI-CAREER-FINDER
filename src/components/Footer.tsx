@@ -103,12 +103,12 @@ const Footer = () => {
               © {new Date().getFullYear()} CareerGuide AI. All rights reserved.
             </p>
             <div className="flex space-x-6">
-              <a href="#" className="text-foreground-muted hover:text-foreground text-sm transition-colors">
+              <button onClick={() => navigate('/privacy')} className="text-foreground-muted hover:text-foreground text-sm transition-colors">
                 Privacy Policy
-              </a>
-              <a href="#" className="text-foreground-muted hover:text-foreground text-sm transition-colors">
+              </button>
+              <button onClick={() => navigate('/terms')} className="text-foreground-muted hover:text-foreground text-sm transition-colors">
                 Terms of Service
-              </a>
+              </button>
               <a href="#" className="text-foreground-muted hover:text-foreground text-sm transition-colors">
                 Cookie Policy
               </a>

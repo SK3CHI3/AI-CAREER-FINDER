@@ -30,6 +30,8 @@ import FeedbackWidget from "./components/FeedbackWidget";
 import CookieBanner from "./components/CookieBanner";
 import BlogIndex from "./pages/BlogIndex";
 import BlogPostPage from "./pages/BlogPost";
+import Terms from "./pages/Terms";
+import Privacy from "./pages/Privacy";
 
 const queryClient = new QueryClient();
 
@@ -128,6 +130,8 @@ const App = () => (
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="/blog" element={<BlogIndex />} />
             <Route path="/blog/:slug" element={<BlogPostPage />} />
+            <Route path="/terms" element={<Terms />} />
+            <Route path="/privacy" element={<Privacy />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
           <FeedbackWidget />
