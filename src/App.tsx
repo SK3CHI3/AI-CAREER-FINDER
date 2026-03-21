@@ -16,6 +16,7 @@ import AdminDashboard from "./pages/AdminDashboard";
 import SchoolDashboard from "./pages/SchoolDashboard"
 import SchoolTeachers from "./pages/SchoolTeachers"
 import SchoolClasses from "./pages/SchoolClasses"
+import SchoolStudents from "./pages/SchoolStudents";
 import TeacherDashboard from "./pages/TeacherDashboard"
 import ClassDetail from "./pages/ClassDetail";
 import AcceptInvite from "./pages/AcceptInvite";
@@ -91,6 +92,14 @@ const App = () => (
               element={
                 <ProtectedRoute requiredRole="school">
                   <SchoolClasses />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/school/students"
+              element={
+                <ProtectedRoute requiredRole="school">
+                  <SchoolStudents />
                 </ProtectedRoute>
               }
             />

@@ -139,11 +139,15 @@ const SchoolDashboard: React.FC = () => {
         {/* Stats Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
           {[
-            { label: 'Academic Staff', value: stats.teacherCount, icon: GraduationCap, color: 'text-blue-400', bg: 'bg-blue-400/10' },
-            { label: 'Active Classes', value: stats.classCount, icon: BookOpen, color: 'text-purple-400', bg: 'bg-purple-400/10' },
-            { label: 'Enrolled Students', value: stats.studentCount, icon: Users, color: 'text-green-400', bg: 'bg-green-400/10' },
-          ].map(({ label, value, icon: Icon, color, bg }) => (
-            <Card key={label} className="bg-gradient-surface border-card-border overflow-hidden relative group">
+            { label: 'Academic Staff', value: stats.teacherCount, icon: GraduationCap, color: 'text-blue-400', bg: 'bg-blue-400/10', link: '/school/teachers' },
+            { label: 'Active Classes', value: stats.classCount, icon: BookOpen, color: 'text-purple-400', bg: 'bg-purple-400/10', link: '/school/classes' },
+            { label: 'Enrolled Students', value: stats.studentCount, icon: Users, color: 'text-green-400', bg: 'bg-green-400/10', link: '/school/students' },
+          ].map(({ label, value, icon: Icon, color, bg, link }) => (
+            <Card 
+              key={label} 
+              className="bg-gradient-surface border-card-border overflow-hidden relative group cursor-pointer hover:border-primary/30 transition-colors"
+              onClick={() => navigate(link)}
+            >
               <div className={`absolute top-0 right-0 w-24 h-24 -mr-8 -mt-8 rounded-full ${bg} blur-2xl opacity-50 group-hover:opacity-80 transition-opacity`} />
               <CardContent className="p-6 flex items-center gap-5 relative">
                 <div className={`w-14 h-14 rounded-2xl ${bg} flex items-center justify-center ${color} shadow-sm border border-white/5`}>

@@ -182,6 +182,60 @@ class SchoolService {
     if (error) throw new Error(error.message)
   }
 
+  // ─── Students ─────────────────────────────────────────────────────────
+
+  async getSchoolStudents(schoolId: string): Promise<any[]> {
+    // A school's students are anyone enrolled in classes belonging to this school
+    const { data: schoolClasses } = await supabase
+      .from('classes')
+      .select('id')
+      .eq('school_id', schoolId)
+      
+    if (!schoolClasses || schoolClasses.length === 0) return []
+    
+    const classIds = schoolClasses.map(c => c.id)
+    
+    // Fetch unique enrollments. Since a student can be in multiple classes, we might want to group them.
+    const { data: enrollments, error } = await supabase
+      .from('class_enrollments')
+      .select(`
+        id,
+        student_user_id,
+        student_upi,
+        enrolled_at,
+        class_id,
+        classes ( name, grade_level ),
+        profiles!student_user_id ( full_name, email )
+      `)
+      .in('class_id', classIds)
+      .order('enrolled_at', { ascending: false })
+
+    if (error) throw new Error(error.message)
+    
+    // Deduplicate by UPI
+    const studentMap = new Map<string, any>()
+    const enrollmentsList = enrollments as any[] || []
+    
+    enrollmentsList.forEach(e => {
+        const upi = e.student_upi?.toUpperCase() || `UNKNOWN-${e.id}`;
+        if (!studentMap.has(upi)) {
+            studentMap.set(upi, {
+                user_id: e.student_user_id,
+                upi_number: e.student_upi,
+                full_name: e.profiles?.full_name || 'Pending Registration...',
+                email: e.profiles?.email || 'N/A',
+                classes: [{ name: e.classes?.name, grade: e.classes?.grade_level }],
+                enrolled_at: e.enrolled_at
+            })
+        } else {
+            const existing = studentMap.get(upi)
+            existing.classes.push({ name: e.classes?.name, grade: e.classes?.grade_level })
+        }
+    })
+    
+    return Array.from(studentMap.values())
+  }
+
   // ─── School Stats ─────────────────────────────────────────────────────
 
   async getSchoolStats(schoolId: string): Promise<{

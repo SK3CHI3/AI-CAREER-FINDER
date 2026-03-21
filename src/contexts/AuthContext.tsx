@@ -238,7 +238,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         await supabase.from('profiles').update({ upi_number: upiOrPhone } as any).eq('id', data.user.id)
         
         // Sync any orphaned grades and class enrollments that were uploaded before the student created an account
-        const { error: syncError } = await supabase.rpc('sync_student_data', {
+        const { error: syncError } = await supabase.rpc('sync_student_data' as any, {
           p_user_id: data.user.id,
           p_upi: upiOrPhone.toUpperCase()
         })
