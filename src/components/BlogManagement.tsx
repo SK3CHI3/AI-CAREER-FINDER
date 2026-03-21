@@ -5,8 +5,8 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Plus, Edit2, Trash2, Image as ImageIcon, CheckCircle2, XCircle, ArrowLeft, Loader2 } from 'lucide-react';
-import ReactQuill from 'react-quill';
-import 'react-quill/dist/quill.snow.css';
+import ReactQuill from 'react-quill-new';
+import 'react-quill-new/dist/quill.snow.css';
 import { motion, AnimatePresence } from 'framer-motion';
 
 interface BlogPost {

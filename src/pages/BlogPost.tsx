@@ -75,20 +75,20 @@ export default function BlogPostPage() {
 
       <main className="flex-1 relative z-10 w-full overflow-x-hidden">
         {/* Header Hero Section */}
-        <div className="relative pt-40 pb-32 text-center px-4">
+        <div className="relative pt-40 pb-32 text-center px-4 overflow-hidden">
           <div className="absolute inset-0 z-0">
              {post.cover_image_url ? (
                <>
-                 <img src={post.cover_image_url} alt="" className="w-full h-full object-cover opacity-20 blur-sm" />
-                 <div className="absolute inset-0 bg-gradient-to-b from-background/80 via-background to-background" />
+                 <img src={post.cover_image_url} alt="" className="w-full h-full object-cover opacity-30 dark:opacity-20 blur-sm" />
+                 <div className="absolute inset-0 bg-gradient-to-b from-background/70 via-background/95 to-background" />
                </>
              ) : (
-                 <div className="w-full h-full bg-slate-900" />
+                 <div className="w-full h-full bg-muted/30" />
              )}
           </div>
           
           <div className="max-w-4xl mx-auto relative z-10">
-            <Link to="/blog" className="inline-flex items-center text-primary font-bold text-sm uppercase tracking-widest hover:text-white transition-colors mb-12">
+            <Link to="/blog" className="inline-flex items-center text-primary font-bold text-sm uppercase tracking-widest hover:text-foreground transition-colors mb-12">
               <ArrowLeft className="w-4 h-4 mr-2" /> Back to all articles
             </Link>
 
@@ -96,16 +96,16 @@ export default function BlogPostPage() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
             >
-              <h1 className="text-4xl md:text-6xl font-black font-serif text-white tracking-tight leading-tight mb-8">
+              <h1 className="text-4xl md:text-6xl font-black font-serif text-foreground tracking-tight leading-tight mb-8">
                 {post.title}
               </h1>
 
-              <div className="flex flex-wrap items-center justify-center gap-6 text-sm font-bold uppercase tracking-widest text-slate-400">
-                <div className="flex items-center gap-2 bg-white/5 py-2 px-4 rounded-full border border-white/10">
+              <div className="flex flex-wrap items-center justify-center gap-6 text-sm font-bold uppercase tracking-widest text-muted-foreground">
+                <div className="flex items-center gap-2 bg-card/50 backdrop-blur-md py-2 px-4 rounded-full border border-card-border shadow-sm">
                   <Calendar className="w-4 h-4 text-primary" />
                   {new Date(post.published_at).toLocaleDateString(undefined, { month: 'long', day: 'numeric', year: 'numeric' })}
                 </div>
-                <div className="flex items-center gap-2 bg-white/5 py-2 px-4 rounded-full border border-white/10">
+                <div className="flex items-center gap-2 bg-card/50 backdrop-blur-md py-2 px-4 rounded-full border border-card-border shadow-sm">
                   <Clock className="w-4 h-4 text-primary" />
                   {readingTime} min read
                 </div>
@@ -121,7 +121,7 @@ export default function BlogPostPage() {
                  initial={{ opacity: 0, scale: 0.95 }}
                  animate={{ opacity: 1, scale: 1 }}
                  transition={{ delay: 0.2 }}
-                 className="rounded-3xl overflow-hidden shadow-2xl border border-white/10 aspect-[21/9] bg-slate-900"
+                 className="rounded-3xl overflow-hidden shadow-2xl border border-card-border aspect-[21/9] bg-muted"
               >
                   <img src={post.cover_image_url} alt={post.title} className="w-full h-full object-cover" />
               </motion.div>
@@ -134,13 +134,14 @@ export default function BlogPostPage() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.3 }}
-            className="prose prose-invert prose-lg prose-slate max-w-none
-              prose-headings:font-black prose-headings:tracking-tight 
-              prose-a:text-primary prose-a:no-underline hover:prose-a:text-primary/80 
-              prose-img:rounded-2xl prose-img:shadow-xl
-              prose-p:text-slate-300 prose-p:leading-relaxed
-              prose-li:text-slate-300 prose-ul:font-medium
-              prose-strong:text-white
+            className="prose dark:prose-invert prose-lg md:prose-xl max-w-none
+              prose-headings:font-black prose-headings:tracking-tight prose-headings:text-foreground
+              prose-a:text-primary prose-a:font-semibold hover:prose-a:text-primary/80 prose-a:transition-colors
+              prose-img:rounded-3xl prose-img:shadow-2xl prose-img:border prose-img:border-border
+              prose-p:leading-relaxed prose-p:text-muted-foreground
+              prose-li:text-muted-foreground prose-ul:font-medium
+              prose-strong:text-foreground prose-strong:font-bold
+              prose-blockquote:border-l-primary prose-blockquote:text-muted-foreground prose-blockquote:font-medium prose-blockquote:italic
             "
             dangerouslySetInnerHTML={{ __html: post.content }}
           />

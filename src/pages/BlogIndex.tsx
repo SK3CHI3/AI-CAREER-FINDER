@@ -66,10 +66,10 @@ export default function BlogIndex() {
             animate={{ opacity: 1, y: 0 }}
             className="text-center max-w-3xl mx-auto mb-20"
           >
-            <h1 className="text-4xl md:text-6xl font-black font-serif tracking-tight text-white mb-6">
+            <h1 className="text-4xl md:text-6xl font-black font-serif tracking-tight text-foreground mb-6">
               The Path <span className="text-primary">Forward</span>
             </h1>
-            <p className="text-lg text-slate-400 font-medium leading-relaxed">
+            <p className="text-lg text-muted-foreground font-medium leading-relaxed">
               Explore our latest insights, success stories, and deep-dives into the future of education and career guidance under CBC.
             </p>
           </motion.div>
@@ -100,14 +100,14 @@ export default function BlogIndex() {
                       />
                     ) : (
                       <div className="w-full h-full bg-gradient-to-br from-primary/20 to-violet-900/40 flex items-center justify-center">
-                        <span className="text-white/20 font-black text-4xl">CGAI</span>
+                        <span className="text-foreground/20 font-black text-4xl">CGAI</span>
                       </div>
                     )}
-                    <div className="absolute inset-0 bg-black/20 group-hover:bg-transparent transition-colors duration-300" />
+                    <div className="absolute inset-0 bg-black/20 dark:bg-black/40 group-hover:bg-transparent transition-colors duration-300" />
                   </div>
                   
                   <div className="p-8 flex-1 flex flex-col">
-                    <div className="flex items-center gap-4 text-xs font-bold uppercase tracking-widest text-slate-400 mb-4">
+                    <div className="flex items-center gap-4 text-xs font-bold uppercase tracking-widest text-muted-foreground mb-4">
                       <div className="flex items-center gap-1.5">
                         <Calendar className="w-3.5 h-3.5 text-primary" />
                         {new Date(post.published_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
@@ -118,11 +118,11 @@ export default function BlogIndex() {
                       </div>
                     </div>
 
-                    <h2 className="text-2xl font-black text-white mb-3 line-clamp-2 leading-tight group-hover:text-primary transition-colors">
+                    <h2 className="text-2xl font-black text-foreground mb-3 line-clamp-2 leading-tight group-hover:text-primary transition-colors">
                       {post.title}
                     </h2>
                     
-                    <p className="text-slate-400 leading-relaxed mb-8 line-clamp-3 text-sm flex-1">
+                    <p className="text-muted-foreground leading-relaxed mb-8 line-clamp-3 text-sm flex-1">
                       {post.excerpt}
                     </p>
 
@@ -134,9 +134,9 @@ export default function BlogIndex() {
               ))}
             </div>
           ) : (
-            <div className="text-center py-32 bg-white/5 border border-white/10 rounded-3xl">
-              <h3 className="text-2xl font-black text-white mb-2">No Articles Yet</h3>
-              <p className="text-slate-400">Check back soon for our newest content and updates!</p>
+            <div className="text-center py-32 bg-card border border-card-border rounded-3xl">
+              <h3 className="text-2xl font-black text-foreground mb-2">No Articles Yet</h3>
+              <p className="text-muted-foreground">Check back soon for our newest content and updates!</p>
             </div>
           )}
         </div>
