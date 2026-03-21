@@ -236,6 +236,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (!error && data.user) {
       if (isStudent) {
         await supabase.from('profiles').update({ upi_number: upiOrPhone } as any).eq('id', data.user.id)
+        
+        // Sync any orphaned grades and class enrollments that were uploaded before the student created an account
+        const { error: syncError } = await supabase.rpc('sync_student_data', {
+          p_user_id: data.user.id,
+          p_upi: upiOrPhone.toUpperCase()
+        })
+        
+        if (syncError) {
+          console.error("Warning: Failed to sync orphaned student data automatically:", syncError)
+        }
       } else {
         await supabase.from('profiles').update({ phone: upiOrPhone } as any).eq('id', data.user.id)
       }
