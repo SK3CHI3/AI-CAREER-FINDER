@@ -115,6 +115,7 @@ const AdminDashboard = () => {
   const [schools, setSchools] = useState<School[]>([])
   const [analytics, setAnalytics] = useState<AnalyticsData[]>([])
   const [updatingId, setUpdatingId] = useState<string | null>(null)
+  const [selectedSchool, setSelectedSchool] = useState<School | null>(null)
   const [isSidebarOpen, setIsSidebarOpen] = useState(true)
   const [dateRange, setDateRange] = useState('30d')
 
@@ -984,17 +985,140 @@ const AdminDashboard = () => {
 
               {activeTab === 'schools' && (
                 <div className="space-y-8">
-                  <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
-                    <div>
-                      <h2 className="text-3xl font-black tracking-tight mb-1">Institutional Hub</h2>
-                      <p className="text-slate-300 text-sm">Oversee and support registered schools.</p>
-                    </div>
-                    <Button 
-                      className="h-12 rounded-2xl bg-emerald-500 hover:bg-emerald-600 text-white font-bold px-6 shadow-glow transition-all active:scale-95"
-                    >
-                      <Building2 className="w-4 h-4 mr-2" /> Register New School
-                    </Button>
-                  </div>
+                  {selectedSchool ? (
+                    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-8">
+                      <div className="flex items-center gap-4 mb-2">
+                        <Button variant="ghost" className="text-slate-400 hover:text-white pl-0" onClick={() => setSelectedSchool(null)}>
+                          <ChevronRight className="w-4 h-4 mr-2 rotate-180" /> Back to Directory
+                        </Button>
+                      </div>
+                      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-8">
+                        <div className="flex items-center gap-4">
+                          <div className="w-16 h-16 rounded-2xl bg-violet-500/10 flex items-center justify-center border border-violet-500/20 overflow-hidden shadow-glass">
+                            {selectedSchool.logo_url ? (
+                              <img src={selectedSchool.logo_url} alt={selectedSchool.name} className="w-full h-full object-cover" />
+                            ) : (
+                              <GraduationCap className="w-8 h-8 text-violet-400" />
+                            )}
+                          </div>
+                          <div>
+                            <h2 className="text-3xl font-black tracking-tight mb-2 text-white">{selectedSchool.name}</h2>
+                            <div className="flex items-center gap-3">
+                              <Badge className={`${
+                                selectedSchool.subscription_tier === 'premium' ? 'bg-amber-500/10 text-amber-500 border-amber-500/20' : 
+                                selectedSchool.subscription_tier === 'standard' ? 'bg-primary/10 text-primary border-primary/20' : 
+                                'bg-slate-500/10 text-slate-400 border-slate-500/20'
+                              } text-xs py-1 px-3 capitalize font-bold shadow-sm`}>
+                                {selectedSchool.subscription_tier} Plan
+                              </Badge>
+                              <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest bg-white/5 py-1 px-2 rounded-md border border-white/5">Code: {selectedSchool.code}</span>
+                            </div>
+                          </div>
+                        </div>
+                        <div className="flex flex-col sm:flex-row items-center gap-3 w-full md:w-auto">
+                          <Button variant="outline" className="w-full sm:w-auto border-white/10 hover:bg-white/5 text-slate-300">
+                            <Settings className="w-4 h-4 mr-2" /> Configure
+                          </Button>
+                          <Button className="w-full sm:w-auto bg-primary hover:bg-primary/90 text-white font-bold shadow-glow">
+                            <Activity className="w-4 h-4 mr-2" /> View Analytics
+                          </Button>
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                        <Card className="bg-slate-950/40 backdrop-blur-md border-white/5 shadow-glass relative overflow-hidden group">
+                          <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                          <CardContent className="p-6">
+                            <div className="flex justify-between items-start mb-4">
+                              <p className="text-[10px] uppercase font-black text-slate-400 tracking-widest">Enrolled Students</p>
+                              <Users className="w-4 h-4 text-blue-400 opacity-50" />
+                            </div>
+                            <p className="text-4xl font-black text-white tabular-nums">{selectedSchool.student_count || 0}</p>
+                          </CardContent>
+                        </Card>
+                        <Card className="bg-slate-950/40 backdrop-blur-md border-white/5 shadow-glass relative overflow-hidden group">
+                          <div className="absolute inset-0 bg-gradient-to-br from-violet-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                          <CardContent className="p-6">
+                            <div className="flex justify-between items-start mb-4">
+                              <p className="text-[10px] uppercase font-black text-slate-400 tracking-widest">Active Teachers</p>
+                              <BookOpen className="w-4 h-4 text-violet-400 opacity-50" />
+                            </div>
+                            <p className="text-4xl font-black text-white tabular-nums">{selectedSchool.teacher_count || 0}</p>
+                          </CardContent>
+                        </Card>
+                        <Card className="bg-slate-950/40 backdrop-blur-md border-white/5 shadow-glass relative overflow-hidden group">
+                           <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                          <CardContent className="p-6">
+                            <div className="flex justify-between items-start mb-4">
+                              <p className="text-[10px] uppercase font-black text-slate-400 tracking-widest">System Status</p>
+                              <Shield className="w-4 h-4 text-emerald-500 opacity-50" />
+                            </div>
+                            <div className="flex items-center gap-2 mt-2">
+                              <div className="w-3 h-3 rounded-full bg-emerald-500 shadow-glow shadow-emerald-500/40 animate-pulse" />
+                              <span className="text-lg font-black text-emerald-500 tracking-tight">Operational</span>
+                            </div>
+                          </CardContent>
+                        </Card>
+                        <Card className="bg-slate-950/40 backdrop-blur-md border-white/5 shadow-glass relative overflow-hidden group">
+                          <div className="absolute inset-0 bg-gradient-to-br from-slate-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                          <CardContent className="p-6">
+                            <div className="flex justify-between items-start mb-4">
+                              <p className="text-[10px] uppercase font-black text-slate-400 tracking-widest">Joined Date</p>
+                              <Activity className="w-4 h-4 text-slate-400 opacity-50" />
+                            </div>
+                            <p className="text-lg font-black text-white mt-1 pt-1">{new Date(selectedSchool.created_at).toLocaleDateString()}</p>
+                          </CardContent>
+                        </Card>
+                      </div>
+
+                      <Card className="bg-slate-950/40 backdrop-blur-md border-white/5 shadow-glass overflow-hidden">
+                         <CardHeader className="border-b border-white/5 py-6 bg-white/[0.02]">
+                           <CardTitle className="text-lg font-black tracking-tight text-white flex items-center gap-2">
+                             <Settings className="w-5 h-5 text-primary" />
+                             Administrative Controls
+                           </CardTitle>
+                           <CardDescription className="text-xs text-slate-400">Manage billing, access, and integrations for this institution.</CardDescription>
+                         </CardHeader>
+                         <CardContent className="p-0">
+                           <div className="divide-y divide-white/5">
+                              <div className="flex flex-col sm:flex-row sm:items-center justify-between p-6 hover:bg-white/[0.02] transition-colors gap-4">
+                                <div>
+                                  <p className="font-bold text-white mb-1">Subscription Tier</p>
+                                  <p className="text-xs text-slate-400 leading-relaxed max-w-xl">Upgrade or downgrade the institutional billing limits and feature access. Currently on the <strong className="text-slate-200 capitalize">{selectedSchool.subscription_tier}</strong> plan.</p>
+                                </div>
+                                <Button variant="outline" className="border-white/10 hover:bg-white/5 hover:text-white shrink-0">Change Tier</Button>
+                              </div>
+                              <div className="flex flex-col sm:flex-row sm:items-center justify-between p-6 hover:bg-white/[0.02] transition-colors gap-4">
+                                <div>
+                                  <p className="font-bold text-white mb-1">Generate Integration Key (API)</p>
+                                  <p className="text-xs text-slate-400 leading-relaxed max-w-xl">Create secure integration tokens for external Student Information System (SIS) syncing and data payloads.</p>
+                                </div>
+                                <Button variant="outline" className="border-white/10 hover:bg-white/5 hover:text-white shrink-0">Generate Key</Button>
+                              </div>
+                              <div className="flex flex-col sm:flex-row sm:items-center justify-between p-6 hover:bg-rose-500/[0.02] transition-colors gap-4">
+                                <div>
+                                  <p className="font-bold text-rose-500 mb-1">Suspend Institution Access</p>
+                                  <p className="text-xs text-slate-400 leading-relaxed max-w-xl">Temporarily block all teacher and student access associated with this school. This action is immediately enforced.</p>
+                                </div>
+                                <Button variant="destructive" className="bg-rose-500/10 text-rose-500 hover:bg-rose-500 hover:text-white border border-rose-500/20 shrink-0 shadow-none">Suspend Access</Button>
+                              </div>
+                           </div>
+                         </CardContent>
+                      </Card>
+                    </motion.div>
+                  ) : (
+                    <>
+                      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+                        <div>
+                          <h2 className="text-3xl font-black tracking-tight mb-1">Institutional Hub</h2>
+                          <p className="text-slate-300 text-sm">Oversee and support registered schools.</p>
+                        </div>
+                        <Button 
+                          className="h-12 rounded-2xl bg-emerald-500 hover:bg-emerald-600 text-white font-bold px-6 shadow-glow transition-all active:scale-95"
+                        >
+                          <Building2 className="w-4 h-4 mr-2" /> Register New School
+                        </Button>
+                      </div>
 
                   {loading ? (
                     <div className="flex justify-center py-20">
@@ -1045,10 +1169,7 @@ const AdminDashboard = () => {
                                 variant="outline" 
                                 size="sm" 
                                 className="h-9 px-4 rounded-xl text-xs font-black border-white/10 hover:bg-white/5 hover:text-primary transition-all active:scale-95 bg-white/[0.02]"
-                                onClick={() => {
-                                  // Simple functional feedback
-                                  alert(`Managing ${s.name} - Dashboard linking implemented on push.`)
-                                }}
+                                onClick={() => setSelectedSchool(s)}
                               >
                                 Manage <ChevronRight className="w-4 h-4 ml-1" />
                               </Button>
@@ -1062,6 +1183,8 @@ const AdminDashboard = () => {
                         </div>
                       )}
                     </div>
+                  )}
+                    </>
                   )}
                 </div>
               )}
