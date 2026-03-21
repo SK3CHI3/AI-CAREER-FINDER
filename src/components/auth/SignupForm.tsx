@@ -71,7 +71,7 @@ export const SignupForm: React.FC<SignupFormProps> = ({ onToggleMode, defaultRol
       // Generate internal ID for students without email
       if (isStudent && !finalEmail) {
         const cleanUPI = data.upiOrPhone.trim().toUpperCase();
-        finalEmail = `${cleanUPI.toLowerCase()}@internal.careerguideai.com`;
+        finalEmail = `${cleanUPI.toLowerCase()}@student.careerguideai.co.ke`;
       }
 
       const { error } = await signUp(finalEmail || '', data.password, data.fullName, data.upiOrPhone, data.role)
