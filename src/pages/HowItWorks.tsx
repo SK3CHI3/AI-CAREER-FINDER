@@ -1,7 +1,7 @@
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
 import BackgroundGradient from "@/components/BackgroundGradient";
-import { UserCircle, BrainCircuit, Bot, Map, School, CheckCircle2, ArrowRight } from "lucide-react";
+import { UserCircle, BrainCircuit, Bot, Map, School, CheckCircle2, ArrowRight, Play, Clock } from "lucide-react";
 import { motion } from "framer-motion";
 import { Helmet } from "react-helmet-async";
 
@@ -81,21 +81,29 @@ export default function HowItWorks() {
 
         {/* Video Feature */}
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-40">
-           <motion.div 
+          <motion.div 
             initial={{ opacity: 0, y: 40 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="relative aspect-video rounded-[2.5rem] overflow-hidden shadow-3xl border border-card-border bg-card group"
+            className="relative p-12 md:p-24 rounded-[3rem] overflow-hidden shadow-3xl border border-card-border bg-card group flex items-center justify-center text-center"
           >
-            <div className="absolute inset-0 bg-gradient-to-tr from-primary/10 via-transparent to-secondary/10 pointer-events-none" />
-            <iframe 
-              className="w-full h-full relative z-10"
-              src="https://www.youtube.com/embed/dQw4w9WgXcQ" 
-              title="CareerGuide AI Overview"
-              frameBorder="0"
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-              allowFullScreen
-            ></iframe>
+            <div className="absolute inset-0 bg-gradient-to-tr from-primary/5 via-transparent to-secondary/5 pointer-events-none" />
+            
+            <div className="relative z-10 max-w-2xl mx-auto space-y-6">
+              <div className="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-8 relative">
+                <Play className="w-8 h-8 text-primary ml-1 relative z-10" />
+                <div className="absolute inset-0 bg-primary/20 rounded-full animate-ping opacity-75" />
+              </div>
+              <h3 className="text-3xl md:text-5xl font-black text-foreground tracking-tight">
+                Platform Walkthrough
+              </h3>
+              <p className="text-xl text-foreground-muted font-medium mb-8">
+                Our complete deep-dive video demonstrating exactly how the CareerGuide AI engine interfaces with the CBC framework is currently in post-production.
+              </p>
+              <div className="inline-flex items-center gap-2 mt-8 px-6 py-3 rounded-full bg-surface border border-card-border shadow-sm text-sm font-bold text-primary uppercase tracking-widest hover:scale-105 transition-transform cursor-default">
+                <Clock className="w-4 h-4" /> Coming Soon
+              </div>
+            </div>
           </motion.div>
         </div>
 
