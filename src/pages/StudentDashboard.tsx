@@ -536,11 +536,11 @@ const StudentDashboard = () => {
               ) : (
                 dynamicStats.map((stat, index) => {
                   const statConfig = {
-                    'profile_completeness': { title: 'Profile Complete', icon: User, color: 'text-green-600', bgColor: 'bg-green-100' },
-                    'career_matches': { title: 'Career Matches', icon: Target, color: 'text-blue-600', bgColor: 'bg-blue-100' },
-                    'ai_sessions': { title: 'AI Sessions', icon: Bot, color: 'text-purple-600', bgColor: 'bg-purple-100' },
-                    'learning_hours': { title: 'Learning Hours', icon: BookMarked, color: 'text-orange-600', bgColor: 'bg-orange-100' }
-                  }[stat.stat_type] || { title: stat.stat_type, icon: Activity, color: 'text-gray-600', bgColor: 'bg-gray-100' };
+                    'profile_completeness': { title: 'Profile Complete', icon: User, color: 'text-emerald-500', bgColor: 'bg-emerald-500/10' },
+                    'career_matches': { title: 'Career Matches', icon: Target, color: 'text-blue-500', bgColor: 'bg-blue-500/10' },
+                    'ai_sessions': { title: 'AI Sessions', icon: Bot, color: 'text-purple-500', bgColor: 'bg-purple-500/10' },
+                    'learning_hours': { title: 'Learning Hours', icon: BookMarked, color: 'text-orange-500', bgColor: 'bg-orange-500/10' }
+                  }[stat.stat_type] || { title: stat.stat_type, icon: Activity, color: 'text-muted-foreground', bgColor: 'bg-muted' };
 
                   const IconComponent = statConfig.icon;
 
@@ -551,8 +551,8 @@ const StudentDashboard = () => {
                           <div>
                             <CardDescription className="text-sm font-medium">{statConfig.title}</CardDescription>
                             <CardTitle className="text-3xl font-bold mt-1">{stat.stat_value}</CardTitle>
-                            <p className={`text-xs flex items-center gap-1 mt-1 ${stat.stat_trend === 'up' ? 'text-green-600' :
-                              stat.stat_trend === 'down' ? 'text-red-600' : 'text-gray-600'
+                            <p className={`text-xs flex items-center gap-1 mt-1 ${stat.stat_trend === 'up' ? 'text-emerald-500' :
+                              stat.stat_trend === 'down' ? 'text-red-500' : 'text-muted-foreground'
                               }`}>
                               <TrendingUp className={`w-3 h-3 ${stat.stat_trend === 'down' ? 'rotate-180' : ''}`} />
                               {stat.stat_change}
@@ -680,11 +680,11 @@ const StudentDashboard = () => {
 
             {/* Action Cards */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-2 sm:gap-6 w-full">
-              <Card className="bg-gradient-to-br from-blue-50 to-indigo-50 border-blue-200 hover:shadow-card transition-all duration-300 cursor-pointer">
+              <Card className="bg-primary/5 border border-primary/20 hover:bg-primary/10 hover:shadow-card transition-all duration-300 cursor-pointer">
                 <CardHeader>
                   <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-                      <Brain className="w-6 h-6 text-blue-600" />
+                    <div className="w-12 h-12 bg-primary/20 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                      <Brain className="w-6 h-6 text-primary" />
                     </div>
                     <div>
                       <CardTitle className="text-lg">Take Assessment</CardTitle>
@@ -695,7 +695,7 @@ const StudentDashboard = () => {
                 <CardContent>
                   <p className="text-sm text-foreground-muted mb-4">Complete our comprehensive career assessment to get personalized recommendations.</p>
                   <Button
-                    className="w-full bg-blue-600 hover:bg-blue-700"
+                    className="w-full"
                     onClick={() => {
                       trackButtonClick('Start Assessment', 'Action Cards')
                       setActiveTab('chat')
@@ -706,11 +706,11 @@ const StudentDashboard = () => {
                 </CardContent>
               </Card>
 
-              <Card className="bg-gradient-to-br from-green-50 to-emerald-50 border-green-200 hover:shadow-card transition-all duration-300 cursor-pointer">
+              <Card className="bg-emerald-500/5 border border-emerald-500/20 hover:bg-emerald-500/10 hover:shadow-card transition-all duration-300 cursor-pointer">
                 <CardHeader>
                   <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-                      <GraduationCap className="w-6 h-6 text-green-600" />
+                    <div className="w-12 h-12 bg-emerald-500/20 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                      <GraduationCap className="w-6 h-6 text-emerald-500" />
                     </div>
                     <div>
                       <CardTitle className="text-lg">Explore CBE Paths</CardTitle>
@@ -721,7 +721,7 @@ const StudentDashboard = () => {
                 <CardContent>
                   <p className="text-sm text-foreground-muted mb-4">Learn about Senior Secondary pathways and university requirements.</p>
                   <Button
-                    className="w-full bg-green-600 hover:bg-green-700"
+                    className="w-full bg-emerald-600 hover:bg-emerald-700 text-white"
                     onClick={() => {
                       trackButtonClick('Explore Paths', 'Action Cards')
                       setActiveTab('careers')
@@ -732,11 +732,11 @@ const StudentDashboard = () => {
                 </CardContent>
               </Card>
 
-              <Card className="bg-gradient-to-br from-purple-50 to-violet-50 border-purple-200 hover:shadow-card transition-all duration-300 cursor-pointer">
+              <Card className="bg-purple-500/5 border border-purple-500/20 hover:bg-purple-500/10 hover:shadow-card transition-all duration-300 cursor-pointer">
                 <CardHeader>
                   <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-                      <Lightbulb className="w-6 h-6 text-purple-600" />
+                    <div className="w-12 h-12 bg-purple-500/20 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                      <Lightbulb className="w-6 h-6 text-purple-500" />
                     </div>
                     <div>
                       <CardTitle className="text-lg">Get AI Guidance</CardTitle>
@@ -747,7 +747,7 @@ const StudentDashboard = () => {
                 <CardContent>
                   <p className="text-sm text-foreground-muted mb-4">Get personalized career advice from our AI counselor.</p>
                   <Button
-                    className="w-full bg-purple-600 hover:bg-purple-700"
+                    className="w-full bg-purple-600 hover:bg-purple-700 text-white"
                     onClick={() => {
                       setActiveTab('chat')
                       trackButtonClick('Start Chat', 'Action Cards')
@@ -813,30 +813,30 @@ const StudentDashboard = () => {
 
                     {/* Key Information Grid */}
                     <div className="grid grid-cols-2 gap-3">
-                      <div className="p-3 rounded-lg bg-green-50 border border-green-200">
+                      <div className="p-3 rounded-lg bg-emerald-500/10 border border-emerald-500/20">
                         <div className="flex items-center gap-2 mb-1">
-                          <DollarSign className="w-4 h-4 text-green-600" />
-                          <span className="text-xs font-medium text-green-800">Salary Range</span>
+                          <DollarSign className="w-4 h-4 text-emerald-500" />
+                          <span className="text-xs font-medium text-emerald-600 dark:text-emerald-400">Salary Range</span>
                         </div>
-                        <p className="text-sm font-semibold text-green-700">{career.salaryRange || 'KSh 60K - 200K'}</p>
+                        <p className="text-sm font-semibold text-emerald-700 dark:text-emerald-300">{career.salaryRange || 'KSh 60K - 200K'}</p>
                       </div>
 
-                      <div className="p-3 rounded-lg bg-blue-50 border border-blue-200">
+                      <div className="p-3 rounded-lg bg-blue-500/10 border border-blue-500/20">
                         <div className="flex items-center gap-2 mb-1">
-                          <TrendingUp className="w-4 h-4 text-blue-600" />
-                          <span className="text-xs font-medium text-blue-800">Growth</span>
+                          <TrendingUp className="w-4 h-4 text-blue-500" />
+                          <span className="text-xs font-medium text-blue-600 dark:text-blue-400">Growth</span>
                         </div>
-                        <p className="text-sm font-semibold text-blue-700">{career.growth || 'High Growth'}</p>
+                        <p className="text-sm font-semibold text-blue-700 dark:text-blue-300">{career.growth || 'High Growth'}</p>
                       </div>
                     </div>
 
                     {/* Education Requirement */}
-                    <div className="p-3 rounded-lg bg-purple-50 border border-purple-200">
+                    <div className="p-3 rounded-lg bg-purple-500/10 border border-purple-500/20">
                       <div className="flex items-center gap-2 mb-1">
-                        <GraduationCap className="w-4 h-4 text-purple-600" />
-                        <span className="text-xs font-medium text-purple-800">Education</span>
+                        <GraduationCap className="w-4 h-4 text-purple-500" />
+                        <span className="text-xs font-medium text-purple-600 dark:text-purple-400">Education</span>
                       </div>
-                      <p className="text-sm text-purple-700">{career.education || "Bachelor's Degree Required"}</p>
+                      <p className="text-sm text-purple-700 dark:text-purple-300">{career.education || "Bachelor's Degree Required"}</p>
                     </div>
 
                     {/* Action Button */}
@@ -918,7 +918,7 @@ const StudentDashboard = () => {
                 <CardContent className="space-y-4">
                   <div className="space-y-2 sm:space-y-3">
                     <div
-                      className="flex flex-col sm:flex-row items-center justify-between p-3 rounded-lg bg-blue-50 border border-blue-200 cursor-pointer hover:bg-blue-100 transition-colors mt-2 sm:mt-0"
+                      className="flex flex-col sm:flex-row items-center justify-between p-3 rounded-lg bg-blue-500/5 border border-blue-500/20 cursor-pointer hover:bg-blue-500/10 transition-colors mt-2 sm:mt-0"
                       onClick={() => {
                         setActiveTab('progress')
                         trackButtonClick('View Academic Insights', 'Journey Actions')
@@ -931,7 +931,7 @@ const StudentDashboard = () => {
                       <ArrowRight className="w-4 h-4 text-blue-500 mt-2 sm:mt-0" />
                     </div>
                     <div
-                      className="flex flex-col sm:flex-row items-center justify-between p-3 rounded-lg bg-green-50 border border-green-200 cursor-pointer hover:bg-green-100 transition-colors"
+                      className="flex flex-col sm:flex-row items-center justify-between p-3 rounded-lg bg-emerald-500/5 border border-emerald-500/20 cursor-pointer hover:bg-emerald-500/10 transition-colors"
                       onClick={() => {
                         setActiveTab('chat')
                         trackButtonClick('Complete Assessment', 'Journey Actions')
@@ -944,7 +944,7 @@ const StudentDashboard = () => {
                       <ArrowRight className="w-4 h-4 text-green-500" />
                     </div>
                     <div
-                      className="flex flex-col sm:flex-row items-center justify-between p-3 rounded-lg bg-purple-50 border border-purple-200 cursor-pointer hover:bg-purple-100 transition-colors"
+                      className="flex flex-col sm:flex-row items-center justify-between p-3 rounded-lg bg-purple-500/5 border border-purple-500/20 cursor-pointer hover:bg-purple-500/10 transition-colors"
                       onClick={() => {
                         setActiveTab('careers')
                         trackButtonClick('Explore Programs', 'Journey Actions')
