@@ -20,12 +20,11 @@ const Auth = () => {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center" style={{ background: 'var(--gradient-homepage)' }}>
-        <div className="text-center">
-          <div className="w-16 h-16 bg-gradient-primary rounded-2xl flex items-center justify-center mx-auto mb-4 animate-pulse p-3">
-            <img src="/logos/CareerGuide_Logo.png" alt="Loading" className="w-full h-auto" />
-          </div>
-          <p className="text-foreground-muted">Loading...</p>
-        </div>
+        <img 
+          src="/logos/CareerGuide_Logo.png" 
+          alt="CareerGuide AI" 
+          className="h-10 w-auto animate-pulse drop-shadow-md"
+        />
       </div>
     )
   }

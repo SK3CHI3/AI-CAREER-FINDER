@@ -520,7 +520,7 @@ const StudentDashboard = () => {
               {isLoadingStats ? (
                 // Loading skeleton for stats
                 Array.from({ length: 4 }).map((_, index) => (
-                  <Card key={index} className="bg-card border-card-border">
+                  <Card key={index} className="bg-gradient-to-br from-card to-card/80 border-card-border/50">
                     <CardHeader className="pb-3">
                       <div className="flex items-center justify-between">
                         <div className="flex-1">
@@ -539,13 +539,16 @@ const StudentDashboard = () => {
                     'profile_completeness': { title: 'Profile Complete', icon: User, color: 'text-emerald-500', bgColor: 'bg-emerald-500/10' },
                     'career_matches': { title: 'Career Matches', icon: Target, color: 'text-blue-500', bgColor: 'bg-blue-500/10' },
                     'ai_sessions': { title: 'AI Sessions', icon: Bot, color: 'text-purple-500', bgColor: 'bg-purple-500/10' },
-                    'learning_hours': { title: 'Learning Hours', icon: BookMarked, color: 'text-orange-500', bgColor: 'bg-orange-500/10' }
+                    'learning_hours': { title: 'Learning Hours', icon: BookMarked, color: 'text-orange-500', bgColor: 'bg-orange-500/10' },
+                    'academic_performance': { title: 'Academic Performance', icon: GraduationCap, color: 'text-indigo-500', bgColor: 'bg-indigo-500/10' }
                   }[stat.stat_type] || { title: stat.stat_type, icon: Activity, color: 'text-muted-foreground', bgColor: 'bg-muted' };
 
                   const IconComponent = statConfig.icon;
 
                   return (
-                    <Card key={stat.id} className="bg-card border-card-border hover:shadow-card transition-all duration-300">
+                    <Card key={stat.id} className="bg-gradient-to-br from-card to-card/80 border-card-border/50 shadow-sm hover:shadow-md dark:shadow-none dark:hover:shadow-primary/10 transition-all duration-300 overflow-hidden relative group">
+                      {/* Subtle hover accent line */}
+                      <div className={`absolute top-0 left-0 w-full h-1 ${statConfig.bgColor} opacity-0 group-hover:opacity-100 transition-opacity`} />
                       <CardHeader className="pb-3">
                         <div className="flex items-center justify-between">
                           <div>
@@ -572,7 +575,9 @@ const StudentDashboard = () => {
             {/* Main Dashboard Grid */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-2 sm:gap-6 w-full">
               {/* Career Recommendations Chart */}
-              <Card className="col-span-1 lg:col-span-2 bg-card border-card-border overflow-hidden">
+              <Card className="col-span-1 lg:col-span-2 bg-gradient-to-br from-card to-card/50 border-card-border/60 shadow-lg dark:shadow-primary/5 overflow-hidden relative">
+                {/* Decorative glow in dark mode */}
+                <div className="absolute -top-24 -right-24 w-48 h-48 bg-primary/10 rounded-full blur-3xl pointer-events-none" />
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <div className="space-y-1">
                     <div className="flex items-center gap-2">
@@ -638,7 +643,8 @@ const StudentDashboard = () => {
 
               {/* RIASEC Personality Profile Card */}
               {riasecChartData.length > 0 && (
-                <Card className="lg:col-span-1 bg-card border-card-border overflow-hidden">
+                <Card className="lg:col-span-1 bg-gradient-to-br from-card to-card/50 border-card-border/60 shadow-lg dark:shadow-purple-500/5 overflow-hidden relative">
+                  <div className="absolute -bottom-24 -left-24 w-48 h-48 bg-purple-500/10 rounded-full blur-3xl pointer-events-none" />
                   <CardHeader className="pb-2">
                     <CardTitle className="text-lg flex items-center gap-2">
                       <Brain className="w-5 h-5 text-purple-500" />

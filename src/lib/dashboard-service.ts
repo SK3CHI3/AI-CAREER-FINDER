@@ -603,35 +603,48 @@ class DashboardService {
   async calculateUserStats(userId: string, profile: any): Promise<UserStat[]> {
     const stats: Omit<UserStat, 'id' | 'calculated_at'>[] = []
 
+    const lastWeekDate = new Date()
+    lastWeekDate.setDate(lastWeekDate.getDate() - 7)
+
+    // Calculate AI sessions and profile updates first to use them across stats
+    const activities = await this.getUserActivities(userId, 100)
+    const aiSessionsAll = activities.filter(a => a.activity_type === 'ai_chat')
+    const aiSessionsThisWeek = aiSessionsAll.filter(a => new Date(a.created_at) > lastWeekDate).length
+
+    const profileUpdatesThisWeek = activities.filter(
+      a => (a.activity_type === 'profile' || a.activity_type === 'assessment') && new Date(a.created_at) > lastWeekDate
+    ).length
+
     // Calculate profile completeness
     const profileCompleteness = this.calculateProfileCompleteness(profile)
     stats.push({
       user_id: userId,
       stat_type: 'profile_completeness',
       stat_value: `${profileCompleteness}%`,
-      stat_change: `+${Math.floor(Math.random() * 20) + 5}% this month`,
-      stat_trend: 'up'
+      stat_change: profileCompleteness === 100 
+        ? 'Maximum profile strength' 
+        : profileUpdatesThisWeek > 0 ? 'Updated this week' : 'Expand to get better matches',
+      stat_trend: profileCompleteness === 100 || profileUpdatesThisWeek > 0 ? 'up' : 'stable'
     })
 
     // Calculate career matches count
     const careerRecommendations = await this.getCareerRecommendations(userId)
+    const recentMatches = careerRecommendations.filter(r => r.created_at && new Date(r.created_at) > lastWeekDate).length
     stats.push({
       user_id: userId,
       stat_type: 'career_matches',
       stat_value: careerRecommendations.length.toString(),
-      stat_change: `+${Math.floor(Math.random() * 5) + 1} this week`,
-      stat_trend: 'up'
+      stat_change: recentMatches > 0 ? `+${recentMatches} fresh matches` : 'Matches based on current inputs',
+      stat_trend: recentMatches > 0 ? 'up' : 'stable'
     })
 
-    // Calculate AI sessions (simulated based on activities)
-    const activities = await this.getUserActivities(userId, 100)
-    const aiSessions = activities.filter(a => a.activity_type === 'ai_chat').length
+    // Calculate AI sessions
     stats.push({
       user_id: userId,
       stat_type: 'ai_sessions',
-      stat_value: aiSessions.toString(),
-      stat_change: `+${Math.floor(Math.random() * 10) + 3} this week`,
-      stat_trend: 'up'
+      stat_value: aiSessionsAll.length.toString(),
+      stat_change: aiSessionsThisWeek > 0 ? `+${aiSessionsThisWeek} this week` : 'No recent sessions',
+      stat_trend: aiSessionsThisWeek > 0 ? 'up' : 'stable'
     })
 
     // Calculate academic performance
@@ -640,8 +653,9 @@ class DashboardService {
       user_id: userId,
       stat_type: 'academic_performance',
       stat_value: `${academicPerformance.overallAverage.toFixed(1)}%`,
-      stat_change: `${academicPerformance.performanceTrend}`,
-      stat_trend: academicPerformance.performanceTrend === 'improving' ? 'up' :
+      stat_change: academicPerformance.overallAverage === 0 ? 'No grade data' : `${academicPerformance.performanceTrend.charAt(0).toUpperCase() + academicPerformance.performanceTrend.slice(1)} performance`,
+      stat_trend: academicPerformance.overallAverage === 0 ? 'stable' :
+        academicPerformance.performanceTrend === 'improving' ? 'up' :
         academicPerformance.performanceTrend === 'declining' ? 'down' : 'stable'
     })
 
