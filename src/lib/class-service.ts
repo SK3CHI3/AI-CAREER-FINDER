@@ -120,6 +120,7 @@ class ClassService {
         id,
         student_user_id,
         student_upi,
+        student_name,
         enrolled_at,
         source,
         profiles!student_user_id ( full_name, email, upi_number )
@@ -132,7 +133,7 @@ class ClassService {
         return (data || []).map((e: any) => ({
             id: e.id,
             user_id: e.student_user_id,
-            full_name: e.profiles?.full_name ?? null,
+            full_name: e.profiles?.full_name ?? e.student_name ?? null,
             email: e.profiles?.email ?? null,
             upi_number: e.student_upi || e.profiles?.upi_number || null,
             enrolled_at: e.enrolled_at,
@@ -140,7 +141,7 @@ class ClassService {
         }))
     }
 
-    async addStudentByUPI(classId: string, upi: string): Promise<StudentInClass> {
+    async addStudentByUPI(classId: string, upi: string, studentName?: string): Promise<StudentInClass> {
         const cleanUPI = upi.trim().toUpperCase()
 
         // 1. Try to find student by UPI first
@@ -152,6 +153,9 @@ class ClassService {
 
         // 2. Enroll using either profile id or just the UPI
         const insertData: any = { class_id: classId, student_upi: cleanUPI, source: 'manual' }
+        if (studentName) {
+            insertData.student_name = studentName;
+        }
         if (profile?.id) {
             insertData.student_user_id = profile.id
         }
@@ -173,7 +177,7 @@ class ClassService {
         return {
             id: data.id,
             user_id: profile?.id || null,
-            full_name: profile?.full_name || null,
+            full_name: profile?.full_name || studentName || null,
             email: profile?.email || null,
             upi_number: cleanUPI,
             enrolled_at: data.enrolled_at,

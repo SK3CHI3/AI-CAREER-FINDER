@@ -136,7 +136,7 @@ const GradeUpload: React.FC<Props> = ({ classId, teacherId, students, onUploaded
                             <Download className="w-3.5 h-3.5" /> Download Template
                         </Button>
                         <p className="text-xs text-foreground-muted">
-                            Required columns: student_upi, subject_name, term, grade_value
+                            Required columns: student_upi, subject_name, term, grade_value. Optional: student_name
                         </p>
                     </div>
                 </div>

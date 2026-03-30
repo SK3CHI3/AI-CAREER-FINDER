@@ -4,6 +4,7 @@ import { aiCacheService } from './ai-cache-service'
 
 export interface ParsedGradeRow {
     student_upi: string
+    student_name?: string
     subject_name: string
     term: string
     academic_year: string
@@ -36,6 +37,12 @@ export interface UploadResult {
 }
 
 const COLUMN_ALIASES: Record<string, string> = {
+    // student name
+    student_name: 'student_name',
+    name: 'student_name',
+    full_name: 'student_name',
+    'student name': 'student_name',
+    'full name': 'student_name',
     // student upi
     student_upi: 'student_upi',
     upi: 'student_upi',
@@ -147,6 +154,7 @@ class GradeUploadService {
 
             return {
                 student_upi: String(normalized.student_upi || '').trim().toUpperCase(),
+                student_name: normalized.student_name ? String(normalized.student_name).trim() : undefined,
                 subject_name: String(normalized.subject_name || '').trim(),
                 term: String(normalized.term || 'Term 1').trim(),
                 academic_year: String(normalized.academic_year || CURRENT_YEAR).trim(),
@@ -188,9 +196,8 @@ class GradeUploadService {
             }
 
             const userId = studentMap.get(row.student_upi)
-            if (row.student_upi && !studentMap.has(row.student_upi)) {
-                rowErrors.push(`Row ${rowNum}: Student with UPI '${row.student_upi}' is not enrolled in this class`)
-            }
+            
+            // Auto-enrollment replaces strict validation checks here.
 
             if (rowErrors.length > 0) {
                 errors.push(...rowErrors)
@@ -224,6 +231,26 @@ class GradeUploadService {
         const errors: string[] = []
         let created = 0
         let updated = 0
+
+        // Auto-enroll missing students
+        const { classService } = await import('./class-service')
+        const unEnrolledRows = validRows.filter(r => !r.student_user_id)
+        const newStudentMap = new Map<string, string | null>()
+        
+        for (const row of unEnrolledRows) {
+            if (!newStudentMap.has(row.student_upi)) {
+                try {
+                    const newStudent = await classService.addStudentByUPI(classId, row.student_upi, row.student_name);
+                    newStudentMap.set(row.student_upi, newStudent.user_id);
+                } catch (e: any) {
+                    // Ignore duplicate enrollment constraint errors just in case
+                    console.error("Auto-enroll error for", row.student_upi, e.message)
+                    newStudentMap.set(row.student_upi, null);
+                }
+            }
+            // Update the row with the resolved user_id
+            row.student_user_id = newStudentMap.get(row.student_upi) || null;
+        }
 
         // Process in chunks of 50
         const chunks: ParsedGradeRow[][] = []
@@ -377,6 +404,7 @@ class GradeUploadService {
 
     generateTemplate(students: { upi_number: string | null; full_name: string | null }[]): void {
         const headers = [
+            'student_name',
             'student_upi',
             'subject_name',
             'term',
@@ -390,6 +418,7 @@ class GradeUploadService {
 
         const sampleRows = students.length > 0
             ? students.filter(s => s.upi_number).map((s) => [
+                s.full_name || '',
                 s.upi_number,
                 'Mathematics',
                 'Term 1',
@@ -401,12 +430,12 @@ class GradeUploadService {
                 '',
             ])
             : [
-                ['A1B2C3', 'Mathematics', 'Term 1', CURRENT_YEAR, '75', 'B', '100', 'End Term', 'Good progress'],
-                ['D4E5F6', 'English', 'Term 1', CURRENT_YEAR, '82', 'A', '100', 'End Term', ''],
+                ['John Doe', 'A1B2C3', 'Mathematics', 'Term 1', CURRENT_YEAR, '75', 'B', '100', 'End Term', 'Good progress'],
+                ['Jane Smith', 'D4E5F6', 'English', 'Term 1', CURRENT_YEAR, '82', 'A', '100', 'End Term', ''],
             ]
 
         if (sampleRows.length === 0) {
-            sampleRows.push(['A1B2C3', 'Mathematics', 'Term 1', CURRENT_YEAR, '75', 'B', '100', 'End Term', 'Good progress'])
+            sampleRows.push(['John Doe', 'A1B2C3', 'Mathematics', 'Term 1', CURRENT_YEAR, '75', 'B', '100', 'End Term', 'Good progress'])
         }
 
         const ws = XLSX.utils.aoa_to_sheet([headers, ...sampleRows])

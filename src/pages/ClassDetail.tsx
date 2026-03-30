@@ -48,6 +48,7 @@ const ClassDetail: React.FC = () => {
 
     // Add student state
     const [addUpi, setAddUpi] = useState('')
+    const [addName, setAddName] = useState('')
     const [addLoading, setAddLoading] = useState(false)
     const [addError, setAddError] = useState<string | null>(null)
 
@@ -100,8 +101,9 @@ const ClassDetail: React.FC = () => {
         setAddLoading(true)
         setAddError(null)
         try {
-            await classService.addStudentByUPI(classId, addUpi.trim())
+            await classService.addStudentByUPI(classId, addUpi.trim(), addName.trim() || undefined)
             setAddUpi('')
+            setAddName('')
             toast({ title: 'Student added', description: `${addUpi.toUpperCase()} enrolled in class.` })
             loadData()
         } catch (err) {
@@ -283,9 +285,15 @@ const ClassDetail: React.FC = () => {
                                 <CardDescription>Add a student to this class by their NEMIS UPI number</CardDescription>
                             </CardHeader>
                             <CardContent>
-                                <div className="flex gap-3">
+                                <div className="flex flex-col sm:flex-row gap-3">
                                     <Input
-                                        placeholder="e.g. XXX8TXY1"
+                                        placeholder="Name (optional)"
+                                        value={addName}
+                                        onChange={(e) => setAddName(e.target.value)}
+                                        className="sm:w-1/3"
+                                    />
+                                    <Input
+                                        placeholder="UPI e.g. XXX8TXY1"
                                         value={addUpi}
                                         onChange={(e) => setAddUpi(e.target.value)}
                                         onKeyDown={(e) => e.key === 'Enter' && handleAddStudent()}
@@ -400,8 +408,13 @@ const ClassDetail: React.FC = () => {
                                                 {filteredGrades.map((g) => (
                                                     <tr key={g.id} className="border-b border-card-border/50 hover:bg-muted/20 transition-colors">
                                                         <td className="py-2.5 pr-4">
-                                                            <p className="font-medium">{g.profiles?.full_name ?? g.student_phone ?? g.profiles?.email ?? '—'}</p>
-                                                            <p className="text-xs text-foreground-muted">{g.student_phone ?? g.profiles?.phone}</p>
+                                                            <p className="font-medium">
+                                                                {(() => {
+                                                                    const student = students.find(s => s.upi_number === g.student_upi || (g.user_id && s.user_id === g.user_id));
+                                                                    return student?.full_name ?? g.profiles?.full_name ?? g.student_upi ?? g.student_phone ?? '—';
+                                                                })()}
+                                                            </p>
+                                                            <p className="text-xs text-foreground-muted">{g.student_upi || g.student_phone || g.profiles?.phone}</p>
                                                         </td>
                                                         <td className="py-2.5 pr-4 text-foreground">{g.subject_name}</td>
                                                         <td className="py-2.5 pr-4 text-foreground">{g.term}</td>
