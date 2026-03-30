@@ -115,6 +115,20 @@ class AICacheService {
     }
   }
 
+  // Clear invalidation record when new cache is saved
+  private async clearInvalidation(userId: string, cacheType: string): Promise<void> {
+    try {
+      // @ts-ignore
+      await supabase
+        .from('cache_invalidation')
+        .delete()
+        .eq('user_id', userId)
+        .eq('cache_type', cacheType)
+    } catch (error) {
+      console.warn('Error clearing invalidation:', error)
+    }
+  }
+
   // Career Recommendations Caching with Hybrid L1/L2
   async getCachedCareerRecommendations(userId: string, currentHash?: string): Promise<CachedCareerRecommendation[] | null> {
     try {
@@ -195,6 +209,7 @@ class AICacheService {
         console.warn('Error saving career recommendations to L2:', error)
       } else {
         console.log(`Saved ${recommendationsToSave.length} career recommendations to Hybrid Cache (L1+L2)`)
+        await this.clearInvalidation(userId, 'career_recommendations')
       }
     } catch (error) {
       console.error('Error saving career recommendations:', error)
@@ -270,6 +285,7 @@ class AICacheService {
         console.warn('Error saving career details to L2:', error)
       } else {
         console.log(`Saved career details for ${careerName} to Hybrid Cache`)
+        await this.clearInvalidation(userId, 'career_details')
       }
     } catch (error) {
       console.error('Error saving career details:', error)
@@ -343,6 +359,7 @@ class AICacheService {
         console.warn('Error saving course recommendations to L2:', error)
       } else {
         console.log(`Saved ${courses.length} course recommendations to Hybrid Cache`)
+        await this.clearInvalidation(userId, 'course_recommendations')
       }
     } catch (error) {
       console.error('Error saving course recommendations:', error)

@@ -57,6 +57,7 @@ import { supabase } from '@/lib/supabase'
 import { aiCareerService } from '@/lib/ai-service'
 import { aiCacheService } from '@/lib/ai-cache-service'
 import { dashboardService, UserStat, UserActivity, CareerRecommendation } from '@/lib/dashboard-service'
+import { generateContextHash } from '@/lib/cache-utils'
 import { useActivityTracking } from '@/hooks/useActivityTracking'
 
 // Default career data - will be replaced with AI recommendations
@@ -232,9 +233,14 @@ const StudentDashboard = () => {
     setIsLoadingRecommendations(true);
 
     try {
+      // Get academic performance data and generate hash early
+      const academicPerformance = await dashboardService.calculateAcademicPerformance(user.id);
+      const userGrades = await dashboardService.getUserGrades(user.id);
+      const currentHash = generateContextHash(user.id, profileData, userGrades);
+
       // First, try to get cached recommendations
       console.log('🔍 Checking for cached career recommendations...');
-      const cachedRecommendations = await aiCacheService.getCachedCareerRecommendations(user.id);
+      const cachedRecommendations = await aiCacheService.getCachedCareerRecommendations(user.id, currentHash);
 
       if (cachedRecommendations && cachedRecommendations.length > 0) {
         console.log('✅ Using cached career recommendations:', cachedRecommendations.length);
@@ -259,8 +265,6 @@ const StudentDashboard = () => {
       // No cached data, generate fresh recommendations
       console.log('🤖 No cached data found, generating fresh career recommendations with AI...');
 
-      // Get academic performance data
-      const academicPerformance = await dashboardService.calculateAcademicPerformance(user.id);
       console.log('📊 Academic performance data:', academicPerformance);
 
       const userContext = {
@@ -284,7 +288,7 @@ const StudentDashboard = () => {
 
       if (recommendations && recommendations.length > 0) {
         // Save recommendations to cache
-        await aiCacheService.saveCareerRecommendations(user.id, recommendations);
+        await aiCacheService.saveCareerRecommendations(user.id, recommendations, currentHash);
         console.log('💾 Career recommendations saved to cache');
 
         // Update chart data

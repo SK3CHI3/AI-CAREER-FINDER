@@ -219,15 +219,15 @@ const PaymentWall: React.FC<PaymentWallProps> = ({ onPaymentSuccess }) => {
 
   if (!isIntaSendLoaded) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100">
-        <Card className="w-full max-w-md">
+      <div className="min-h-screen flex items-center justify-center bg-background p-4">
+        <Card className="w-full max-w-md bg-card border-card-border shadow-lg">
           <CardContent className="pt-6">
             <div className="text-center space-y-4">
               <div className="flex items-center justify-center space-x-2">
-                <Loader2 className="w-6 h-6 animate-spin" />
-                <span>Loading payment system...</span>
+                <Loader2 className="w-6 h-6 animate-spin text-primary" />
+                <span className="text-foreground font-medium">Loading payment system...</span>
               </div>
-              <p className="text-sm text-gray-500">
+              <p className="text-sm text-foreground-muted">
                 This should only take a few seconds. If it takes longer, please refresh the page.
               </p>
               {error && (
@@ -243,71 +243,71 @@ const PaymentWall: React.FC<PaymentWallProps> = ({ onPaymentSuccess }) => {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
-      <Card className="w-full max-w-2xl">
-        <CardHeader className="text-center">
-          <div className="mx-auto w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-4">
-            <Lock className="w-8 h-8 text-green-600" />
+    <div className="min-h-[80vh] flex items-center justify-center p-4 sm:p-6 w-full">
+      <Card className="w-full max-w-2xl bg-card border-card-border shadow-xl">
+        <CardHeader className="text-center pb-4">
+          <div className="mx-auto w-16 h-16 bg-green-500/10 rounded-full flex items-center justify-center mb-4">
+            <Lock className="w-8 h-8 text-green-500" />
           </div>
-          <CardTitle className="text-2xl font-bold text-gray-900">
+          <CardTitle className="text-2xl sm:text-3xl font-extrabold text-foreground tracking-tight">
             Complete Your Registration
           </CardTitle>
-            <CardDescription className="text-lg text-gray-600">
-              Unlock full access to AI Career Finder with a one-time M-Pesa payment
+            <CardDescription className="text-base sm:text-lg text-foreground-muted mt-2">
+              Unlock full access to AI Career Finder with a one-time payment
             </CardDescription>
         </CardHeader>
 
-        <CardContent className="space-y-6">
+        <CardContent className="space-y-6 sm:space-y-8 px-4 sm:px-8 pb-8">
           {/* Payment Status */}
           {paymentStatus === 'success' && (
-            <Alert className="border-green-200 bg-green-50">
-              <CheckCircle className="h-4 w-4 text-green-600" />
-              <AlertDescription className="text-green-800">
+            <Alert className="border-green-500/20 bg-green-500/10">
+              <CheckCircle className="h-4 w-4 text-green-500" />
+              <AlertDescription className="text-green-600 font-medium">
                 Payment successful! Redirecting to your dashboard...
               </AlertDescription>
             </Alert>
           )}
 
           {paymentStatus === 'failed' && (
-            <Alert className="border-red-200 bg-red-50">
-              <XCircle className="h-4 w-4 text-red-600" />
-              <AlertDescription className="text-red-800">
+            <Alert variant="destructive" className="bg-destructive/10">
+              <XCircle className="h-4 w-4 text-destructive" />
+              <AlertDescription className="font-medium text-destructive">
                 {error || 'Payment failed. Please try again.'}
               </AlertDescription>
             </Alert>
           )}
 
           {paymentStatus === 'processing' && (
-            <Alert className="border-blue-200 bg-blue-50">
-              <Loader2 className="h-4 w-4 text-blue-600 animate-spin" />
-              <AlertDescription className="text-blue-800">
+            <Alert className="border-primary/20 bg-primary/10">
+              <Loader2 className="h-4 w-4 text-primary animate-spin" />
+              <AlertDescription className="text-primary font-medium">
                 Processing your payment... Please wait.
               </AlertDescription>
             </Alert>
           )}
 
           {/* Payment Details */}
-          <div className="bg-gray-50 rounded-lg p-6">
+          <div className="bg-muted/30 border border-card-border rounded-xl p-5 sm:p-6 shadow-sm">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-gray-900">Payment Details</h3>
-              <Badge variant="outline" className="bg-green-100 text-green-800 border-green-200">
+              <h3 className="text-base sm:text-lg font-bold text-foreground">Payment Details</h3>
+              <Badge variant="outline" className="bg-green-500/10 text-green-500 border-green-500/20">
                 One-time Payment
               </Badge>
             </div>
             
             <div className="space-y-3">
               <div className="flex justify-between items-center">
-                <span className="text-gray-600">AI Career Finder Access</span>
-                <span className="font-semibold text-primary text-xl">KSh 10</span>
+                <span className="text-sm sm:text-base text-foreground-muted">AI Career Finder Access</span>
+                <span className="font-extrabold text-primary text-xl sm:text-2xl">KSh 10</span>
               </div>
-              <div className="flex justify-between items-center text-sm text-gray-500">
+              <div className="flex justify-between items-center text-xs sm:text-sm text-foreground-muted">
                 <span>Includes:</span>
                 <span>Lifetime access</span>
               </div>
             </div>
 
-            <div className="mt-4 pt-4 border-t border-gray-200">
-              <div className="flex justify-between items-center text-lg font-bold">
+            <div className="mt-5 pt-5 border-t border-card-border">
+              <div className="flex justify-between items-center text-lg sm:text-xl font-black text-foreground">
                 <span>Total</span>
                 <span className="text-primary">KSh 10</span>
               </div>
@@ -316,31 +316,31 @@ const PaymentWall: React.FC<PaymentWallProps> = ({ onPaymentSuccess }) => {
 
           {/* Features List */}
           <div className="space-y-4">
-            <h3 className="text-lg font-semibold text-gray-900">What you'll get:</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="flex items-center space-x-3">
-                <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                  <CreditCard className="w-4 h-4 text-blue-600" />
+            <h3 className="text-base sm:text-lg font-bold text-foreground">What you'll get:</h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+              <div className="flex items-center space-x-3 p-3 rounded-lg bg-card border border-card-border shadow-sm">
+                <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center shrink-0">
+                  <CreditCard className="w-5 h-5 text-primary" />
                 </div>
-                <span className="text-gray-700">AI Career Assessment</span>
+                <span className="text-sm font-medium text-foreground">AI Career Assessment</span>
               </div>
-              <div className="flex items-center space-x-3">
-                <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                  <Smartphone className="w-4 h-4 text-blue-600" />
+              <div className="flex items-center space-x-3 p-3 rounded-lg bg-card border border-card-border shadow-sm">
+                <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center shrink-0">
+                  <Smartphone className="w-5 h-5 text-primary" />
                 </div>
-                <span className="text-gray-700">Personalized Recommendations</span>
+                <span className="text-sm font-medium text-foreground">Personalized Matches</span>
               </div>
-              <div className="flex items-center space-x-3">
-                <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                  <Shield className="w-4 h-4 text-blue-600" />
+              <div className="flex items-center space-x-3 p-3 rounded-lg bg-card border border-card-border shadow-sm">
+                <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center shrink-0">
+                  <Shield className="w-5 h-5 text-primary" />
                 </div>
-                <span className="text-gray-700">Academic Performance Tracking</span>
+                <span className="text-sm font-medium text-foreground">Academic Tracking</span>
               </div>
-              <div className="flex items-center space-x-3">
-                <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                  <CheckCircle className="w-4 h-4 text-blue-600" />
+              <div className="flex items-center space-x-3 p-3 rounded-lg bg-card border border-card-border shadow-sm">
+                <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center shrink-0">
+                  <CheckCircle className="w-5 h-5 text-primary" />
                 </div>
-                <span className="text-gray-700">Course Recommendations</span>
+                <span className="text-sm font-medium text-foreground">Subject Recommendations</span>
               </div>
             </div>
           </div>
@@ -358,31 +358,31 @@ const PaymentWall: React.FC<PaymentWallProps> = ({ onPaymentSuccess }) => {
             )}
 
             {paymentStatus !== 'success' && (
-              <button
-                className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+              <Button
+                className="w-full h-12 text-base font-bold bg-green-500 hover:bg-green-600 text-white shadow-lg shadow-green-500/20 transition-all duration-200"
                 disabled={isLoading || paymentStatus === 'processing' || !intaSendInstance}
                 onClick={handlePaymentClick}
               >
                 {isLoading || paymentStatus === 'processing' ? (
                   <>
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    Processing...
+                    <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                    Processing Payment...
                   </>
                 ) : !intaSendInstance ? (
                   <>
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    Loading Payment...
+                    <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                    Connecting...
                   </>
                 ) : (
                   <>
-                    <CreditCard className="w-4 h-4 mr-2" />
+                    <CreditCard className="w-5 h-5 mr-2" />
                     Pay KSh 10 Now
                   </>
                 )}
-              </button>
+              </Button>
             )}
 
-            <p className="text-xs text-gray-500 text-center">
+            <p className="text-xs text-foreground-muted text-center pt-2">
               Secure payment powered by IntaSend. We accept M-Pesa, Visa, Mastercard, and more.
             </p>
             {import.meta.env.VITE_INTASEND_PUBLIC_KEY === 'your_intasend_public_key_here' && (

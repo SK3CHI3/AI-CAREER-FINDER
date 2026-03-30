@@ -265,41 +265,24 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (isDev) console.log('🔍 AuthContext: Non-email identifier, resolving email...');
         const cleanIdentifier = identifier.replace(/[\s-]/g, '');
 
-        // Try UPI first (6-char alphanumeric NEMIS code)
+        // Try resolving using the secure RPC function to bypass RLS restrictions for anon users
         const isUPI = /^[A-Za-z0-9]{4,12}$/.test(cleanIdentifier) && !cleanIdentifier.startsWith('07') && !cleanIdentifier.startsWith('+');
 
-        if (isUPI) {
-          const { data, error } = await supabase
-            .from('profiles')
-            .select('email')
-            .eq('upi_number', cleanIdentifier.toUpperCase())
-            .single();
-          if (!error && data?.email) {
-            email = data.email;
-            if (isDev) console.log('🎓 AuthContext: Resolved email from UPI:', email);
-          } else {
-            if (error && error.code !== 'PGRST116') {
-              // Not a "0 rows returned" error, probably a server/RLS error
-              console.error('Server error during UPI lookup:', error);
-              return { error: { message: `Server error during login: ${error.message} (Code: ${error.code})`, name: 'AuthError' } as any };
-            }
-            return { error: { message: 'No account found with this UPI number. Please check your NEMIS UPI and try again.', name: 'AuthError' } as any };
-          }
+        const { data: resolvedEmail, error } = await (supabase.rpc as any)('get_user_email', { p_identifier: cleanIdentifier });
+
+        if (!error && resolvedEmail) {
+          email = resolvedEmail as string;
+          if (isDev) console.log('🎓 AuthContext: Resolved email:', email);
         } else {
-          // Phone number fallback
-          const { data, error } = await supabase
-            .from('profiles')
-            .select('email')
-            .eq('phone', cleanIdentifier)
-            .single();
           if (error && error.code !== 'PGRST116') {
-            console.error('Server error during phone lookup:', error);
+            console.error('Server error during identifier lookup:', error);
             return { error: { message: `Server error during login: ${error.message} (Code: ${error.code})`, name: 'AuthError' } as any };
           }
-          if (error || !data?.email) {
+          if (isUPI) {
+            return { error: { message: 'No account found with this UPI number. Please check your NEMIS UPI and try again.', name: 'AuthError' } as any };
+          } else {
             return { error: { message: 'No account found with this identifier. Please use your email, UPI number, or phone.', name: 'AuthError' } as any };
           }
-          email = data.email;
         }
       }
 
