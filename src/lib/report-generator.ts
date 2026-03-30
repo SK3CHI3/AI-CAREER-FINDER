@@ -21,6 +21,9 @@ export interface CareerRecommendation {
   universities: string[];
   salaryRange: string;
   jobOutlook: string;
+  education?: string;
+  actionabilityScore?: number;
+  whyRecommended?: string;
 }
 
 export class ReportGenerator {
@@ -72,13 +75,25 @@ export class ReportGenerator {
         
         /* Header Styles */
         .brand-header {
+          display: flex;
+          align-items: center;
+          gap: 20px;
           border-bottom: 3px solid var(--brand);
           padding-bottom: 20px;
           margin-bottom: 30px;
         }
         
+        .logo-container img {
+          width: 80px;
+          height: auto;
+        }
+
+        .header-text {
+          flex: 1;
+        }
+        
         .brand-title {
-          font-size: 28px;
+          font-size: 32px;
           font-weight: 800;
           color: var(--brand);
           margin-bottom: 5px;
@@ -92,17 +107,14 @@ export class ReportGenerator {
         }
         
         .report-meta {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          margin-top: 15px;
+          text-align: right;
           font-size: 12px;
           color: var(--muted);
         }
         
         /* Main Content */
         .main-title {
-          font-size: 32px;
+          font-size: 28px;
           font-weight: 700;
           color: var(--ink);
           margin-bottom: 8px;
@@ -110,7 +122,7 @@ export class ReportGenerator {
         }
         
         .main-subtitle {
-          font-size: 18px;
+          font-size: 16px;
           color: var(--muted);
           margin-bottom: 40px;
           font-weight: 400;
@@ -223,39 +235,73 @@ export class ReportGenerator {
         
         /* Career Recommendations */
         .career-card {
-          background: #fff;
-          border: 1px solid var(--border);
-          border-radius: 12px;
-          padding: 20px;
-          margin: 15px 0;
-          box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+          background: #f8fafc;
+          border-left: 5px solid var(--brand);
+          border-radius: 8px;
+          padding: 25px;
+          margin: 20px 0;
+          box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
         }
         
+        .career-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: flex-start;
+          margin-bottom: 12px;
+        }
+
         .career-title {
-          font-size: 18px;
-          font-weight: 700;
+          font-size: 22px;
+          font-weight: 800;
           color: var(--ink);
-          margin-bottom: 8px;
+          margin-bottom: 4px;
         }
         
         .match-badge {
-          display: inline-block;
+          display: flex;
+          flex-direction: column;
+          align-items: flex-end;
           background: #dcfce7;
           color: var(--success);
-          padding: 4px 12px;
-          border-radius: 20px;
-          font-size: 12px;
-          font-weight: 600;
-          margin-bottom: 10px;
+          padding: 6px 14px;
+          border-radius: 6px;
+          font-weight: 700;
+        }
+        .match-badge span {
+            font-size: 18px;
+        }
+        .match-badge small {
+            font-size: 10px;
+            text-transform: uppercase;
         }
         
         .career-details {
-          margin: 10px 0;
+          margin: 15px 0;
+          padding: 15px;
+          background: #ffffff;
+          border-radius: 6px;
+          border: 1px solid var(--border);
         }
         
+        .career-details p {
+          margin-bottom: 8px;
+          font-size: 13px;
+        }
+
         .career-details strong {
           color: var(--brand);
           font-weight: 600;
+          display: inline-block;
+          width: 140px;
+        }
+
+        .why-recommended {
+            margin-top: 15px;
+            font-size: 14px;
+            line-height: 1.6;
+            color: #334155;
+            padding-left: 15px;
+            border-left: 3px solid var(--success);
         }
         
         /* AI Summary */
@@ -341,11 +387,16 @@ export class ReportGenerator {
     <div class="report-container">
         <!-- Header -->
         <div class="brand-header">
-            <div class="brand-title">CareerGuide AI</div>
-            <div class="brand-subtitle">Kenya's Premier CBE Career Guidance Platform</div>
+            <div class="logo-container">
+                <img src="${window.location.origin}/logos/CareerGuide_Logo.png" alt="CareerGuide Logo" onerror="this.style.display='none'"/>
+            </div>
+            <div class="header-text">
+                <div class="brand-title">CareerGuide AI</div>
+                <div class="brand-subtitle">Kenya's Premier CBE Career Guidance Platform</div>
+            </div>
             <div class="report-meta">
-                <span>Generated: ${currentDate}</span>
-                <span>Report ID: ${Date.now().toString().slice(-6)}</span>
+                <div>Generated: ${currentDate}</div>
+                <div>Report ID: ${Date.now().toString().slice(-6)}</div>
             </div>
         </div>
         
@@ -422,18 +473,27 @@ export class ReportGenerator {
         <!-- Career Recommendations Section -->
         ${recommendations.length > 0 ? `
         <div class="section">
-            <h2 class="section-title">Career Recommendations</h2>
+            <h2 class="section-title">Personalized Career Matches</h2>
             ${recommendations.map(rec => `
                 <div class="career-card">
-                    <span class="match-badge">${rec.matchPercentage}% Match</span>
-                    <h3 class="career-title">${rec.title}</h3>
-                    <p style="margin: 10px 0; font-size: 14px; line-height: 1.6;">${rec.description}</p>
+                    <div class="career-header">
+                        <h3 class="career-title">${rec.title}</h3>
+                        <div class="match-badge">
+                            <span>${rec.matchPercentage}%</span>
+                            <small>Match</small>
+                        </div>
+                    </div>
+                    <p style="margin-bottom: 10px; font-size: 14px;">${rec.description}</p>
                     
                     <div class="career-details">
-                        <p><strong>Required CBE Subjects:</strong> ${rec.requiredSubjects.join(', ')}</p>
-                        <p><strong>Recommended Universities:</strong> ${rec.universities.join(', ')}</p>
-                        <p><strong>Expected Salary Range:</strong> ${rec.salaryRange}</p>
-                        <p><strong>Job Market Outlook:</strong> ${rec.jobOutlook}</p>
+                        <p><strong>CBE Subjects:</strong> ${Array.isArray(rec.requiredSubjects) ? rec.requiredSubjects.join(', ') : rec.requiredSubjects || 'N/A'}</p>
+                        <p><strong>Education:</strong> ${Array.isArray(rec.universities) ? rec.universities.join(', ') : rec.education || 'N/A'}</p>
+                        <p><strong>Salary Range:</strong> ${rec.salaryRange}</p>
+                        <p><strong>Actionability:</strong> ${rec.actionabilityScore || 'High'}/100</p>
+                    </div>
+
+                    <div class="why-recommended">
+                        <strong>Why this fits you:</strong> ${rec.whyRecommended || 'Aligns strongly with your RIASEC profile and subject strengths.'}
                     </div>
                 </div>
             `).join('')}

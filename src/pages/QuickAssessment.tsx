@@ -55,17 +55,17 @@ const QuickAssessment = () => {
         const welcomeMessage: ChatMessage = {
             id: crypto.randomUUID(),
             role: 'assistant',
-            content: `Karibu to CareerGuide AI! 🎉\n\nI'm your friendly career counselor. Let's find your perfect career path through Kenya's CBE system!\n\nWhat's your name? 😊`,
+            content: `Welcome to CareerGuide AI! 🎓\n\nI'm going to guide you through a rapid 4-step assessment to find your perfect Kenyan CBE career path.\n\nFirst, what is your **name** and your **current grade/class**?`,
             timestamp: new Date()
         };
         setConversation([welcomeMessage]);
     }, []);
 
     const extractProfileInfo = (userMessage: string, aiResponse: string) => {
+        // We will rely on the final JSON extraction phase for complete accuracy,
+        // but we can try to grab the name early just to personalize the chat context.
         const message = userMessage.toLowerCase();
         const newProfile = { ...guestProfile };
-        
-        // Simplified extraction for the demo
         if (!newProfile.name) {
             const nameMatch = message.match(/(?:my name is|i'm|i am|call me)\s+([a-zA-Z\s]+)/i);
             if (nameMatch) newProfile.name = nameMatch[1].trim();
@@ -91,6 +91,7 @@ const QuickAssessment = () => {
             const response = await aiCareerService.sendMessage(userMsg.content, conversation, {
                 name: guestProfile.name,
                 schoolLevel: 'secondary',
+                constraints: ["CRITICAL: You are conducting a strict 4-step Quick Assessment. Do not give open ended chats. Step 1: Ask Name & Grade. Step 2: Ask top 3 Favorite Subjects. Step 3: Conduct a 1-question Mini-RIASEC scenario test (e.g. Would you rather fix a drone, analyze data, or manage a team?). Step 4: Summarize and tell them to click Finish. MOVE STRICTLY ONE STEP AT A TIME."]
             });
 
             const assistantMsg: ChatMessage = {
@@ -114,10 +115,46 @@ const QuickAssessment = () => {
         }
     };
 
+    const [finalRecommendations, setFinalRecommendations] = useState<any[]>([]);
+
     const finishAssessment = async () => {
         setIsGeneratingReport(true);
         try {
-            const summary = await aiCareerService.sendMessage("Summarize our session for a career report.", conversation, {});
+            // Step 1: Extract real profile via hidden JSON prompt
+            const extractPrompt = "Extract the student's profile from our conversation into a strict JSON format. Return ONLY a JSON object with these exact keys and nothing else: 'name' (string), 'grade' (string), 'subjects' (array of strings), 'riasecCode' (string: their 3-letter Holland Code based on evaluating their answers, e.g. 'IRE'. If unsure, guess based on their subjects/answers). Example: {\"name\":\"John\",\"grade\":\"Form 3\",\"subjects\":[\"Math\",\"Physics\"],\"riasecCode\":\"IRE\"}";
+            const extractionObjStr = await aiCareerService.sendMessage(extractPrompt, conversation, {});
+            
+            let extractedProfile: GuestProfile = { ...guestProfile };
+            try {
+                // Ensure we just grab the JSON part if the AI wrapped it in markdown
+                const jsonMatch = extractionObjStr.match(/\{[\s\S]*?\}/);
+                if (jsonMatch) {
+                   const parsed = JSON.parse(jsonMatch[0]);
+                   extractedProfile = {
+                       name: parsed.name || guestProfile.name,
+                       grade: parsed.grade || 'Unknown',
+                       subjects: parsed.subjects || [],
+                       interests: [parsed.riasecCode ? `RIASEC: ${parsed.riasecCode}` : 'General Exploration'],
+                       careerGoals: "Seeking career alignment via AI Quick Assessment."
+                   };
+                   setGuestProfile(extractedProfile);
+                }
+            } catch (e) {
+                console.error("Failed to parse extracted JSON profile", e);
+            }
+
+            // Step 2: Generate actual career recommendations based on the extracted profile
+            const recommendations = await aiCareerService.generateCareerRecommendations({
+                name: extractedProfile.name,
+                currentGrade: extractedProfile.grade,
+                subjects: extractedProfile.subjects,
+                interests: extractedProfile.interests,
+            });
+            setFinalRecommendations(recommendations);
+
+            // Step 3: Provide a closing conversational summary
+            const summaryPrompt = "The assessment is complete. Provide a warm 2-sentence closing message thanking them by name and telling them their PDF report is ready to download containing their personalized career matches based on their RIASEC code.";
+            const summary = await aiCareerService.sendMessage(summaryPrompt, conversation, {});
             const assistantMsg: ChatMessage = {
                 id: crypto.randomUUID(),
                 role: 'assistant',
@@ -127,6 +164,7 @@ const QuickAssessment = () => {
             setConversation(prev => [...prev, assistantMsg]);
             setShowReport(true);
         } catch (e) {
+            console.error(e);
             setError('Error generating report.');
         } finally {
             setIsGeneratingReport(false);
@@ -134,8 +172,8 @@ const QuickAssessment = () => {
     };
 
     const downloadReport = async () => {
-        const html = ReportGenerator.generatePDFReport(guestProfile, conversation);
-        await ReportGenerator.downloadPDF(html, `CareerGuide-Report.pdf`);
+        const html = ReportGenerator.generatePDFReport(guestProfile, conversation, finalRecommendations);
+        await ReportGenerator.downloadPDF(html, `${guestProfile.name || 'CareerGuide'}-Assessment-Report.pdf`);
     };
 
     return (
