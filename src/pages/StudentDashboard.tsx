@@ -44,7 +44,6 @@ import {
   School,
   X
 } from 'lucide-react'
-import PaymentWall from '@/components/PaymentWall'
 import { ThemeToggle } from '@/components/ThemeToggle'
 import AIChat from '@/components/AIChat'
 import { ReportGenerator } from '@/lib/report-generator'
@@ -84,10 +83,6 @@ const StudentDashboard = () => {
   const [selectedCareer, setSelectedCareer] = useState<CareerDataItem | null>(null)
   const [isCareerModalOpen, setIsCareerModalOpen] = useState(false)
   const [isGradesModalOpen, setIsGradesModalOpen] = useState(false)
-  const [isSchoolSubscribed, setIsSchoolSubscribed] = useState(false)
-  const [isPaid, setIsPaid] = useState(false)
-  const [isPaymentWallOpen, setIsPaymentWallOpen] = useState(false)
-  const [isBannerVisible, setIsBannerVisible] = useState(true)
   const [schoolInfo, setSchoolInfo] = useState<{ name: string; status: string } | null>(null)
 
   // Activity tracking
@@ -110,18 +105,12 @@ const StudentDashboard = () => {
 
   const checkAccessStatus = async () => {
     if (!profile) return;
-    const paid = profile.payment_status === 'completed';
-    setIsPaid(paid);
 
     if (profile.school_id) {
       try {
         const { schoolService } = await import('@/lib/school-service');
-        const [hasSub, schoolData] = await Promise.all([
-          schoolService.hasActiveSubscription(profile.school_id),
-          schoolService.getSchoolById(profile.school_id)
-        ]);
+        const schoolData = await schoolService.getSchoolById(profile.school_id);
         
-        setIsSchoolSubscribed(hasSub);
         if (schoolData) {
           setSchoolInfo({ name: schoolData.name, status: schoolData.status || 'active' });
         }
@@ -131,7 +120,7 @@ const StudentDashboard = () => {
     }
   }
 
-  const isAuthorized = isPaid || isSchoolSubscribed;
+  const isAuthorized = true;
 
   // Load all dashboard data
   const loadDashboardData = async () => {
@@ -455,35 +444,7 @@ const StudentDashboard = () => {
 
       {/* Main Content */}
       <main className="max-w-7xl w-full mx-auto px-2 sm:px-6 lg:px-8 py-4 sm:py-8">
-        {!isAuthorized && isBannerVisible && (
-          <div className="mb-8 p-6 rounded-[2.5rem] bg-gradient-to-r from-primary/10 via-blue-500/10 to-indigo-500/10 border-2 border-primary/20 backdrop-blur-sm animate-in fade-in slide-in-from-top-4 duration-700 relative group/banner">
-            <Button
-              variant="ghost"
-              size="icon"
-              className="absolute top-4 right-4 h-8 w-8 rounded-full bg-white/50 hover:bg-white text-primary opacity-0 group-hover/banner:opacity-100 transition-opacity"
-              onClick={() => setIsBannerVisible(false)}
-            >
-              <X className="w-4 h-4" />
-            </Button>
-            <div className="flex flex-col md:flex-row items-center justify-between gap-6">
-              <div className="flex items-center gap-5">
-                <div className="w-16 h-16 rounded-3xl bg-primary flex items-center justify-center shadow-lg shadow-primary/30">
-                  <Sparkles className="w-8 h-8 text-white" />
-                </div>
-                <div>
-                  <h3 className="text-xl sm:text-2xl font-black tracking-tight">Unlock Your Full Career Potential! 🚀</h3>
-                  <p className="text-foreground-muted text-base sm:text-lg">Get personalized AI guidance, detailed reports, and expert career mapping for just <span className="text-primary font-bold">KSh 10</span>.</p>
-                </div>
-              </div>
-                <Button 
-                onClick={() => setIsPaymentWallOpen(true)}
-                className="h-14 px-8 text-lg rounded-2xl bg-primary hover:bg-primary/90 text-white shadow-xl shadow-primary/20 font-bold w-full md:w-auto transition-transform hover:scale-105"
-              >
-                Unlock Premium Now (10 KES)
-              </Button>
-            </div>
-          </div>
-        )}
+        {/* Banner removed */}
         {/* Welcome Section */}
         <div className="mb-6 sm:mb-8">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0">
@@ -853,17 +814,10 @@ const StudentDashboard = () => {
                     <Button 
                       variant="outline" 
                       className="w-full group-hover:bg-primary group-hover:text-primary-foreground transition-colors duration-200"
-                      onClick={() => {
-                        if (isAuthorized) {
-                          // Already handled by parent Card? No, let's trigger detail modal
-                          handleCareerDetailClick(career)
-                        } else {
-                          setIsPaymentWallOpen(true)
-                        }
-                      }}
+                      onClick={() => handleCareerDetailClick(career)}
                     >
-                      {isAuthorized ? <Target className="w-4 h-4 mr-2" /> : <Lock className="w-4 h-4 mr-2" />}
-                      {isAuthorized ? 'Get Detailed Insights' : 'Unlock Insights'}
+                      <Target className="w-4 h-4 mr-2" />
+                      Get Detailed Insights
                       <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform duration-200" />
                     </Button>
                   </CardContent>
@@ -874,25 +828,7 @@ const StudentDashboard = () => {
 
           {/* Chat Tab */}
           <TabsContent value="chat" className="w-full mx-auto px-2 sm:px-0">
-            {isAuthorized ? (
-              <AIChat />
-            ) : (
-              <Card className="p-12 text-center border-2 border-dashed border-primary/30 bg-primary/5 rounded-[3rem]">
-                <div className="max-w-md mx-auto space-y-6">
-                  <div className="w-24 h-24 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-6">
-                    <Lock className="w-12 h-12 text-primary" />
-                  </div>
-                  <h3 className="text-3xl font-black">AI Career Mentor is Locked</h3>
-                  <p className="text-lg text-foreground-muted">Upgrade to Premium to chat with our AI Career Mentor. Get personalized advice on subjects, universities, and your 10 KES one-time payment covers everything!</p>
-                  <Button 
-                    onClick={() => setIsPaymentWallOpen(true)}
-                    className="h-16 px-10 text-xl rounded-2xl bg-primary text-white shadow-2xl shadow-primary/30 font-bold"
-                  >
-                    Unlock for KSh 10
-                  </Button>
-                </div>
-              </Card>
-            )}
+            <AIChat />
           </TabsContent>
 
           {/* Progress Tab */}
@@ -981,10 +917,6 @@ const StudentDashboard = () => {
                       variant="outline"
                       className="w-full min-h-[44px]"
                       onClick={async () => {
-                        if (!isAuthorized) {
-                          setIsPaymentWallOpen(true)
-                          return
-                        }
                         const profileData = profile || ({} as any)
                         const html = ReportGenerator.generatePDFReport(
                           {
@@ -1002,8 +934,8 @@ const StudentDashboard = () => {
                         trackButtonClick('Download PDF', 'Journey Actions')
                       }}
                     >
-                      {isAuthorized ? <FileText className="w-4 h-4 mr-2" /> : <Lock className="w-4 h-4 mr-2" />}
-                      {isAuthorized ? 'Download PDF' : 'Unlock Report (10 KES)'}
+                      <FileText className="w-4 h-4 mr-2" />
+                      Download PDF
                     </Button>
                   </div>
                 </CardContent>
@@ -1033,28 +965,7 @@ const StudentDashboard = () => {
 
       {/* Career Detail Modal */}
       {/* Modals and Overlays */}
-      {isPaymentWallOpen && (
-        <div className="fixed inset-0 z-[100] bg-background/80 backdrop-blur-sm animate-in fade-in duration-300">
-          <div className="fixed inset-0 flex items-center justify-center p-4">
-            <div className="relative w-full max-w-2xl bg-card rounded-[3rem] shadow-2xl border-2 border-card-border overflow-hidden animate-in zoom-in-95 duration-300">
-              <button 
-                onClick={() => setIsPaymentWallOpen(false)}
-                className="absolute top-6 right-6 p-2 rounded-full hover:bg-muted transition-colors z-10"
-              >
-                <XCircle className="w-8 h-8 text-foreground-muted" />
-              </button>
-              <div className="max-h-[90vh] overflow-y-auto">
-                <div className="p-2">
-                  <PaymentWall onPaymentSuccess={() => {
-                    setIsPaymentWallOpen(false);
-                    checkAccessStatus();
-                  }} />
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* PaymentWall Removed */}
 
       {selectedCareer && (
         <CareerDetailModal

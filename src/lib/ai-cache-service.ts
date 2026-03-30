@@ -200,10 +200,15 @@ class AICacheService {
         why_recommended: (rec.why_recommended || rec.whyRecommended || '').toString()
       }))
 
+      // Ensure unique career names in case AI generates duplicates
+      const uniqueRecommendations = Array.from(
+        new Map(recommendationsToSave.map(item => [item.career_name, item])).values()
+      );
+
       // @ts-ignore
       const { error } = await supabase
         .from('cached_career_recommendations')
-        .insert(recommendationsToSave as any)
+        .upsert(uniqueRecommendations as any, { onConflict: 'user_id,career_name' })
 
       if (error) {
         console.warn('Error saving career recommendations to L2:', error)
