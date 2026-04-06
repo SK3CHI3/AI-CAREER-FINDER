@@ -123,46 +123,58 @@ const Careers = () => {
                 animate={{ opacity: 1, scale: 1 }}
                 whileHover={{ y: -5 }}
               >
-                <Card className="bg-gradient-surface border-card-border p-6 hover:shadow-card transition-all duration-300 h-full flex flex-col group">
-                  <div className="flex justify-between items-start mb-4">
-                    <h3 className="text-xl font-bold text-foreground group-hover:text-primary transition-colors">
-                      {career.title}
-                    </h3>
-                    <Badge className={getDemandColor(career.demand_level)}>
-                      {career.demand_level}
-                    </Badge>
+                <Card className="bg-gradient-surface border-card-border hover:shadow-card transition-all duration-300 h-full flex flex-col group overflow-hidden">
+                  {/* Image Section */}
+                  <div className="relative h-48 w-full overflow-hidden bg-muted">
+                    <img 
+                      src={career.image_url || 'https://images.unsplash.com/photo-1522202176988-66273c2fd55f?fit=crop&w=800&q=80'} 
+                      alt={career.title}
+                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-[#020617] via-[#020617]/50 to-transparent"></div>
+                    <div className="absolute bottom-4 left-4 right-4 flex justify-between items-end">
+                      <h3 className="text-xl font-bold text-white group-hover:text-primary transition-colors line-clamp-2 drop-shadow-md">
+                        {career.title}
+                      </h3>
+                      <Badge className={`backdrop-blur-md whitespace-nowrap ml-2 ${getDemandColor(career.demand_level)} border-none shadow-sm`}>
+                        {career.demand_level}
+                      </Badge>
+                    </div>
                   </div>
+
+                  {/* Content Section */}
+                  <div className="p-6 flex-1 flex flex-col space-y-4">
+                    <p className="text-foreground-muted mb-6 flex-1 line-clamp-3 text-sm">
+                      {career.description}
+                    </p>
                   
-                  <p className="text-foreground-muted mb-6 flex-1 line-clamp-3">
-                    {career.description}
-                  </p>
-                  
-                  <div className="space-y-3 mb-6">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center space-x-2">
-                        <DollarSign className="w-4 h-4 text-foreground-muted" />
-                        <span className="text-sm text-foreground-muted">Salary Range</span>
+                    <div className="space-y-3 mb-6">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-2">
+                          <DollarSign className="w-4 h-4 text-foreground-muted" />
+                          <span className="text-sm text-foreground-muted">Salary Range</span>
+                        </div>
+                        <span className="text-sm font-semibold text-foreground">{career.salary_range}</span>
                       </div>
-                      <span className="text-sm font-semibold text-foreground">{career.salary_range}</span>
+                      
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-2">
+                          <TrendingUp className="w-4 h-4 text-foreground-muted" />
+                          <span className="text-sm text-foreground-muted">Growth Rate</span>
+                        </div>
+                        <span className="text-sm font-semibold text-success">{career.growth_percentage}</span>
+                      </div>
                     </div>
                     
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center space-x-2">
-                        <TrendingUp className="w-4 h-4 text-foreground-muted" />
-                        <span className="text-sm text-foreground-muted">Growth Rate</span>
-                      </div>
-                      <span className="text-sm font-semibold text-success">{career.growth_percentage}</span>
+                    <div className="pt-0 mt-auto">
+                      <Button 
+                        onClick={() => window.location.href = `/quick-assessment?career=${encodeURIComponent(career.title)}`}
+                        className="w-full bg-primary/10 hover:bg-primary text-primary hover:text-primary-foreground border border-primary/20 transition-all font-bold"
+                      >
+                        Assess My Fit
+                        <ArrowRight className="w-4 h-4 ml-2" />
+                      </Button>
                     </div>
-                  </div>
-                  
-                  <div className="pt-4 border-t border-card-border mt-auto">
-                    <Button 
-                      onClick={() => window.location.href = `/quick-assessment?career=${encodeURIComponent(career.title)}`}
-                      className="w-full bg-primary/10 hover:bg-primary text-primary hover:text-primary-foreground border border-primary/20 transition-all font-bold"
-                    >
-                      Assess My Fit
-                      <ArrowRight className="w-4 h-4 ml-2" />
-                    </Button>
                   </div>
                 </Card>
               </motion.div>

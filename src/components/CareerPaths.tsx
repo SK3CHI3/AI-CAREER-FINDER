@@ -107,19 +107,29 @@ const CareerPaths = () => {
           {dynamicCareerPaths.slice(0, 3).map((career) => (
             <Card 
               key={career.id}
-              className="bg-gradient-surface border-card-border p-6 hover:shadow-card transition-all duration-300 group"
+              className="bg-gradient-surface border-card-border hover:shadow-card transition-all duration-300 group overflow-hidden flex flex-col"
             >
-              <div className="space-y-4">
-                <div className="flex justify-between items-start">
-                  <h3 className="text-xl font-semibold text-foreground group-hover:text-primary transition-colors">
+              {/* Image Section */}
+              <div className="relative h-48 w-full overflow-hidden bg-muted">
+                <img 
+                  src={career.image_url || 'https://images.unsplash.com/photo-1522202176988-66273c2fd55f?fit=crop&w=800&q=80'} 
+                  alt={career.title}
+                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-[#020617] via-[#020617]/50 to-transparent"></div>
+                <div className="absolute bottom-4 left-4 right-4 flex justify-between items-end">
+                  <h3 className="text-xl font-bold text-white group-hover:text-primary transition-colors line-clamp-2 drop-shadow-md">
                     {career.title}
                   </h3>
-                  <Badge className={getDemandColor(career.demand_level)}>
+                  <Badge className={`backdrop-blur-md whitespace-nowrap ml-2 ${getDemandColor(career.demand_level)} border-none shadow-sm`}>
                     {career.demand_level}
                   </Badge>
                 </div>
-                
-                <p className="text-foreground-muted">
+              </div>
+
+              {/* Content Section */}
+              <div className="p-6 space-y-4 flex-1 flex flex-col">
+                <p className="text-foreground-muted text-sm line-clamp-3">
                   {career.description}
                 </p>
                 
@@ -156,13 +166,16 @@ const CareerPaths = () => {
                   </div>
                 </div>
                 
-                <Button 
-                  variant="ghost" 
-                  className="w-full justify-between hover:bg-surface group-hover:text-primary"
-                >
-                  Explore Path
-                  <ArrowRight className="w-4 h-4" />
-                </Button>
+                <div className="mt-auto pt-4">
+                  <Button 
+                    variant="ghost" 
+                    className="w-full justify-between hover:bg-surface group-hover:text-primary"
+                    onClick={() => window.location.href = '/careers'}
+                  >
+                    Explore Path
+                    <ArrowRight className="w-4 h-4" />
+                  </Button>
+                </div>
               </div>
             </Card>
           ))}

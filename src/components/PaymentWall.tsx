@@ -3,7 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
-import { Loader2, CheckCircle, XCircle, CreditCard, Smartphone, Shield, Lock } from 'lucide-react'
+import { Loader2, CheckCircle, XCircle, CreditCard, Smartphone, Shield, Lock, MessageCircle } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
 import { supabase } from '@/lib/supabase'
 
@@ -149,9 +149,7 @@ const PaymentWall: React.FC<PaymentWallProps> = ({ onPaymentSuccess }) => {
         .update({
           payment_status: 'completed',
           payment_reference: results.reference || `PAY_${Date.now()}`,
-          payment_date: new Date().toISOString(),
-          payment_amount: 10.00,
-          payment_currency: 'KES',
+          payment_amount: 1500.00,
           intasend_transaction_id: results.transaction_id || results.id
         })
         .eq('id', user?.id)
@@ -203,7 +201,7 @@ const PaymentWall: React.FC<PaymentWallProps> = ({ onPaymentSuccess }) => {
     try {
       // Trigger the payment using IntaSend's run method
       intaSendInstance.run({
-        amount: 10,
+        amount: 1500,
         currency: 'KES',
         email: profile?.email || user?.email || '',
         phone_number: '254700000000',
@@ -250,10 +248,10 @@ const PaymentWall: React.FC<PaymentWallProps> = ({ onPaymentSuccess }) => {
             <Lock className="w-8 h-8 text-green-500" />
           </div>
           <CardTitle className="text-2xl sm:text-3xl font-extrabold text-foreground tracking-tight">
-            Complete Your Registration
+            Book Career Counselor Session
           </CardTitle>
             <CardDescription className="text-base sm:text-lg text-foreground-muted mt-2">
-              Unlock full access to AI Career Finder with a one-time payment
+              Unlock full platform access including live chat with professional career counselors.
             </CardDescription>
         </CardHeader>
 
@@ -297,19 +295,19 @@ const PaymentWall: React.FC<PaymentWallProps> = ({ onPaymentSuccess }) => {
             
             <div className="space-y-3">
               <div className="flex justify-between items-center">
-                <span className="text-sm sm:text-base text-foreground-muted">AI Career Finder Access</span>
-                <span className="font-extrabold text-primary text-xl sm:text-2xl">KSh 10</span>
+                <span className="text-sm sm:text-base text-foreground-muted">Professional Counselor Access</span>
+                <span className="font-extrabold text-primary text-xl sm:text-2xl">KSh 1,500</span>
               </div>
               <div className="flex justify-between items-center text-xs sm:text-sm text-foreground-muted">
                 <span>Includes:</span>
-                <span>Lifetime access</span>
+                <span>Full platform & Live Chat</span>
               </div>
             </div>
 
             <div className="mt-5 pt-5 border-t border-card-border">
               <div className="flex justify-between items-center text-lg sm:text-xl font-black text-foreground">
                 <span>Total</span>
-                <span className="text-primary">KSh 10</span>
+                <span className="text-primary">KSh 1,500</span>
               </div>
             </div>
           </div>
@@ -320,6 +318,12 @@ const PaymentWall: React.FC<PaymentWallProps> = ({ onPaymentSuccess }) => {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
               <div className="flex items-center space-x-3 p-3 rounded-lg bg-card border border-card-border shadow-sm">
                 <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center shrink-0">
+                  <MessageCircle className="w-5 h-5 text-primary" />
+                </div>
+                <span className="text-sm font-medium text-foreground">Live Counselor Chat</span>
+              </div>
+              <div className="flex items-center space-x-3 p-3 rounded-lg bg-card border border-card-border shadow-sm">
+                <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center shrink-0">
                   <CreditCard className="w-5 h-5 text-primary" />
                 </div>
                 <span className="text-sm font-medium text-foreground">AI Career Assessment</span>
@@ -328,19 +332,13 @@ const PaymentWall: React.FC<PaymentWallProps> = ({ onPaymentSuccess }) => {
                 <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center shrink-0">
                   <Smartphone className="w-5 h-5 text-primary" />
                 </div>
-                <span className="text-sm font-medium text-foreground">Personalized Matches</span>
+                <span className="text-sm font-medium text-foreground">Personalized Reports</span>
               </div>
               <div className="flex items-center space-x-3 p-3 rounded-lg bg-card border border-card-border shadow-sm">
                 <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center shrink-0">
                   <Shield className="w-5 h-5 text-primary" />
                 </div>
                 <span className="text-sm font-medium text-foreground">Academic Tracking</span>
-              </div>
-              <div className="flex items-center space-x-3 p-3 rounded-lg bg-card border border-card-border shadow-sm">
-                <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center shrink-0">
-                  <CheckCircle className="w-5 h-5 text-primary" />
-                </div>
-                <span className="text-sm font-medium text-foreground">Subject Recommendations</span>
               </div>
             </div>
           </div>
@@ -376,7 +374,7 @@ const PaymentWall: React.FC<PaymentWallProps> = ({ onPaymentSuccess }) => {
                 ) : (
                   <>
                     <CreditCard className="w-5 h-5 mr-2" />
-                    Pay KSh 10 Now
+                    Pay KSh 1,500 Now
                   </>
                 )}
               </Button>

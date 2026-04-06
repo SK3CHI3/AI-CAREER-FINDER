@@ -49,9 +49,9 @@ import AIChat from '@/components/AIChat'
 import { ReportGenerator } from '@/lib/report-generator'
 import { ProfileSetup } from '@/components/ProfileSetup'
 import GradesManager from '@/components/GradesManager'
-import CareerDetailModal from '@/components/CareerDetailModal'
 import CourseRecommendations from '@/components/CourseRecommendations'
 import GradesModal from '@/components/GradesModal'
+import { StudentCounselorChat } from '@/components/StudentCounselorChat'
 import { supabase } from '@/lib/supabase'
 import { aiCareerService } from '@/lib/ai-service'
 import { aiCacheService } from '@/lib/ai-cache-service'
@@ -475,6 +475,7 @@ const StudentDashboard = () => {
                   )}
                 </TabsTrigger>
             <TabsTrigger value="chat">AI Chat</TabsTrigger>
+            <TabsTrigger value="human-chat">Counselor Hub</TabsTrigger>
             <TabsTrigger value="progress">Progress</TabsTrigger>
           </TabsList>
 
@@ -829,6 +830,11 @@ const StudentDashboard = () => {
           {/* Chat Tab */}
           <TabsContent value="chat" className="w-full mx-auto px-2 sm:px-0">
             <AIChat />
+          </TabsContent>
+
+          {/* Counselor Hub Tab */}
+          <TabsContent value="human-chat" className="w-full mx-auto px-2 sm:px-0">
+            <StudentCounselorChat />
           </TabsContent>
 
           {/* Progress Tab */}

@@ -19,12 +19,13 @@ import {
   MessageCircle, CheckCircle2, Bug, Lightbulb, HelpCircle,
   LayoutDashboard, Settings, Bell, Menu, X, ChevronRight,
   Database, LineChart, PieChart as PieChartIcon, Loader2,
-  MessageSquarePlus, FileText
+  MessageSquarePlus, FileText, Briefcase
 } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { motion, AnimatePresence } from 'framer-motion'
-import { ThemeToggle } from '@/components/ThemeToggle'
 import { BlogManagement } from '@/components/BlogManagement'
+import { CareerPathwaysManagement } from '@/components/CareerPathwaysManagement'
+import { AdminCounselorChat } from '@/components/AdminCounselorChat'
 
 interface AdminStats {
   totalStudents: number
@@ -129,6 +130,8 @@ const AdminDashboard = () => {
     { id: 'analytics', label: 'Analytics', icon: LineChart },
     { id: 'feedbacks', label: 'Feedbacks', icon: MessageCircle },
     { id: 'blog', label: 'Blog', icon: FileText },
+    { id: 'careers', label: 'Career Pathways', icon: Briefcase },
+    { id: 'counselor_chats', label: 'Counselor Chats', icon: MessageSquarePlus },
     { id: 'settings', label: 'Settings', icon: Settings },
   ]
 
@@ -704,6 +707,14 @@ const AdminDashboard = () => {
                     </Card>
                   </div>
                 </div>
+              )}
+
+              {activeTab === 'careers' && (
+                <CareerPathwaysManagement />
+              )}
+
+              {activeTab === 'counselor_chats' && (
+                <AdminCounselorChat />
               )}
 
               {activeTab === 'users' && (

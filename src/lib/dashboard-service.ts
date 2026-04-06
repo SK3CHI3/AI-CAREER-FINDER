@@ -53,6 +53,7 @@ export interface CareerPath {
   education_requirements: string
   career_level: string
   is_active: boolean
+  image_url?: string
   created_at: string
   updated_at: string
 }
@@ -318,31 +319,8 @@ class DashboardService {
   // Career Paths
   async getCareerPaths(category?: string, limit: number = 20): Promise<CareerPath[]> {
     try {
-      // 1. Check if we need to refresh (once a week)
-      const { data: entries, error: fetchError } = await supabase
-        .from('career_paths')
-        .select('created_at')
-        .order('created_at', { ascending: false })
-        .limit(1);
-
-      if (fetchError) throw fetchError;
-      const latestEntry = entries && entries.length > 0 ? entries[0] : null;
-
-      const ONE_WEEK = 7 * 24 * 60 * 60 * 1000;
-      const isStale = !latestEntry || (new Date().getTime() - new Date(latestEntry.created_at).getTime() > ONE_WEEK);
-
-      if (isStale) {
-        console.log('Career paths are stale or missing. Attempting refresh from AI...');
-        try {
-          await this.syncCareerPathsWithAI();
-        } catch (syncError) {
-          console.warn('AI Sync failed, continuing with existing database content:', 
-            syncError instanceof Error ? syncError.message : String(syncError)
-          );
-        }
-      }
-
-      // 2. Fetch data
+      // Data is now managed strictly via the Admin Dashboard.
+      // Auto-sync from AI is disabled to prevent overwriting manual image/description updates.
       let query = supabase
         .from('career_paths')
         .select('*')
