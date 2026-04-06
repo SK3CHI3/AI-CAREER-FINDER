@@ -25,7 +25,7 @@ import { supabase } from '@/lib/supabase'
 import { motion, AnimatePresence } from 'framer-motion'
 import { BlogManagement } from '@/components/BlogManagement'
 import { CareerPathwaysManagement } from '@/components/CareerPathwaysManagement'
-import { AdminCounselorChat } from '@/components/AdminCounselorChat'
+import { AdminCounselorManager } from '@/components/AdminCounselorManager'
 
 interface AdminStats {
   totalStudents: number
@@ -714,7 +714,7 @@ const AdminDashboard = () => {
               )}
 
               {activeTab === 'counselor_chats' && (
-                <AdminCounselorChat />
+                <AdminCounselorManager />
               )}
 
               {activeTab === 'users' && (

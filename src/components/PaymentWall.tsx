@@ -320,7 +320,7 @@ const PaymentWall: React.FC<PaymentWallProps> = ({ onPaymentSuccess }) => {
                 <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center shrink-0">
                   <MessageCircle className="w-5 h-5 text-primary" />
                 </div>
-                <span className="text-sm font-medium text-foreground">Live Counselor Chat</span>
+                <span className="text-sm font-medium text-foreground">Counselor Directory & Booking</span>
               </div>
               <div className="flex items-center space-x-3 p-3 rounded-lg bg-card border border-card-border shadow-sm">
                 <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center shrink-0">

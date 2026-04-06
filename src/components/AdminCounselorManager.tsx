@@ -1,0 +1,220 @@
+import React, { useState, useEffect } from 'react';
+import { supabase } from '@/lib/supabase';
+import { useAuth } from '@/contexts/AuthContext';
+import { Card, CardHeader, CardTitle, CardContent, CardDescription, CardFooter } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Badge } from '@/components/ui/badge';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Input } from '@/components/ui/input';
+import { Loader2, CheckCircle, Clock, Video, SwitchCamera, MessageSquare, DollarSign, UserCog } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
+
+export const AdminCounselorManager = () => {
+  const { user } = useAuth();
+  const [activeTab, setActiveTab] = useState('bookings');
+  
+  // Bookings State
+  const [bookings, setBookings] = useState<any[]>([]);
+  const [isLoadingBookings, setIsLoadingBookings] = useState(true);
+  
+  // Counselors State
+  const [counselors, setCounselors] = useState<any[]>([]);
+  const [isLoadingCounselors, setIsLoadingCounselors] = useState(true);
+
+  const { toast } = useToast();
+
+  useEffect(() => {
+    loadBookings();
+    loadCounselors();
+  }, []);
+
+  const loadBookings = async () => {
+    setIsLoadingBookings(true);
+    const { data } = await supabase
+      .from('counselor_sessions')
+      .select(`
+        *, 
+        student:profiles!counselor_sessions_student_id_fkey(full_name, email),
+        counselor:counselor_profiles!counselor_sessions_counselor_id_fkey(title, profile:profiles(full_name))
+      `)
+      .order('created_at', { ascending: false });
+
+    if (data) setBookings(data);
+    setIsLoadingBookings(false);
+  };
+
+  const loadCounselors = async () => {
+    setIsLoadingCounselors(true);
+    const { data } = await supabase
+      .from('counselor_profiles')
+      .select('*, profile:profiles(full_name, email)')
+      .order('created_at', { ascending: false });
+
+    if (data) setCounselors(data);
+    setIsLoadingCounselors(false);
+  };
+
+  const updateBookingStatus = async (id: string, status: string) => {
+    const { error } = await supabase
+      .from('counselor_sessions')
+      .update({ status })
+      .eq('id', id);
+
+    if (error) {
+      toast({ title: 'Error', description: 'Failed to update booking status.', variant: 'destructive' });
+    } else {
+      toast({ title: 'Status Updated', description: `Booking is now ${status}.` });
+      loadBookings();
+    }
+  };
+
+  const toggleCounselorStatus = async (id: string, currentStatus: boolean) => {
+    const { error } = await supabase
+      .from('counselor_profiles')
+      .update({ is_active: !currentStatus })
+      .eq('id', id);
+
+    if (error) {
+      toast({ title: 'Error', description: 'Could not update status.', variant: 'destructive' });
+    } else {
+      toast({ title: 'Status Updated', description: 'Counselor visibility changed.' });
+      loadCounselors();
+    }
+  };
+
+  return (
+    <div className="space-y-6">
+      <div>
+        <h2 className="text-2xl font-bold tracking-tight text-foreground">Counselor Management</h2>
+        <p className="text-foreground-muted">Manage incoming call bookings and the counselor directory.</p>
+      </div>
+
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+        <TabsList className="grid w-full grid-cols-2 max-w-[400px]">
+          <TabsTrigger value="bookings">Call Bookings</TabsTrigger>
+          <TabsTrigger value="directory">Directory Admin</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="bookings" className="space-y-6">
+          <Card className="bg-card border-card-border">
+            <CardHeader>
+              <CardTitle>Incoming Call Requests</CardTitle>
+              <CardDescription>Review and manage requested sessions.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              {isLoadingBookings ? (
+                <div className="flex justify-center p-8"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>
+              ) : bookings.length === 0 ? (
+                <div className="text-center p-12 border-2 border-dashed border-card-border rounded-xl">
+                  <Video className="w-10 h-10 text-foreground-muted mx-auto mb-3" />
+                  <p className="text-foreground-muted">No calls booked yet.</p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {bookings.map((booking) => (
+                    <div key={booking.id} className="flex flex-col md:flex-row justify-between p-4 border border-card-border rounded-xl bg-muted/20">
+                      <div className="space-y-2 mb-4 md:mb-0">
+                        <div className="flex items-center gap-3">
+                          <span className="font-bold text-lg">{booking.student?.full_name || 'Unknown'}</span>
+                          <Badge variant="outline" className={`font-bold ${
+                            booking.status === 'requested' ? 'text-yellow-500 border-yellow-500/30' :
+                            booking.status === 'active' ? 'text-blue-500 border-blue-500/30' :
+                            'text-green-500 border-green-500/30'
+                          }`}>
+                            {booking.status}
+                          </Badge>
+                          {booking.payment_amount && (
+                            <Badge className="bg-emerald-500/10 text-emerald-500 border-none">
+                              Paid KSh {booking.payment_amount}
+                            </Badge>
+                          )}
+                        </div>
+                        <div className="text-sm text-foreground-muted flex flex-col gap-1">
+                          <span>📧 {booking.student?.email}</span>
+                          <span className="flex items-center gap-1">
+                            <Clock className="w-3 h-3" /> Booked: {new Date(booking.created_at).toLocaleString()}
+                          </span>
+                          <span className="flex items-center gap-1 text-primary pt-1">
+                            <UserCog className="w-3 h-3" /> Requested Counselor: {booking.counselor?.profile?.full_name || 'Admin'}
+                          </span>
+                        </div>
+                      </div>
+                      
+                      <div className="flex flex-col gap-2 justify-center shrink-0">
+                        {booking.status === 'requested' && (
+                          <Button size="sm" onClick={() => updateBookingStatus(booking.id, 'active')} className="bg-primary hover:bg-primary/90 text-white">
+                            Accept & Connect
+                          </Button>
+                        )}
+                        {booking.status === 'active' && (
+                          <Button size="sm" variant="outline" onClick={() => updateBookingStatus(booking.id, 'completed')} className="text-green-500 border-green-500/30 hover:bg-green-500/10">
+                            Mark Completed
+                          </Button>
+                        )}
+                        <Button size="sm" variant="ghost" className="text-foreground-muted">
+                          View Details
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="directory" className="space-y-6">
+          <Card className="bg-card border-card-border">
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <div>
+                <CardTitle>Counselor Profiles</CardTitle>
+                <CardDescription>Manage the experts shown in the student directory.</CardDescription>
+              </div>
+              <Button size="sm"><UserCog className="w-4 h-4 mr-2" /> Add Counselor</Button>
+            </CardHeader>
+            <CardContent className="pt-4">
+              {isLoadingCounselors ? (
+                <div className="flex justify-center p-8"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>
+              ) : counselors.length === 0 ? (
+                <div className="text-center p-12 text-foreground-muted">No counselors mapped yet.</div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {counselors.map((c) => (
+                    <div key={c.id} className="flex gap-4 p-4 border border-card-border rounded-xl">
+                      <Avatar className="w-16 h-16 rounded-md">
+                        <AvatarImage src={c.image_url} />
+                        <AvatarFallback>{c.profile?.full_name?.substring(0, 2)}</AvatarFallback>
+                      </Avatar>
+                      <div className="flex-1">
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <h4 className="font-bold">{c.profile?.full_name}</h4>
+                            <p className="text-xs text-primary font-medium">{c.title}</p>
+                          </div>
+                          <Badge variant="outline">KSh {c.hourly_rate}</Badge>
+                        </div>
+                        <p className="text-xs text-foreground-muted mt-2 line-clamp-2">{c.bio}</p>
+                        <div className="flex items-center gap-2 mt-4">
+                          <Switch 
+                            checked={c.is_active} 
+                            onCheckedChange={() => toggleCounselorStatus(c.id, c.is_active)}
+                            id={`status-${c.id}`}
+                          />
+                          <Label htmlFor={`status-${c.id}`} className="text-xs font-semibold uppercase">{c.is_active ? 'Visible in Directory' : 'Hidden'}</Label>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
+    </div>
+  );
+};

@@ -487,11 +487,55 @@ export type Database = {
           },
         ]
       }
+      counselor_profiles: {
+        Row: {
+          bio: string | null
+          created_at: string | null
+          hourly_rate: number
+          id: string
+          image_url: string | null
+          is_active: boolean | null
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          bio?: string | null
+          created_at?: string | null
+          hourly_rate?: number
+          id: string
+          image_url?: string | null
+          is_active?: boolean | null
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          bio?: string | null
+          created_at?: string | null
+          hourly_rate?: number
+          id?: string
+          image_url?: string | null
+          is_active?: boolean | null
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "counselor_profiles_id_fkey"
+            columns: ["id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       counselor_sessions: {
         Row: {
           counselor_id: string | null
           created_at: string | null
           id: string
+          intasend_transaction_id: string | null
+          payment_amount: number | null
+          payment_reference: string | null
           status: string
           student_id: string
           updated_at: string | null
@@ -500,6 +544,9 @@ export type Database = {
           counselor_id?: string | null
           created_at?: string | null
           id?: string
+          intasend_transaction_id?: string | null
+          payment_amount?: number | null
+          payment_reference?: string | null
           status?: string
           student_id: string
           updated_at?: string | null
@@ -508,6 +555,9 @@ export type Database = {
           counselor_id?: string | null
           created_at?: string | null
           id?: string
+          intasend_transaction_id?: string | null
+          payment_amount?: number | null
+          payment_reference?: string | null
           status?: string
           student_id?: string
           updated_at?: string | null

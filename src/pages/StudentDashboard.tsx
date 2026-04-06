@@ -51,7 +51,7 @@ import { ProfileSetup } from '@/components/ProfileSetup'
 import GradesManager from '@/components/GradesManager'
 import CourseRecommendations from '@/components/CourseRecommendations'
 import GradesModal from '@/components/GradesModal'
-import { StudentCounselorChat } from '@/components/StudentCounselorChat'
+import { CounselorDirectory } from '@/components/CounselorDirectory'
 import { supabase } from '@/lib/supabase'
 import { aiCareerService } from '@/lib/ai-service'
 import { aiCacheService } from '@/lib/ai-cache-service'
@@ -475,7 +475,13 @@ const StudentDashboard = () => {
                   )}
                 </TabsTrigger>
             <TabsTrigger value="chat">AI Chat</TabsTrigger>
-            <TabsTrigger value="human-chat">Counselor Hub</TabsTrigger>
+            <TabsTrigger value="human-chat" className="relative group">
+              Counselor Directory
+              <span className="absolute -top-1 -right-2 flex h-2.5 w-2.5">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+              </span>
+            </TabsTrigger>
             <TabsTrigger value="progress">Progress</TabsTrigger>
           </TabsList>
 
@@ -832,9 +838,9 @@ const StudentDashboard = () => {
             <AIChat />
           </TabsContent>
 
-          {/* Counselor Hub Tab */}
+          {/* Counselor Directory Tab */}
           <TabsContent value="human-chat" className="w-full mx-auto px-2 sm:px-0">
-            <StudentCounselorChat />
+            <CounselorDirectory />
           </TabsContent>
 
           {/* Progress Tab */}
