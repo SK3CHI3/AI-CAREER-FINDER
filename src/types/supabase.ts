@@ -897,6 +897,87 @@ export type Database = {
         }
         Relationships: []
       }
+      counselor_profiles: {
+        Row: {
+          bio: string | null
+          created_at: string | null
+          hourly_rate: number
+          id: string
+          image_url: string | null
+          is_active: boolean | null
+          title: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          bio?: string | null
+          created_at?: string | null
+          hourly_rate: number
+          id?: string
+          image_url?: string | null
+          is_active?: boolean | null
+          title?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          bio?: string | null
+          created_at?: string | null
+          hourly_rate?: number
+          id?: string
+          image_url?: string | null
+          is_active?: boolean | null
+          title?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      counselor_sessions: {
+        Row: {
+          counselor_id: string
+          created_at: string | null
+          id: string
+          intasend_transaction_id: string | null
+          payment_amount: number
+          payment_reference: string | null
+          status: string
+          student_id: string
+        }
+        Insert: {
+          counselor_id: string
+          created_at?: string | null
+          id?: string
+          intasend_transaction_id?: string | null
+          payment_amount: number
+          payment_reference?: string | null
+          status?: string
+          student_id: string
+        }
+        Update: {
+          counselor_id?: string
+          created_at?: string | null
+          id?: string
+          intasend_transaction_id?: string | null
+          payment_amount?: number
+          payment_reference?: string | null
+          status?: string
+          student_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "counselor_sessions_counselor_id_fkey"
+            columns: ["counselor_id"]
+            isOneToOne: false
+            referencedRelation: "counselor_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "counselor_sessions_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never

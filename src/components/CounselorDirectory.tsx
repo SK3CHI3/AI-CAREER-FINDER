@@ -33,10 +33,11 @@ export const CounselorDirectory = ({ limit }: { limit?: number }) => {
  
   const loadCounselors = async () => {
     setIsLoading(true);
-    const { data: profilesData, error } = await supabase
-      .from('counselor_profiles')
+    const { data: profilesData, error } = await (supabase
+      .from('counselor_profiles') as any)
       .select('*, profile:profiles(id, full_name)')
       .eq('is_active', true);
+
  
     if (!error && profilesData) {
       const filtered = limit ? profilesData.slice(0, limit) : profilesData;
@@ -119,7 +120,7 @@ export const CounselorDirectory = ({ limit }: { limit?: number }) => {
   };
 
   const handlePaymentSuccess = async (results: any, counselor: any) => {
-    const { error } = await supabase.from('counselor_sessions').insert([{
+    const { error } = await (supabase.from('counselor_sessions') as any).insert([{
       student_id: user?.id,
       counselor_id: counselor.id,
       status: 'requested',
@@ -127,6 +128,7 @@ export const CounselorDirectory = ({ limit }: { limit?: number }) => {
       payment_reference: results.reference,
       intasend_transaction_id: results.transaction_id || results.id
     }]);
+
 
     setProcessingId(null);
 
