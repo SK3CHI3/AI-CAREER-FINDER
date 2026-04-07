@@ -27,7 +27,7 @@ const faqs = [
   },
   {
     question: "Do students need to pay individual subscription fees?",
-    answer: "No, our model is designed to be institutional. Schools pay a highly affordable flat fee per term (starting from 10 KES per student), ensuring that all students in the school gain equal access to their future guidance without individual barriers."
+    answer: "No, our model is designed to be institutional. Schools pay a highly affordable flat fee per term (starting from 100 KES per student), ensuring that all students in the school gain equal access to their future guidance without individual barriers."
   },
   {
     question: "What security measures protect student data?",

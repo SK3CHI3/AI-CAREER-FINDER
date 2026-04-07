@@ -62,7 +62,7 @@ export default function BlogPostPage() {
   const readingTime = post.content ? Math.ceil(post.content.replace(/<[^>]*>?/gm, '').split(/\s+/).length / 200) : 1;
 
   return (
-    <div className="min-h-screen bg-background font-sans selection:bg-primary/30 selection:text-white flex flex-col">
+    <div className="min-h-screen bg-background font-sans selection:bg-primary/30 selection:text-white flex flex-col overflow-x-hidden relative">
       <Helmet>
         <title>{post.seo_title || `${post.title} | CareerGuide Blog`}</title>
         <meta name="description" content={post.seo_description || post.excerpt} />
@@ -87,7 +87,7 @@ export default function BlogPostPage() {
              )}
           </div>
           
-          <div className="max-w-4xl mx-auto relative z-10">
+          <div className="max-w-4xl mx-auto relative z-10 px-4">
             <Link to="/blog" className="inline-flex items-center text-primary font-bold text-sm uppercase tracking-widest hover:text-foreground transition-colors mb-12">
               <ArrowLeft className="w-4 h-4 mr-2" /> Back to all articles
             </Link>
@@ -96,16 +96,16 @@ export default function BlogPostPage() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
             >
-              <h1 className="text-4xl md:text-6xl font-black font-serif text-foreground tracking-tight leading-tight mb-8">
+              <h1 className="text-4xl md:text-6xl font-black font-serif text-foreground tracking-tight leading-tight mb-8 break-words uppercase">
                 {post.title}
               </h1>
 
               <div className="flex flex-wrap items-center justify-center gap-6 text-sm font-bold uppercase tracking-widest text-muted-foreground">
-                <div className="flex items-center gap-2 bg-card/50 backdrop-blur-md py-2 px-4 rounded-full border border-card-border shadow-sm">
+                <div className="flex items-center gap-2 bg-card/50 backdrop-blur-md py-2 px-4 rounded-full border border-card-border shadow-sm shrink-0">
                   <Calendar className="w-4 h-4 text-primary" />
                   {new Date(post.published_at).toLocaleDateString(undefined, { month: 'long', day: 'numeric', year: 'numeric' })}
                 </div>
-                <div className="flex items-center gap-2 bg-card/50 backdrop-blur-md py-2 px-4 rounded-full border border-card-border shadow-sm">
+                <div className="flex items-center gap-2 bg-card/50 backdrop-blur-md py-2 px-4 rounded-full border border-card-border shadow-sm shrink-0">
                   <Clock className="w-4 h-4 text-primary" />
                   {readingTime} min read
                 </div>
@@ -129,12 +129,12 @@ export default function BlogPostPage() {
         )}
 
         {/* Article Body */}
-        <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 pb-32">
+        <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 pb-32 w-full">
           <motion.article 
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.3 }}
-            className="prose dark:prose-invert prose-lg md:prose-xl max-w-none
+            className="prose dark:prose-invert prose-lg md:prose-xl max-w-none break-words
               prose-headings:font-black prose-headings:tracking-tight prose-headings:text-foreground
               prose-a:text-primary prose-a:font-semibold hover:prose-a:text-primary/80 prose-a:transition-colors
               prose-img:rounded-3xl prose-img:shadow-2xl prose-img:border prose-img:border-border

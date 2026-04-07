@@ -75,10 +75,11 @@ const CallingCard = () => {
                                 <div className="space-y-1">
                                     <div className="text-sm font-bold text-foreground-muted">Starting from only</div>
                                     <div className="flex items-baseline justify-center gap-1">
-                                        <span className="text-6xl md:text-7xl font-black bg-gradient-text bg-clip-text text-transparent">10</span>
+                                        <span className="text-6xl md:text-7xl font-black bg-gradient-text bg-clip-text text-transparent">100</span>
                                         <span className="text-xl font-bold text-foreground">KES</span>
                                     </div>
                                     <div className="text-base font-bold text-foreground-muted">per student / term</div>
+                                    <p className="text-[10px] text-primary/60 font-bold uppercase tracking-wider mt-2">Institutional Access Model</p>
                                 </div>
                                 
                                 <div className="pt-8 grid grid-cols-2 gap-4">
