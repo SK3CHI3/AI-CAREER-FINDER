@@ -184,7 +184,7 @@ const QuickAssessment = () => {
             <main className="max-w-4xl mx-auto px-4 py-8 relative z-10">
                 <div className="text-center mb-6">
                     <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight bg-gradient-to-r from-primary to-blue-600 bg-clip-text text-transparent pb-1">Professional Counselor Assessment</h1>
-                    <p className="text-base text-foreground-muted mt-2">Comprehensive 10-point analysis covering Values, MBTI Personality, Works Styles, and Real Challenges.</p>
+                    <p className="text-base text-muted-foreground mt-2">Comprehensive 10-point analysis covering Values, MBTI Personality, Works Styles, and Real Challenges.</p>
                 </div>
 
                 <div className="mb-6">
@@ -237,7 +237,7 @@ const QuickAssessment = () => {
                                             <div className="flex flex-wrap gap-2">
                                                 {commonSubjects.map(sub => (
                                                     <button key={sub} type="button" onClick={() => setSelectedSubjects(p => p.includes(sub) ? p.filter(x => x !== sub) : [...p, sub])}
-                                                        className={`px-3 py-2 text-sm rounded-lg border-2 transition-all ${selectedSubjects.includes(sub) ? 'border-primary bg-primary text-white' : 'border-card-border bg-background hover:border-primary/50'}`}>
+                                                        className={`px-3 py-2 text-sm rounded-lg border-2 transition-all ${selectedSubjects.includes(sub) ? 'border-primary bg-primary text-primary-foreground' : 'border-card-border bg-card hover:border-primary/50 text-foreground'}`}>
                                                         {sub}
                                                     </button>
                                                 ))}
@@ -258,17 +258,17 @@ const QuickAssessment = () => {
                                 <motion.div key="step2" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-6">
                                     <div className="text-center">
                                         <h2 className="text-2xl md:text-3xl font-bold flex items-center justify-center gap-2"><Target className="w-8 h-8 text-primary"/> Phase 2: Interests</h2>
-                                        <p className="text-foreground-muted mt-2">Pick 3-5 activities that sound genuinely fun to you.</p>
+                                        <p className="text-muted-foreground mt-2">Pick 3-5 activities that sound genuinely fun to you.</p>
                                     </div>
 
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-[50vh] overflow-y-auto p-2 custom-scrollbar">
                                         {RIASEC_ACTIVITIES.slice(0, 16).map(a => (
                                             <button key={a.id} type="button" onClick={() => setSelectedActivities(p => p.includes(a.id) ? p.filter(x => x !== a.id) : [...p, a.id])}
-                                                className={`p-4 rounded-xl border-2 transition-all text-left flex items-start gap-4 ${selectedActivities.includes(a.id) ? 'border-primary bg-primary/10 ring-1 ring-primary' : 'border-card-border hover:border-primary/20 bg-background/50'}`}>
-                                                <div className={`mt-0.5 w-5 h-5 shrink-0 rounded border-2 flex items-center justify-center ${selectedActivities.includes(a.id) ? 'border-primary bg-primary text-white' : 'border-muted-foreground/30'}`}>
+                                                className={`p-4 rounded-xl border-2 transition-all text-left flex items-start gap-4 ${selectedActivities.includes(a.id) ? 'border-primary bg-primary/10 ring-1 ring-primary' : 'border-card-border hover:border-primary/20 bg-card/50'}`}>
+                                                <div className={`mt-0.5 w-5 h-5 shrink-0 rounded border-2 flex items-center justify-center ${selectedActivities.includes(a.id) ? 'border-primary bg-primary text-primary-foreground' : 'border-muted-foreground/30'}`}>
                                                     {selectedActivities.includes(a.id) && <CheckCircle className="w-3 h-3" />}
                                                 </div>
-                                                <p className="text-[15px] font-medium leading-tight">{a.text}</p>
+                                                <p className="text-[15px] font-medium leading-tight text-foreground">{a.text}</p>
                                             </button>
                                         ))}
                                     </div>
@@ -293,7 +293,7 @@ const QuickAssessment = () => {
                                             <div className="grid grid-cols-2 gap-2">
                                                 {valueOptions.map(val => (
                                                     <button key={val} type="button" onClick={() => setSelectedValues(p => p.includes(val) ? p.filter(x => x !== val) : p.length < 2 ? [...p, val] : p)}
-                                                        className={`p-3 rounded-xl border-2 transition-all font-medium text-sm md:text-base ${selectedValues.includes(val) ? 'border-primary bg-primary text-white' : 'border-card-border hover:border-primary/50 bg-background/50'}`}>
+                                                        className={`p-3 rounded-xl border-2 transition-all font-medium text-sm md:text-base ${selectedValues.includes(val) ? 'border-primary bg-primary text-primary-foreground' : 'border-card-border hover:border-primary/50 bg-card/50 text-foreground'}`}>
                                                         {val}
                                                     </button>
                                                 ))}
@@ -305,7 +305,7 @@ const QuickAssessment = () => {
                                             <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
                                                 {workStyleOptions.map(ws => (
                                                     <button key={ws} type="button" onClick={() => setWorkStyle(ws)}
-                                                        className={`p-3 rounded-xl border-2 transition-all font-medium text-sm md:text-base ${workStyle === ws ? 'border-primary bg-primary text-white' : 'border-card-border hover:border-primary/50 bg-background/50'}`}>
+                                                        className={`p-3 rounded-xl border-2 transition-all font-medium text-sm md:text-base ${workStyle === ws ? 'border-primary bg-primary text-primary-foreground' : 'border-card-border hover:border-primary/50 bg-card/50 text-foreground'}`}>
                                                         {ws}
                                                     </button>
                                                 ))}
@@ -325,7 +325,7 @@ const QuickAssessment = () => {
                                 <motion.div key="step4" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-6">
                                     <div className="text-center">
                                         <h2 className="text-2xl md:text-3xl font-bold flex items-center justify-center gap-2"><Brain className="w-8 h-8 text-primary"/> Phase 4: Personality</h2>
-                                        <p className="text-foreground-muted mt-2">MBTI-inspired psychological framing.</p>
+                                        <p className="text-muted-foreground mt-2">MBTI-inspired psychological framing.</p>
                                     </div>
 
                                     <div className="space-y-6">
@@ -406,7 +406,7 @@ const QuickAssessment = () => {
                                 <motion.div key="step6" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-8">
                                     <div className="text-center">
                                         <h2 className="text-2xl md:text-3xl font-bold flex items-center justify-center gap-2"><Rocket className="w-8 h-8 text-primary"/> Phase 6: Action</h2>
-                                        <p className="text-foreground-muted mt-2">How ready are you to start planning?</p>
+                                        <p className="text-muted-foreground mt-2">How ready are you to start planning?</p>
                                     </div>
 
                                     <div className="flex flex-col gap-3 max-w-md mx-auto">
@@ -434,13 +434,27 @@ const QuickAssessment = () => {
                                         <CheckCircle className="w-10 h-10 text-green-500" />
                                     </div>
                                     <h2 className="text-3xl md:text-4xl font-extrabold tracking-tight">Your Diagnostic is Ready</h2>
-                                    <p className="text-lg md:text-xl text-foreground-muted max-w-lg mx-auto">
+                                    <p className="text-lg md:text-xl text-muted-foreground max-w-lg mx-auto">
                                         We evaluated 10 professional metrics including your MBTI, Values, and Barriers.
                                     </p>
+                                    
+                                    <div className="bg-primary/5 border border-primary/20 rounded-3xl p-6 md:p-8 max-w-2xl mx-auto backdrop-blur-sm">
+                                        <h3 className="text-xl font-bold text-primary mb-3 flex items-center justify-center gap-2">
+                                            <Compass className="w-6 h-6" /> The Next Logical Step
+                                        </h3>
+                                        <p className="text-foreground mb-6 text-sm md:text-base leading-relaxed">
+                                            The AI has identified your potential. Now, validate these results with a 
+                                            <strong> Human Career Counselor</strong> to build a realistic roadmap for your 
+                                            education and future job market in Kenya.
+                                        </p>
+                                        <Button onClick={() => navigate('/student')} size="lg" className="w-full h-14 text-lg font-bold bg-primary text-primary-foreground rounded-2xl shadow-glow hover:scale-[1.02] transition-all">
+                                            Book a 1-on-1 Counseling Session
+                                        </Button>
+                                    </div>
 
                                     <div className="pt-8 flex flex-col items-center gap-4">
-                                        <Button onClick={downloadReport} size="lg" className="h-14 md:h-16 px-8 md:px-10 text-base md:text-xl font-bold bg-gradient-to-r from-primary via-blue-600 to-indigo-600 text-white rounded-full shadow-2xl hover:scale-105 transition-transform duration-300">
-                                            <Download className="w-5 h-5 md:w-6 md:h-6 mr-2 md:mr-3" /> Download Diagnostic Report
+                                        <Button onClick={downloadReport} variant="outline" className="h-14 px-8 border-2 font-bold flex items-center gap-2">
+                                            <Download className="w-5 h-5" /> Download Diagnostic Report
                                         </Button>
                                         <Button variant="ghost" onClick={() => { setCurrentStep(1); setGuestProfile({}); }} className="mt-4">Retake Assessment</Button>
                                     </div>

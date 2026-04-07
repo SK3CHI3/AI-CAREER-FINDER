@@ -49,7 +49,7 @@ const CareerPaths = () => {
               Careers in Kenya
             </span>
           </h2>
-            <p className="text-xl text-foreground-muted max-w-3xl mx-auto">
+            <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
               Explore high-demand career paths in Kenya's evolving job market, 
               with real-time insights on demand, salaries, and growth projections.
             </p>
@@ -97,7 +97,7 @@ const CareerPaths = () => {
               Careers in Kenya
             </span>
           </h2>
-          <p className="text-xl text-foreground-muted max-w-3xl mx-auto">
+          <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
             Explore high-demand career paths in Kenya's evolving job market, 
             with real-time insights on demand, salaries, and growth projections.
           </p>
@@ -129,30 +129,30 @@ const CareerPaths = () => {
 
               {/* Content Section */}
               <div className="p-6 space-y-4 flex-1 flex flex-col">
-                <p className="text-foreground-muted text-sm line-clamp-3">
+                <p className="text-muted-foreground text-sm line-clamp-3">
                   {career.description}
                 </p>
                 
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-2">
-                      <DollarSign className="w-4 h-4 text-foreground-muted" />
-                      <span className="text-sm text-foreground-muted">Salary Range</span>
+                      <DollarSign className="w-4 h-4 text-muted-foreground" />
+                      <span className="text-sm text-muted-foreground">Salary Range</span>
                     </div>
                     <span className="text-sm font-medium text-foreground">{career.salary_range}</span>
                   </div>
                   
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-2">
-                      <TrendingUp className="w-4 h-4 text-foreground-muted" />
-                      <span className="text-sm text-foreground-muted">Growth Rate</span>
+                      <TrendingUp className="w-4 h-4 text-muted-foreground" />
+                      <span className="text-sm text-muted-foreground">Growth Rate</span>
                     </div>
                     <span className="text-sm font-medium text-success">{career.growth_percentage}</span>
                   </div>
                 </div>
                 
                 <div className="space-y-2">
-                  <span className="text-sm text-foreground-muted">Key Skills:</span>
+                  <span className="text-sm text-muted-foreground">Key Skills:</span>
                   <div className="flex flex-wrap gap-2">
                     {career.skills_required.map((skill, skillIndex) => (
                       <Badge 

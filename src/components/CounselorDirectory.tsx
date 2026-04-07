@@ -15,7 +15,7 @@ declare global {
   }
 }
 
-export const CounselorDirectory = () => {
+export const CounselorDirectory = ({ limit }: { limit?: number }) => {
   const { user, profile } = useAuth();
   const [counselors, setCounselors] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -25,21 +25,22 @@ export const CounselorDirectory = () => {
   const [intaSendInstance, setIntaSendInstance] = useState<any>(null);
   const [processingId, setProcessingId] = useState<string | null>(null);
   const { toast } = useToast();
-
+ 
   useEffect(() => {
     loadCounselors();
     loadIntaSend();
   }, []);
-
+ 
   const loadCounselors = async () => {
     setIsLoading(true);
     const { data: profilesData, error } = await supabase
       .from('counselor_profiles')
       .select('*, profile:profiles(id, full_name)')
       .eq('is_active', true);
-
+ 
     if (!error && profilesData) {
-      setCounselors(profilesData);
+      const filtered = limit ? profilesData.slice(0, limit) : profilesData;
+      setCounselors(filtered);
     }
     setIsLoading(false);
   };

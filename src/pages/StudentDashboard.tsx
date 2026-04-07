@@ -42,7 +42,8 @@ import {
   Lightbulb,
   RefreshCw,
   School,
-  X
+  X,
+  UserCog
 } from 'lucide-react'
 import { ThemeToggle } from '@/components/ThemeToggle'
 import AIChat from '@/components/AIChat'
@@ -58,6 +59,7 @@ import { aiCacheService } from '@/lib/ai-cache-service'
 import { dashboardService, UserStat, UserActivity, CareerRecommendation } from '@/lib/dashboard-service'
 import { generateContextHash } from '@/lib/cache-utils'
 import { useActivityTracking } from '@/hooks/useActivityTracking'
+import CareerDetailModal from '@/components/CareerDetailModal'
 
 // Default career data - will be replaced with AI recommendations
 interface CareerDataItem {
@@ -453,7 +455,7 @@ const StudentDashboard = () => {
                 Welcome back, {profile?.full_name?.split(' ')[0] || 'Student'}!
                 <span className="animate-bounce">👋</span>
               </h2>
-              <p className="text-foreground-muted text-base sm:text-lg">
+              <p className="text-muted-foreground text-base sm:text-lg">
                 Continue your career discovery journey and unlock your potential.
               </p>
             </div>
@@ -476,7 +478,7 @@ const StudentDashboard = () => {
                 </TabsTrigger>
             <TabsTrigger value="chat">AI Chat</TabsTrigger>
 
-            <TabsTrigger value="progress">Progress</TabsTrigger>
+            <TabsTrigger value="progress">Journey</TabsTrigger>
           </TabsList>
 
           {/* Overview Tab */}
@@ -570,7 +572,7 @@ const StudentDashboard = () => {
                     <div className="flex items-center justify-center h-64">
                       <div className="text-center">
                         <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4 text-primary" />
-                        <p className="text-foreground-muted">Analyzing your career potential...</p>
+                        <p className="text-muted-foreground">Analyzing your career potential...</p>
                       </div>
                     </div>
                   ) : (
@@ -665,7 +667,7 @@ const StudentDashboard = () => {
                   </div>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-sm text-foreground-muted mb-4">Complete our comprehensive career assessment to get personalized recommendations.</p>
+                  <p className="text-sm text-muted-foreground mb-4">Complete our comprehensive career assessment to get personalized recommendations.</p>
                   <Button
                     className="w-full"
                     onClick={() => {
@@ -691,7 +693,7 @@ const StudentDashboard = () => {
                   </div>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-sm text-foreground-muted mb-4">Learn about Senior Secondary pathways and university requirements.</p>
+                  <p className="text-sm text-muted-foreground mb-4">Learn about Senior Secondary pathways and university requirements.</p>
                   <Button
                     className="w-full bg-emerald-600 hover:bg-emerald-700 text-white"
                     onClick={() => {
@@ -717,11 +719,11 @@ const StudentDashboard = () => {
                   </div>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-sm text-foreground-muted mb-4">Connect with verified professional career counselors for 1-on-1 guidance.</p>
+                  <p className="text-sm text-muted-foreground mb-4">Connect with verified professional career counselors for 1-on-1 guidance.</p>
                   <Button
                     className="w-full bg-purple-600 hover:bg-purple-700 text-white"
                     onClick={() => {
-                      setActiveTab('human-chat')
+                      setActiveTab('progress')
                       trackButtonClick('Start Counselor Directory', 'Action Cards')
                     }}
                   >
@@ -744,7 +746,7 @@ const StudentDashboard = () => {
                           <Briefcase className="w-7 h-7 text-blue-600" />
                         </div>
                         <div className="flex-1">
-                          <CardTitle className="text-xl font-bold mb-1">{career.name}</CardTitle>
+                          <CardTitle className="text-xl font-bold mb-1 text-foreground">{career.name}</CardTitle>
                           <div className="flex flex-col gap-2">
                             <div className="flex items-center gap-2">
                               <Badge variant="secondary" className="text-[10px] h-5">
@@ -756,7 +758,7 @@ const StudentDashboard = () => {
                                   className="h-1.5 bg-muted"
                                   indicatorClassName="bg-gradient-to-r from-blue-500 to-purple-500"
                                 />
-                                <span className="text-[10px] font-medium text-foreground-muted text-right">{career.value}% Match</span>
+                                <span className="text-[10px] font-medium text-muted-foreground text-right">{career.value}% Match</span>
                               </div>
                             </div>
                             <div className="flex items-center gap-2">
@@ -769,7 +771,7 @@ const StudentDashboard = () => {
                                   className="h-1.5 bg-muted"
                                   indicatorClassName="bg-orange-400"
                                 />
-                                <span className="text-[10px] font-medium text-foreground-muted text-right">{career.actionabilityScore || 85}% Actionable</span>
+                                <span className="text-[10px] font-medium text-muted-foreground text-right">{career.actionabilityScore || 85}% Actionable</span>
                               </div>
                             </div>
                           </div>
@@ -779,7 +781,7 @@ const StudentDashboard = () => {
                   </CardHeader>
 
                   <CardContent className="space-y-4">
-                    <p className="text-sm text-foreground-muted leading-relaxed">
+                    <p className="text-sm text-muted-foreground leading-relaxed">
                       {career.description || "A promising career path that aligns with your CBE pathway and interests, offering strong growth potential in Kenya's evolving job market."}
                     </p>
 
@@ -832,11 +834,6 @@ const StudentDashboard = () => {
             <AIChat />
           </TabsContent>
 
-          {/* Counselor Directory Tab */}
-          <TabsContent value="human-chat" className="w-full mx-auto px-2 sm:px-0">
-            <CounselorDirectory />
-          </TabsContent>
-
           {/* Progress Tab */}
           <TabsContent value="progress" className="space-y-2 sm:space-y-6 w-full">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-2 sm:gap-6 w-full">
@@ -859,7 +856,7 @@ const StudentDashboard = () => {
               </Card>
 
               {/* Journey Actions Card */}
-              <Card className="w-full bg-card border-card-border">
+              <Card className="w-full bg-card border-card-border overflow-hidden">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <Target className="w-5 h-5 text-green-500" />
@@ -868,6 +865,15 @@ const StudentDashboard = () => {
                   <CardDescription>Take action to advance your career path</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
+                  <div className="bg-primary/5 border border-primary/10 rounded-xl p-4 mb-4">
+                    <h4 className="text-sm font-bold text-primary mb-2 flex items-center gap-2">
+                      <UserCog className="w-4 h-4" /> Recommended Next Step
+                    </h4>
+                    <p className="text-xs text-muted-foreground mb-4">
+                      Connect with a professional counselor to validate your AI report and build your roadmap.
+                    </p>
+                    <CounselorDirectory limit={1} />
+                  </div>
                   <div className="space-y-2 sm:space-y-3">
                     <div
                       className="flex flex-col sm:flex-row items-center justify-between p-3 rounded-lg bg-blue-500/5 border border-blue-500/20 cursor-pointer hover:bg-blue-500/10 transition-colors mt-2 sm:mt-0"
@@ -885,13 +891,13 @@ const StudentDashboard = () => {
                     <div
                       className="flex flex-col sm:flex-row items-center justify-between p-3 rounded-lg bg-emerald-500/5 border border-emerald-500/20 cursor-pointer hover:bg-emerald-500/10 transition-colors"
                       onClick={() => {
-                        setActiveTab('human-chat')
+                        // Logic to handle counselor interaction can go here
                         trackButtonClick('Book Counselor', 'Journey Actions')
                       }}
                     >
                       <div className="flex items-center space-x-3">
                         <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                        <span className="text-sm font-medium">Book a Career Counselor</span>
+                        <span className="text-sm font-medium">Explore Specialized Counselors</span>
                       </div>
                       <ArrowRight className="w-4 h-4 text-green-500" />
                     </div>
