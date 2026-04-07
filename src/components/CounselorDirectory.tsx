@@ -35,7 +35,7 @@ export const CounselorDirectory = ({ limit }: { limit?: number }) => {
     setIsLoading(true);
     const { data: profilesData, error } = await (supabase
       .from('counselor_profiles') as any)
-      .select('*, profile:profiles(id, full_name)')
+      .select('*')
       .eq('is_active', true);
 
  
@@ -122,7 +122,7 @@ export const CounselorDirectory = ({ limit }: { limit?: number }) => {
   const handlePaymentSuccess = async (results: any, counselor: any) => {
     // The secure background webhook (intasend-webhook) will create the counselor_sessions record.
     setProcessingId(null);
-    toast({ title: 'Booking Confirmed!', description: `Your session with ${counselor.profile?.full_name} has been processed successfully. Please check your dashboard shortly.` });
+    toast({ title: 'Booking Confirmed!', description: `Your session with ${counselor.full_name} has been processed successfully. Please check your dashboard shortly.` });
   };
 
   if (isLoading) {
@@ -151,7 +151,7 @@ export const CounselorDirectory = ({ limit }: { limit?: number }) => {
               <div className="relative group/avatar">
                 <Avatar className="w-24 h-24 border-4 border-card rounded-2xl shadow-xl bg-background">
                   <AvatarImage src={counselor.image_url || ""} className="object-cover" />
-                  <AvatarFallback className="text-3xl font-bold bg-primary/10 text-primary">{counselor.profile?.full_name?.substring(0, 2) || 'C'}</AvatarFallback>
+                  <AvatarFallback className="text-3xl font-bold bg-primary/10 text-primary">{counselor.full_name?.substring(0, 2) || 'C'}</AvatarFallback>
                 </Avatar>
                 {/* Brand Badge on Avatar */}
                 <div className="absolute -bottom-1 -right-1 w-8 h-8 bg-card border-2 border-background rounded-lg flex items-center justify-center shadow-lg transform group-hover/avatar:scale-110 transition-transform duration-300">
@@ -166,7 +166,7 @@ export const CounselorDirectory = ({ limit }: { limit?: number }) => {
 
             
             <CardContent className="pt-5 flex-1 flex flex-col">
-              <h3 className="text-xl font-bold text-foreground leading-tight tracking-tight mb-0.5">{counselor.profile?.full_name || 'Verified Counselor'}</h3>
+              <h3 className="text-xl font-bold text-foreground leading-tight tracking-tight mb-0.5">{counselor.full_name || 'Verified Counselor'}</h3>
               <p className="text-sm font-semibold text-primary/80 mb-4">{counselor.title}</p>
               
               <p className="text-sm text-foreground-subtle line-clamp-3 mb-6 flex-1 leading-relaxed">

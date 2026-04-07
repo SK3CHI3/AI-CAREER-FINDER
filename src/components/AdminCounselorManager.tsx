@@ -33,7 +33,7 @@ export const AdminCounselorManager = () => {
   const [selectedBooking, setSelectedBooking] = useState<any>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [newCounsellor, setNewCounsellor] = useState({
-    user_id: '',
+    full_name: '',
     title: '',
     bio: '',
     hourly_rate: 1500,
@@ -51,12 +51,12 @@ export const AdminCounselorManager = () => {
 
   const loadBookings = async () => {
     setIsLoadingBookings(true);
-    const { data } = await supabase
-      .from('counselor_sessions')
+    const { data } = await (supabase
+      .from('counselor_sessions') as any)
       .select(`
         *, 
         student:profiles!counselor_sessions_student_id_fkey(full_name, email),
-        counselor:counselor_profiles!counselor_sessions_counselor_id_fkey(title, profile:profiles(full_name))
+        counselor:counselor_profiles!counselor_sessions_counselor_id_fkey(full_name, title)
       `)
       .order('created_at', { ascending: false });
 
@@ -66,9 +66,9 @@ export const AdminCounselorManager = () => {
 
   const loadCounselors = async () => {
     setIsLoadingCounselors(true);
-    const { data } = await supabase
-      .from('counselor_profiles')
-      .select('*, profile:profiles(full_name, email)')
+    const { data } = await (supabase
+      .from('counselor_profiles') as any)
+      .select('*')
       .order('created_at', { ascending: false });
 
     if (data) setCounselors(data);
@@ -90,8 +90,8 @@ export const AdminCounselorManager = () => {
   };
 
   const toggleCounselorStatus = async (id: string, currentStatus: boolean) => {
-    const { error } = await supabase
-      .from('counselor_profiles')
+    const { error } = await (supabase
+      .from('counselor_profiles') as any)
       .update({ is_active: !currentStatus })
       .eq('id', id);
       
@@ -104,8 +104,8 @@ export const AdminCounselorManager = () => {
   };
 
   const handleSaveCounselor = async () => {
-    if (!newCounsellor.user_id && !editingMode) {
-      toast({ title: 'Validation Error', description: 'User ID is required.', variant: 'destructive' });
+    if (!newCounsellor.full_name) {
+      toast({ title: 'Validation Error', description: 'Counselor Name is required.', variant: 'destructive' });
       return;
     }
     if (!newCounsellor.title) {
@@ -117,20 +117,21 @@ export const AdminCounselorManager = () => {
     let error;
 
     if (editingMode && editingId) {
-      const res = await supabase
-        .from('counselor_profiles')
+      const res = await (supabase
+        .from('counselor_profiles') as any)
         .update({
           title: newCounsellor.title,
+          full_name: newCounsellor.full_name,
           bio: newCounsellor.bio,
           hourly_rate: newCounsellor.hourly_rate
         })
         .eq('id', editingId);
       error = res.error;
     } else {
-      const res = await supabase
-        .from('counselor_profiles')
+      const res = await (supabase
+        .from('counselor_profiles') as any)
         .insert([{
-          id: newCounsellor.user_id,
+          full_name: newCounsellor.full_name,
           title: newCounsellor.title,
           bio: newCounsellor.bio,
           hourly_rate: newCounsellor.hourly_rate,
@@ -204,7 +205,7 @@ export const AdminCounselorManager = () => {
                             <Clock className="w-3 h-3" /> Booked: {new Date(booking.created_at).toLocaleString()}
                           </span>
                           <span className="flex items-center gap-1 text-primary pt-1">
-                            <UserCog className="w-3 h-3" /> Requested Counselor: {booking.counselor?.profile?.full_name || 'Admin'}
+                            <UserCog className="w-3 h-3" /> Requested Counselor: {booking.counselor?.full_name || 'Admin'}
                           </span>
                         </div>
                       </div>
@@ -250,7 +251,7 @@ export const AdminCounselorManager = () => {
               <Button size="sm" onClick={() => {
                 setEditingMode(false);
                 setEditingId(null);
-                setNewCounsellor({ user_id: '', title: '', bio: '', hourly_rate: 1500, specialties: [] });
+                setNewCounsellor({ full_name: '', title: '', bio: '', hourly_rate: 1500, specialties: [] });
                 setIsCounsellorModalOpen(true);
               }}>
                 <UserCog className="w-4 h-4 mr-2" /> Add Counselor
@@ -267,12 +268,12 @@ export const AdminCounselorManager = () => {
                     <div key={c.id} className="flex gap-4 p-4 border border-border rounded-xl bg-card">
                       <Avatar className="w-16 h-16 rounded-md">
                         <AvatarImage src={c.image_url} />
-                        <AvatarFallback className="bg-muted text-muted-foreground">{c.profile?.full_name?.substring(0, 2)}</AvatarFallback>
+                        <AvatarFallback className="bg-muted text-muted-foreground">{c.full_name?.substring(0, 2)}</AvatarFallback>
                       </Avatar>
                       <div className="flex-1 text-foreground">
                         <div className="flex justify-between items-start">
                           <div>
-                            <h4 className="font-bold">{c.profile?.full_name}</h4>
+                            <h4 className="font-bold">{c.full_name}</h4>
                             <p className="text-xs text-primary font-medium">{c.title}</p>
                           </div>
                           <Badge variant="outline" className="border-border bg-muted/30">KSh {c.hourly_rate}</Badge>
@@ -295,7 +296,7 @@ export const AdminCounselorManager = () => {
                               setEditingMode(true);
                               setEditingId(c.id);
                               setNewCounsellor({
-                                user_id: c.id,
+                                full_name: c.full_name || '',
                                 title: c.title || '',
                                 bio: c.bio || '',
                                 hourly_rate: c.hourly_rate || 1500,
@@ -326,16 +327,14 @@ export const AdminCounselorManager = () => {
             <DialogDescription>{editingMode ? 'Modify career expert details.' : 'Add a verified career expert to the directory.'}</DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4 text-foreground">
-            {!editingMode && (
-              <div className="space-y-2">
-                <Label className="text-foreground/80">User ID (Supabase Auth ID)</Label>
-                <Input 
-                  placeholder="Paste the user's UUID here" 
-                  value={newCounsellor.user_id}
-                  onChange={e => setNewCounsellor({...newCounsellor, user_id: e.target.value})}
-                />
-              </div>
-            )}
+            <div className="space-y-2">
+              <Label className="text-foreground/80">Counselor Full Name</Label>
+              <Input 
+                placeholder="e.g. Dr. Jane Doe" 
+                value={newCounsellor.full_name}
+                onChange={e => setNewCounsellor({...newCounsellor, full_name: e.target.value})}
+              />
+            </div>
             <div className="space-y-2">
               <Label>Professional Title</Label>
               <Input 
@@ -386,7 +385,7 @@ export const AdminCounselorManager = () => {
                 </div>
                 <div className="space-y-1">
                   <p className="text-muted-foreground font-medium uppercase text-[10px] tracking-wider">Counselor</p>
-                  <p className="font-bold">{selectedBooking.counselor?.profile?.full_name || 'Unassigned'}</p>
+                  <p className="font-bold">{selectedBooking.counselor?.full_name || 'Unassigned'}</p>
                 </div>
                 <div className="space-y-1">
                   <p className="text-muted-foreground font-medium uppercase text-[10px] tracking-wider">Payment Ref</p>
