@@ -79,6 +79,7 @@ export default function BlogPostPage() {
             "@type": "BlogPosting",
             "headline": post.title,
             "description": post.seo_description || post.excerpt,
+            "articleBody": post.content ? post.content.replace(/<[^>]*>?/gm, '').substring(0, 5000) : "",
             "image": post.cover_image_url,
             "datePublished": post.published_at,
             "author": {
