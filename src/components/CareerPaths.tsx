@@ -104,7 +104,7 @@ const CareerPaths = () => {
         </div>
         
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {dynamicCareerPaths.slice(0, 3).map((career) => (
+          {dynamicCareerPaths.map((career) => (
             <Card 
               key={career.id}
               className="bg-gradient-surface border-card-border hover:shadow-card transition-all duration-300 group overflow-hidden flex flex-col"
