@@ -53,6 +53,7 @@ export interface CareerPath {
   education_requirements: string
   career_level: string
   is_active: boolean
+  is_featured?: boolean
   image_url?: string
   created_at: string
   updated_at: string

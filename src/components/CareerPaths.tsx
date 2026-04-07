@@ -30,7 +30,9 @@ const CareerPaths = () => {
       try {
         setIsLoading(true)
         const paths = await dashboardService.getCareerPaths()
-        setDynamicCareerPaths(paths)
+        // Filter for featured items and limit to 3
+        const featuredPaths = paths.filter(p => p.is_featured).slice(0, 3)
+        setDynamicCareerPaths(featuredPaths)
       } catch (err) {
         console.error('Failed to load career paths:', err)
         setError('Real-time career paths are currently unavailable. Showing last available data.')

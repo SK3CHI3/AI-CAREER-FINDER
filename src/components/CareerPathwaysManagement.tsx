@@ -55,7 +55,8 @@ export const CareerPathwaysManagement = () => {
       skills_required: [],
       education_requirements: '',
       career_level: 'Entry Level',
-      is_active: true
+      is_active: true,
+      is_featured: false
     });
   };
 
@@ -231,6 +232,16 @@ export const CareerPathwaysManagement = () => {
                 <label className="text-xs font-bold text-foreground/80 mb-1 block uppercase tracking-wider">Education Requirements</label>
                 <Input value={formData.education_requirements || ''} onChange={e => setFormData({...formData, education_requirements: e.target.value})} className="bg-background border-border" placeholder="e.g. Degree in Computer Science" />
               </div>
+              <div className="flex items-center gap-3 pt-2">
+                <input 
+                  type="checkbox" 
+                  id="is_featured"
+                  checked={formData.is_featured || false} 
+                  onChange={e => setFormData({...formData, is_featured: e.target.checked})} 
+                  className="w-4 h-4 rounded border-border bg-background text-primary"
+                />
+                <label htmlFor="is_featured" className="text-sm font-semibold text-foreground cursor-pointer">Featured on Homepage (Top 3)</label>
+              </div>
             </div>
             
             <div>
@@ -281,7 +292,12 @@ export const CareerPathwaysManagement = () => {
                     )}
                   </TableCell>
                   <TableCell>
-                    <div className="font-bold text-foreground mb-1">{path.title}</div>
+                    <div className="flex items-center gap-2 mb-1">
+                      <div className="font-bold text-foreground">{path.title}</div>
+                      {path.is_featured && (
+                        <span className="px-2 py-0.5 text-[10px] font-bold bg-amber-500/10 text-amber-500 border border-amber-500/20 rounded-full uppercase tracking-widest">Featured</span>
+                      )}
+                    </div>
                     <div className="text-xs text-muted-foreground uppercase tracking-wider">{path.category}</div>
                   </TableCell>
                   <TableCell>
