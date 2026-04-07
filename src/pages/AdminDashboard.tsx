@@ -19,13 +19,14 @@ import {
   MessageCircle, CheckCircle2, Bug, Lightbulb, HelpCircle,
   LayoutDashboard, Settings, Bell, Menu, X, ChevronRight,
   Database, LineChart, PieChart as PieChartIcon, Loader2,
-  MessageSquarePlus, FileText, Briefcase
+  MessageSquarePlus, FileText, Briefcase, Calendar
 } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { motion, AnimatePresence } from 'framer-motion'
 import { BlogManagement } from '@/components/BlogManagement'
 import { CareerPathwaysManagement } from '@/components/CareerPathwaysManagement'
 import { AdminCounselorManager } from '@/components/AdminCounselorManager'
+import { AdminFieldDayRequests } from '@/components/AdminFieldDayRequests'
 import { ThemeToggle } from '@/components/ThemeToggle'
 
 interface AdminStats {
@@ -132,6 +133,7 @@ const AdminDashboard = () => {
     { id: 'feedbacks', label: 'Feedbacks', icon: MessageCircle },
     { id: 'blog', label: 'Blog', icon: FileText },
     { id: 'careers', label: 'Career Pathways', icon: Briefcase },
+    { id: 'field_days', label: 'Field Days', icon: Calendar },
     { id: 'counselor_chats', label: 'Counselor Chats', icon: MessageSquarePlus },
     { id: 'settings', label: 'Settings', icon: Settings },
   ]
@@ -716,6 +718,10 @@ const AdminDashboard = () => {
 
               {activeTab === 'counselor_chats' && (
                 <AdminCounselorManager />
+              )}
+
+              {activeTab === 'field_days' && (
+                <AdminFieldDayRequests />
               )}
 
               {activeTab === 'users' && (
