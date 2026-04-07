@@ -21,6 +21,7 @@ import TeacherDashboard from "./pages/TeacherDashboard"
 import ClassDetail from "./pages/ClassDetail";
 import AcceptInvite from "./pages/AcceptInvite";
 import Dashboard from "./pages/Dashboard";
+import Counselors from "./pages/Counselors";
 import SchoolInsightsPage from "./pages/SchoolInsightsPage";
 import QuickAssessment from "./pages/QuickAssessment";
 import Careers from "./pages/Careers";
@@ -59,6 +60,16 @@ const App = () => (
                 <ProtectedRoute requiredRole="student">
                   <PaymentGate>
                     <StudentDashboard />
+                  </PaymentGate>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/student/counselors"
+              element={
+                <ProtectedRoute requiredRole="student">
+                  <PaymentGate>
+                    <Counselors />
                   </PaymentGate>
                 </ProtectedRoute>
               }

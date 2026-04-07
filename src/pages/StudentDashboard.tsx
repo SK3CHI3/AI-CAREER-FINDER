@@ -720,10 +720,10 @@ const StudentDashboard = () => {
                 </CardHeader>
                 <CardContent>
                   <p className="text-sm text-muted-foreground mb-4">Connect with verified professional career counselors for 1-on-1 guidance.</p>
-                  <Button
+                    <Button
                     className="w-full bg-purple-600 hover:bg-purple-700 text-white"
                     onClick={() => {
-                      setActiveTab('progress')
+                      navigate('/student/counselors')
                       trackButtonClick('Start Counselor Directory', 'Action Cards')
                     }}
                   >
@@ -891,7 +891,7 @@ const StudentDashboard = () => {
                     <div
                       className="flex flex-col sm:flex-row items-center justify-between p-3 rounded-lg bg-emerald-500/5 border border-emerald-500/20 cursor-pointer hover:bg-emerald-500/10 transition-colors"
                       onClick={() => {
-                        // Logic to handle counselor interaction can go here
+                        navigate('/student/counselors')
                         trackButtonClick('Book Counselor', 'Journey Actions')
                       }}
                     >
