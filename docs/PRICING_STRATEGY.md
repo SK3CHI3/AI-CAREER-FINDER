@@ -1,60 +1,52 @@
-# CareerGuide AI Pricing & Revenue Strategy
+# CareerPath AI Pricing and Revenue Strategy
 
-This document outlines the current technical implementation of pricing and the proposed strategy for scaling the platform's revenue model.
+This document outlines the current technical implementation of pricing and the strategy for scaling the platform's revenue model.
 
-## 1. Current Implementation (v1.0)
+## 1. Current Implementation
 
-The current version handles two distinct payment tracks:
+The platform manages three primary payment tracks:
 
-| Tier | Target | Price | Frequency | Tech File |
+| Category | Target | Price | Frequency | Description |
 | :--- | :--- | :--- | :--- | :--- |
-| **Institutional** | Schools | **KES 10** / student | Termly | `school-service` |
-| **Individual Pro** | Students/Parents | **KES 1,500** | One-time | `PaymentWall` |
+| **Individual Pro** | Students/Parents | **KES 499** | Termly | Full access to AI assessments and reports. |
+| **Institutional** | Schools | **KES 100** / student | Termly | Management dashboard for teachers and student roster. |
+| **Counselor Sessions**| Students | **Variable** | Per Session | Direct booking with verified career experts (KES 500 - 3,000). |
 
 ### Billing Logistics
-- **Platform**: [IntaSend](https://intasend.com) handles all M-Pesa, Visa, and Mastercard transactions.
-- **Verification**: Database triggers (`profiles.payment_status`) automate access control.
-- **Institutional Billing**: Dynamically calculated based on the `student_count` in the School Admin dashboard.
+- **Platform**: IntaSend handles all M-Pesa, Visa, and Mastercard transactions.
+- **Verification**: Database status updates automate access control.
+- **Institutional Billing**: Calculated based on the total enrollment in the School Admin dashboard.
 
 ---
 
-## 2. Strategic Recommendations
+## 2. New Service Offerings
 
-To increase Transparency and Conversion, we recommend the following shifts:
+### A. Professional Counselor Bookings
+Students can book 1-on-1 video calls with verified career experts.
+- **Pricing**: Set by individual counselors (Admin approved).
+- **Payment**: Processed upfront via the Counselor Directory.
 
-### A. The "Freemium" Bridge
-Students should not encounter a raw paywall.
-- **Recommendation**: Allow the **Quick Assessment** and **Top 3 Career Matches** to be free.
-- **The Upsell**: Lock the **RIASEC Diagnostic Report**, **Counselor Booking**, and **Live Chat** behind the KES 1,500 "Pro" license.
-
-### B. Tiered Institutional Packages (School)
-A single 10 bob fee is excellent for volume, but doesn't capture value from "Elite" institutions.
-1. **Standard (KES 10/student/term)**: Basic AI Career Roster + Teacher Dashboard.
-2. **Premium (KES 25/student/term)**: Includes:
-    - **Parent Access**: Parents can log in to view their child's career trajectory.
-    - **CBE Alignment**: Mapping assessment results directly to the Kenyan CBC pathway choices.
-    - **Offline Reports**: PDF batch downloads for every student in the school.
-
-### C. The "Family" Bundle
-Targeting households with multiple children (Middle-class parents).
-- **Offer**: **KES 2,400** for up to 3 siblings (33% discount vs 3 individual licenses).
-- **Benefit**: Increases immediate cash flow and locks in long-term household usage.
+### B. Career Field Day Requests
+Schools and student groups can request organized industrial visits.
+- **Pricing**: Managed via quotations based on group size and location.
+- **Process**: Requests are submitted via the student dashboard and managed by the Admin.
 
 ---
 
 ## 3. UI/UX Roadmap
 
-### Dedicated Pricing Page (`/pricing`)
-We need a professional, high-conversion landing page that:
-1.  **Displays Tiers side-by-side**: Individual vs School.
-2.  **Lists Features clearly**: Checkmarks for "What’s included."
-3.  **Includes a M-Pesa QR/Logo**: Lowers friction for Kenyan mobile-first users.
-4.  **FAQ Section**: Addressing "Can I pay for just one term?", "Is student data safe?", and "Refund Policy."
+### Dedicated Pricing Page
+A high-conversion landing page that:
+1.  Displays tiers side-by-side (Individual vs School).
+2.  Lists features clearly with detailed comparisons.
+3.  Includes local payment indicators (M-Pesa logo) to lower friction.
+4.  Provides an FAQ section addressing common billing and data safety questions.
 
 ---
 
-## 4. Technical Constants (Reference)
+## 4. Technical Constants
 
-Developers should maintain these values in the following files:
+Developers should maintain these values in the following locations:
 - **School Pricing**: `src/lib/school-service.ts` -> `PRICE_PER_STUDENT_PER_TERM`
-- **Student Pricing**: `src/components/PaymentWall.tsx` (Manual constant in component state)
+- **Student Pricing**: `src/components/PaymentWall.tsx` -> `pricingInfo` state
+- **Counselor Rates**: Managed via `counselor_profiles` table in Supabase.

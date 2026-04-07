@@ -1,52 +1,39 @@
-﻿# CareerGuide AI - Your CBE Career Guide 🎓
+# CareerPath AI
 
-## My Story 📚
+CareerPath AI is a dedicated platform designed to guide students through the complexities of the Competency-Based Education (CBE) curriculum in Kenya. By centering student potential and real-world opportunities, we help bridge the gap between academic choices and future professional success.
 
-When I was in primary class 8, transitioning to high school under the old education system, I faced a crucial decision point in my academic journey. Without proper guidance or someone to turn to for career advice, I made choices that would impact my future path. I dropped physics - a decision I later regretted when I discovered my passion for software engineering. Having experienced these challenges in the simpler old system, I can't help but think how much more daunting it must be for students navigating today's complex CBE curriculum with its multiple pathways and competency requirements.
+## The Story
 
+The inspiration for CareerPath AI stems from a personal journey. Growing up under the traditional education system, many students were forced to make life-altering academic decisions without professional guidance. This often led to missed opportunities and misaligned paths—such as abandoning foundational sciences before discovering a passion for engineering. 
 
-## What CareerPath AI Does 🚀
+In today's multifaceted CBE environment, the challenge is even greater. CareerPath AI was built to ensure that no student has to navigate these critical transition points alone, providing a data-driven companion for every step of their career discovery process.
 
-CareerPath AI helps CBE students make informed career decisions by:
-- 📊 **Realistic Triangulation**: Analyzing the intersection of Personality (RIASEC), Academic Performance, and Stated Interests.
-- 🎯 **Contexual Guidance**: Factoring in real-world constraints (financial, geographical) and personal values.
-- 📈 **Market Intelligence**: Aligning recommendations with Kenyan Vision 2030 priorities and labor market demand.
-- 🏫 **Teacher Empowerment**: Providing teachers with AI-driven pedagogical insights for student mentorship.
-- 🗺️ **Actionable Roadmaps**: Creating feasible learning pathways with associated "Actionability Scores."
+## Key Features
 
-## Key Features ✨
+### Intelligent Assessments
+The platform utilize comprehensive analysis to align student personalities (RIASEC) with academic performance and socio-economic realities. This ensures that every recommendation is both aspirational and actionable.
 
-### Dual Assessment Modes
+### Institutional Management
+Schools and teachers are equipped with dedicated dashboards to monitor student progress, manage class enrollments, and access automated guidance reports for personalized classroom intervention.
 
-1. **Quick Assessment Mode**
-   - Perfect for initial career exploration
-   - 5-10 minute interactive sessions
-   - Instant career recommendations
-   - Basic pathway guidance
+### Verified Counselor Access
+Students can book one-on-one sessions with professional career counselors. This direct access to human expertise complements our AI insights, providing a holistic support system.
 
-2. **Comprehensive Analysis Mode**
-   - In-depth **RIASEC Personality Discovery**
-   - Detailed academic performance analysis from school records
-   - Socio-economic constraint mapping (Financial/Geographical)
-   - Value-alignment checks (Autonomy, Impact, Stability, Income)
-   - **Teacher Guidance Reports** for classroom intervention
+### Dynamic Career Pathways
+Explore an extensive directory of career pathways, enriched with market intelligence, required skills, and education requirements.
 
-## Technology Stack 💻
+### Field Day Coordination
+A streamlined process for students and schools to request and manage industrial visits, fostering real-world exposure and industry connections.
 
-- ⚛️ React + TypeScript for the frontend
-- ⚡ Vite for blazing fast development
-- 🎨 Tailwind CSS + Shadcn/UI for modern design
-- 🔒 Supabase for backend and authentication
-- 🤖 Advanced AI models for career analysis
+## Technology Stack
 
-## Getting Started 🌟
+The platform is built with a modern, high-performance stack:
+- Frontend: React with TypeScript and Vite
+- Styling: Tailwind CSS and Shadcn/UI
+- Backend: Supabase (PostgreSQL, Auth, Storage)
+- Intelligence: Advanced AI models for personalized analysis
+- Payments: IntaSend for secure, local transactions
 
-Want to explore your career options? Visit [CareerPath AI](https://careerpath-ai.vercel.app) and start your journey today!
+---
 
-## Contributing 🤝
-
-We welcome contributions! If you'd like to help improve CareerPath AI, please check out our contributing guidelines.
-
-## License 📝
-
-This project is licensed under the MIT License - see the LICENSE file for details.
+CareerPath AI is dedicated to empowering the next generation of professionals through informed decision-making.
