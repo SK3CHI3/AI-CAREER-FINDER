@@ -21,6 +21,8 @@ const Careers = () => {
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [selectedCareer, setSelectedCareer] = useState<any>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [itemsToShow, setItemsToShow] = useState(12);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
   const { profile } = useAuth();
 
   useEffect(() => {
@@ -47,7 +49,16 @@ const Careers = () => {
       return matchesSearch && matchesCategory;
     });
     setFilteredCareers(filtered);
+    setItemsToShow(12); // Reset pagination when filters change
   }, [searchQuery, selectedCategory, careers]);
+
+  const handleLoadMore = () => {
+    setIsLoadingMore(true);
+    setTimeout(() => {
+      setItemsToShow(prev => prev + 12);
+      setIsLoadingMore(false);
+    }, 400);
+  };
 
   const categories = ["All", ...Array.from(new Set(careers.map(c => c.category)))];
 
@@ -153,20 +164,23 @@ const Careers = () => {
             ))}
           </div>
         ) : filteredCareers.length > 0 ? (
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {filteredCareers.map((career) => (
-              <motion.div
-                key={career.id}
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                whileHover={{ y: -5 }}
-              >
+          <div className="space-y-12">
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {filteredCareers.slice(0, itemsToShow).map((career, index) => (
+                <motion.div
+                  key={career.id}
+                  initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  transition={{ delay: (index % 12) * 0.05 }}
+                  whileHover={{ y: -5 }}
+                >
                 <Card className="bg-gradient-surface border-card-border hover:shadow-card transition-all duration-300 h-full flex flex-col group overflow-hidden">
                   {/* Image Section */}
                   <div className="relative h-48 w-full overflow-hidden bg-muted">
                     <img 
                       src={career.image_url || 'https://images.unsplash.com/photo-1522202176988-66273c2fd55f?fit=crop&w=800&q=80'} 
                       alt={career.title}
+                      loading="lazy"
                       className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
@@ -248,6 +262,30 @@ const Careers = () => {
               </motion.div>
             ))}
           </div>
+
+          {itemsToShow < filteredCareers.length && (
+            <div className="flex justify-center mt-16">
+              <Button
+                onClick={handleLoadMore}
+                disabled={isLoadingMore}
+                size="lg"
+                className="bg-card hover:bg-muted text-foreground border border-card-border px-12 py-6 rounded-2xl shadow-elevated hover:shadow-glow transition-all duration-300 font-bold text-lg group"
+              >
+                {isLoadingMore ? (
+                  <div className="flex items-center space-x-2">
+                    <div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
+                    <span>Loading...</span>
+                  </div>
+                ) : (
+                  <div className="flex items-center space-x-2">
+                    <span>Load More Careers</span>
+                    <TrendingUp className="w-5 h-5 group-hover:translate-y-[-2px] transition-transform" />
+                  </div>
+                )}
+              </Button>
+            </div>
+          )}
+        </div>
         ) : (
           <div className="text-center py-20 bg-card/30 rounded-3xl border border-dashed border-card-border">
             <div className="w-16 h-16 bg-muted rounded-2xl flex items-center justify-center mx-auto mb-4">
