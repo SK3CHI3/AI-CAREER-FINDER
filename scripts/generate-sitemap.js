@@ -90,7 +90,7 @@ async function generateSitemap() {
     // Add Careers (Direct links if applicable, or just careers page with queries)
     // Note: If you have dynamic career detail pages like /career/:id, add them here.
     // Given the current app, they open in modals or /quick-assessment?career=...
-    careers.slice(0, 50).forEach(career => {
+    careers.slice(0, 1000).forEach(career => {
        xml += `
   <url>
     <loc>${BASE_URL}/careers?search=${encodeURIComponent(career.title)}</loc>
