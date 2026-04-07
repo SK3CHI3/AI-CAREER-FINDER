@@ -6,7 +6,8 @@ import { ExternalLink, Clock, Users, Star, Loader2, BookOpen, Award, Globe, Refr
 import { aiCacheService } from '@/lib/ai-cache-service'
 import { useAuth } from '@/contexts/AuthContext'
 
-interface CourseRecommendation {
+export interface CourseRecommendation {
+
   title: string
   provider: string
   duration: string
@@ -26,19 +27,34 @@ interface CourseRecommendationsProps {
   careerInterests?: string[]
   cbeSubjects?: string[]
   strongSubjects?: string[]
+  initialCourses?: CourseRecommendation[]
+  initialLoading?: boolean
+  onCoursesLoaded?: (courses: CourseRecommendation[]) => void
 }
+
 
 const CourseRecommendations: React.FC<CourseRecommendationsProps> = ({
   careerInterests = [],
   cbeSubjects = [],
-  strongSubjects = []
+  strongSubjects = [],
+  initialCourses = [],
+  initialLoading = false,
+  onCoursesLoaded
 }) => {
-  const [courses, setCourses] = useState<CourseRecommendation[]>([])
-  const [isLoading, setIsLoading] = useState(true)
+  const [courses, setCourses] = useState<CourseRecommendation[]>(initialCourses)
+  const [isLoading, setIsLoading] = useState(initialLoading && initialCourses.length === 0)
+
   const [error, setError] = useState<string | null>(null)
   const { user } = useAuth()
 
   useEffect(() => {
+    // If we already have courses from props, don't auto-load
+    if (initialCourses && initialCourses.length > 0) {
+      setCourses(initialCourses)
+      setIsLoading(false)
+      return
+    }
+
     // First check for cached courses
     const loadCachedCourses = async () => {
       if (!user?.id) {
@@ -50,8 +66,10 @@ const CourseRecommendations: React.FC<CourseRecommendationsProps> = ({
         const cachedCourses = await aiCacheService.getCachedCourseRecommendations(user.id)
         if (cachedCourses && cachedCourses.length > 0) {
           console.log('✅ Using cached course recommendations')
-          setCourses(cachedCourses as unknown as CourseRecommendation[])
+          const typedCourses = cachedCourses as unknown as CourseRecommendation[];
+          setCourses(typedCourses)
           setIsLoading(false)
+          if (onCoursesLoaded) onCoursesLoaded(typedCourses)
           return
         }
       } catch (error) {
@@ -64,7 +82,7 @@ const CourseRecommendations: React.FC<CourseRecommendationsProps> = ({
     }
     
     loadCachedCourses()
-  }, [user?.id]) // Remove other dependencies to prevent unnecessary regenerations
+  }, [user?.id, initialCourses.length])
 
   const generateCourseRecommendations = async (forceRefresh = false) => {
     setIsLoading(true)
@@ -188,6 +206,8 @@ Focus on:
             if (user?.id) {
               await aiCacheService.saveCourseRecommendations(user.id, parsed)
             }
+            if (onCoursesLoaded) onCoursesLoaded(parsed)
+
           } else {
             throw new Error('Invalid course data format')
           }

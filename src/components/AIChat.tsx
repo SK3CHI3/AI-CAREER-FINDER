@@ -81,8 +81,25 @@ const MessageContent = ({ content, role }: { content: string, role: 'user' | 'as
 const AIChat = () => {
   const { user, profile } = useAuth();
   const [message, setMessage] = useState("");
-  const [conversation, setConversation] = useState<ChatMessage[]>([]);
+  const [conversation, setConversation] = useState<ChatMessage[]>(() => {
+    if (user?.id) {
+      const saved = localStorage.getItem(`ai_chat_${user.id}`);
+      if (saved) {
+        try {
+          const parsed = JSON.parse(saved);
+          return parsed.map((msg: any) => ({
+            ...msg,
+            timestamp: new Date(msg.timestamp)
+          }));
+        } catch (e) {
+          console.error('Failed to parse saved conversation:', e);
+        }
+      }
+    }
+    return [];
+  });
   const [isLoading, setIsLoading] = useState(false);
+
   const [error, setError] = useState<string | null>(null);
   const [userContext, setUserContext] = useState<UserContext>({});
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -105,26 +122,6 @@ const AIChat = () => {
     }
   }, [user, profile, isInitialized]);
 
-  // Load conversation from localStorage on component mount
-  useEffect(() => {
-    if (user?.id) {
-      const savedConversation = localStorage.getItem(`ai_chat_${user.id}`);
-      if (savedConversation) {
-        try {
-          const parsedConversation = JSON.parse(savedConversation);
-          // Convert timestamp strings back to Date objects
-          const conversationWithDates = parsedConversation.map((msg: ChatMessage) => ({
-            ...msg,
-            timestamp: new Date(msg.timestamp)
-          }));
-          setConversation(conversationWithDates);
-          console.log('✅ Loaded conversation from localStorage');
-        } catch (error) {
-          console.error('Failed to parse saved conversation:', error);
-        }
-      }
-    }
-  }, [user?.id]);
 
   // Save conversation to localStorage whenever it changes
   useEffect(() => {

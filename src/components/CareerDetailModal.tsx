@@ -63,12 +63,13 @@ const CareerDetailModal: React.FC<CareerDetailModalProps> = ({ isOpen, onClose, 
   }, [isOpen, career])
 
   const generateCareerDetails = async () => {
+    if (!career?.name) return;
+    
     console.log('🚀 Starting career details generation for:', career.name)
-    setIsLoading(true)
     setError(null)
-
+ 
     try {
-      // First check if we have cached details
+      // First check if we have cached details - do this BEFORE setting isLoading(true) to avoid flicker
       if (studentProfile?.id) {
         const cachedDetails = await aiCacheService.getCachedCareerDetails(studentProfile.id, career.name)
         if (cachedDetails) {
@@ -78,6 +79,10 @@ const CareerDetailModal: React.FC<CareerDetailModalProps> = ({ isOpen, onClose, 
           return
         }
       }
+
+      // If not in cache, NOW we show the loader
+      setIsLoading(true)
+
       // Get API key from environment variables
       const apiKey = import.meta.env.VITE_DEEPSEEK_API_KEY
       const baseUrl = 'https://api.deepseek.com'

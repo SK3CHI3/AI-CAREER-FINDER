@@ -59,7 +59,8 @@ import AIChat from '@/components/AIChat'
 import { ReportGenerator } from '@/lib/report-generator'
 import { ProfileSetup } from '@/components/ProfileSetup'
 import GradesManager from '@/components/GradesManager'
-import CourseRecommendations from '@/components/CourseRecommendations'
+import CourseRecommendations, { type CourseRecommendation } from '@/components/CourseRecommendations'
+
 import GradesModal from '@/components/GradesModal'
 import { CounselorDirectory } from '@/components/CounselorDirectory'
 import { supabase } from '@/lib/supabase'
@@ -97,6 +98,12 @@ const StudentDashboard = () => {
   const [isCareerModalOpen, setIsCareerModalOpen] = useState(false)
   const [isGradesModalOpen, setIsGradesModalOpen] = useState(false)
   const [schoolInfo, setSchoolInfo] = useState<{ name: string; status: string } | null>(null)
+  const [courseRecommendations, setCourseRecommendations] = useState<CourseRecommendation[]>([])
+
+  const [isLoadingCourses, setIsLoadingCourses] = useState(false)
+  const [aiInsights, setAiInsights] = useState<{ weeklyTip?: string; nextStep?: string; motivation?: string } | null>(null)
+
+
 
   // Activity tracking
   const { trackPageView, trackButtonClick, trackAIChat } = useActivityTracking({
@@ -149,6 +156,14 @@ const StudentDashboard = () => {
 
       // Load career recommendations
       await loadCareerRecommendations(profile);
+      
+      // Load course recommendations
+      await loadCourseRecommendations();
+
+      // Fetch AI Insights in background
+      fetchAIInsights();
+
+
 
     } catch (error) {
       console.error('Failed to load dashboard data:', error);
@@ -206,11 +221,12 @@ const StudentDashboard = () => {
 
       try {
         const parsedInsights = JSON.parse(insights);
-        // You can use these insights to enhance the dashboard further
+        setAiInsights(parsedInsights);
         console.log('AI Insights:', parsedInsights);
       } catch (e) {
         console.log('Could not parse AI insights, using defaults');
       }
+
     } catch (error) {
       console.error('Error fetching AI insights:', error);
     }
@@ -318,6 +334,28 @@ const StudentDashboard = () => {
       setCareerData([]);
     } finally {
       setIsLoadingRecommendations(false)
+    }
+  }
+
+  const loadCourseRecommendations = async () => {
+    if (!user?.id) return;
+    
+    setIsLoadingCourses(true);
+    try {
+      // Check cache first
+      const cached = await aiCacheService.getCachedCourseRecommendations(user.id);
+      if (cached && cached.length > 0) {
+        setCourseRecommendations(cached as unknown as CourseRecommendation[]);
+        setIsLoadingCourses(false);
+        return;
+      }
+      
+      // If not in cache, the component will handle initial generation or we can trigger it here
+      // For now, just setting up the infrastructure
+    } catch (error) {
+      console.error('Failed to load course recommendations from dashboard:', error);
+    } finally {
+      setIsLoadingCourses(false);
     }
   }
 
@@ -601,7 +639,31 @@ const StudentDashboard = () => {
               )}
             </div>
 
+            {/* AI Insights / Tip of the Day */}
+            {aiInsights?.weeklyTip && (
+              <Card className="bg-primary/5 border border-primary/20 shadow-sm overflow-hidden relative">
+                <div className="absolute top-0 right-0 p-2 opacity-10">
+                  <Sparkles className="w-12 h-12 text-primary" />
+                </div>
+                <CardContent className="p-4 flex items-center gap-4">
+                  <div className="p-2 bg-primary/10 rounded-full">
+                    <Lightbulb className="w-5 h-5 text-primary" />
+                  </div>
+                  <div className="flex-1">
+                    <h4 className="text-sm font-bold text-primary">AI Career Insight</h4>
+                    <p className="text-sm text-foreground leading-relaxed">{aiInsights.weeklyTip}</p>
+                  </div>
+                  {aiInsights.motivation && (
+                    <div className="hidden md:block pl-4 border-l border-primary/20 max-w-[30%]">
+                      <p className="text-xs italic text-muted-foreground">"{aiInsights.motivation}"</p>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            )}
+
             {/* Main Dashboard Grid */}
+
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-2 sm:gap-6 w-full">
               {/* Career Recommendations Chart */}
               <Card className="col-span-1 lg:col-span-2 bg-gradient-to-br from-card to-card/50 border-card-border/60 shadow-lg dark:shadow-primary/5 overflow-hidden relative">
@@ -955,7 +1017,11 @@ const StudentDashboard = () => {
                     careerInterests={profile?.career_interests || profile?.interests}
                     cbeSubjects={profile?.cbe_subjects || profile?.subjects}
                     strongSubjects={[]} // This will be populated from grades data
+                    initialCourses={courseRecommendations}
+                    initialLoading={isLoadingCourses}
+                    onCoursesLoaded={(courses) => setCourseRecommendations(courses)}
                   />
+
                 </CardContent>
               </Card>
 
@@ -974,8 +1040,9 @@ const StudentDashboard = () => {
                       <UserCog className="w-4 h-4" /> Recommended Next Step
                     </h4>
                     <p className="text-xs text-muted-foreground mb-4 leading-relaxed">
-                      Connect with a professional counselor to validate your AI career report and build your practical roadmap for university.
+                      {aiInsights?.nextStep || 'Connect with a professional counselor to validate your AI career report and build your practical roadmap for university.'}
                     </p>
+
                     <Button
                       variant="outline"
                       className="w-full bg-background border-primary/20 hover:bg-primary/5 group"
