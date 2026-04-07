@@ -1246,6 +1246,11 @@ const StudentDashboard = () => {
         isOpen={isGradesModalOpen}
         onClose={() => setIsGradesModalOpen(false)}
       />
+
+      <FieldDayRequestModal
+        isOpen={isFieldDayModalOpen}
+        onClose={() => setIsFieldDayModalOpen(false)}
+      />
     </div>
   )
 }
