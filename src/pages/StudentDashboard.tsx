@@ -58,6 +58,7 @@ import {
 import { ThemeToggle } from '@/components/ThemeToggle'
 import { FieldDayRequestModal } from '@/components/FieldDayRequestModal'
 import { subscriptionService } from '@/lib/subscription-service'
+import PaymentWall from '@/components/PaymentWall'
 import AIChat from '@/components/AIChat'
 import { ReportGenerator } from '@/lib/report-generator'
 import { ProfileSetup } from '@/components/ProfileSetup'
@@ -92,6 +93,9 @@ const StudentDashboard = () => {
   const navigate = useNavigate()
   const { user, profile, signOut } = useAuth()
   const [activeTab, setActiveTab] = useState('overview')
+  const [isActivatingTrial, setIsActivatingTrial] = useState(false)
+  const [showTrialBanner, setShowTrialBanner] = useState(true)
+  const [showExpiryBanner, setShowExpiryBanner] = useState(true)
 
   const [careerData, setCareerData] = useState<CareerDataItem[]>([])
   const [isLoadingRecommendations, setIsLoadingRecommendations] = useState(false)
@@ -150,7 +154,7 @@ const StudentDashboard = () => {
   const handleActivateTrial = async () => {
     if (!user) return;
     try {
-      setIsLoadingStats(true);
+      setIsActivatingTrial(true);
       await subscriptionService.activateTrial(user.id);
       await checkAccessStatus();
       // Reload page to refresh all context/boundaries
@@ -158,8 +162,13 @@ const StudentDashboard = () => {
     } catch (err) {
       console.error('Error activating trial:', err);
     } finally {
-      setIsLoadingStats(false);
+      setIsActivatingTrial(false);
     }
+  }
+
+  // If user is truly expired (past grace period), show Payment Wall as a hard lockout
+  if (!isLoadingStats && subscriptionStatus && !subscriptionStatus.isActive && !subscriptionStatus.isTrialEligible) {
+    return <PaymentWall onPaymentSuccess={checkAccessStatus} />
   }
 
   const isAuthorized = true;
@@ -571,32 +580,54 @@ const StudentDashboard = () => {
         {/* Welcome Section */}
         <div className="mb-6 sm:mb-8">
           {/* Subscription / Trial Banner */}
-        {subscriptionStatus && !subscriptionStatus.isActive && subscriptionStatus.isTrialEligible && (
-          <Alert className="mb-6 border-primary/20 bg-primary/5 flex items-center justify-between p-6 rounded-2xl shadow-sm animate-in fade-in slide-in-from-top duration-500">
+        {subscriptionStatus && !subscriptionStatus.isActive && subscriptionStatus.isTrialEligible && showTrialBanner && (
+          <Alert className="mb-6 border-primary/20 bg-primary/5 flex items-center justify-between p-6 rounded-2xl shadow-sm animate-in fade-in slide-in-from-top duration-500 relative group">
             <div className="flex items-center gap-4">
               <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
                 <Sparkles className="w-6 h-6 text-primary animate-pulse" />
               </div>
               <div>
                 <AlertTitle className="text-xl font-bold text-foreground">First Term Free Trial Available!</AlertTitle>
-                <AlertDescription className="text-foreground-muted">
+                <AlertDescription className="text-foreground-muted font-medium">
                   Get full access to all features for the remainder of this academic term. No credit card required.
                 </AlertDescription>
               </div>
             </div>
-            <Button 
-              onClick={handleActivateTrial} 
-              className="bg-primary hover:bg-primary/90 text-primary-foreground font-bold px-8 h-12 rounded-xl shadow-lg shadow-primary/20 transition-all hover:scale-105 active:scale-95"
-            >
-              Activate Free Term
-            </Button>
+            <div className="flex items-center gap-3">
+              <Button 
+                onClick={handleActivateTrial} 
+                disabled={isActivatingTrial}
+                className="bg-primary hover:bg-primary/90 text-primary-foreground font-bold px-8 h-12 rounded-xl shadow-lg shadow-primary/20 transition-all hover:scale-105 active:scale-95"
+              >
+                {isActivatingTrial ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
+                Activate Free Term
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setShowTrialBanner(false)}
+                className="rounded-full hover:bg-primary/10"
+              >
+                <X className="w-4 h-4 text-muted-foreground" />
+              </Button>
+            </div>
           </Alert>
         )}
 
-        {subscriptionStatus?.type === 'trial' && (
-          <div className="mb-6 px-4 py-2 bg-yellow-500/10 border border-yellow-500/20 rounded-lg flex items-center justify-center gap-2 text-yellow-600 font-medium text-sm">
-            <Clock className="w-4 h-4" />
-            Your Free Trial ends on {new Date(subscriptionStatus.expiresAt).toLocaleDateString()}
+        {subscriptionStatus?.type === 'trial' && showExpiryBanner && (
+          <div className="mb-6 px-4 py-3 bg-yellow-500/10 border border-yellow-500/20 rounded-xl flex items-center justify-between gap-4">
+            <div className="flex items-center gap-2 text-yellow-600 font-bold text-sm tracking-tight uppercase">
+              <Clock className="w-4 h-4" />
+              <span>Your Free Trial ends on {new Date(subscriptionStatus.expiresAt).toLocaleDateString('en-KE')}</span>
+            </div>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setShowExpiryBanner(false)}
+              className="h-8 w-8 rounded-full hover:bg-yellow-500/20"
+            >
+              <X className="w-3 h-3 text-yellow-600" />
+            </Button>
           </div>
         )}
 
@@ -1065,14 +1096,17 @@ const StudentDashboard = () => {
                   <CardDescription>AI-curated courses based on your profile and career interests</CardDescription>
                 </CardHeader>
                 <CardContent className="flex-1 overflow-hidden pt-0 pb-6">
-                  <CourseRecommendations
-                    careerInterests={profile?.career_interests || profile?.interests}
-                    cbeSubjects={profile?.cbe_subjects || profile?.subjects}
-                    strongSubjects={[]} // This will be populated from grades data
-                    initialCourses={courseRecommendations}
-                    initialLoading={isLoadingCourses}
-                    onCoursesLoaded={(courses) => setCourseRecommendations(courses)}
-                  />
+                  <div className="overflow-y-auto max-h-[500px] pr-2">
+                    <CourseRecommendations
+                      careerInterests={profile?.career_interests || profile?.interests}
+                      cbeSubjects={profile?.cbe_subjects || profile?.subjects}
+                      strongSubjects={[]} // This will be populated from grades data
+                      initialCourses={courseRecommendations}
+                      initialLoading={isLoadingCourses}
+                      onCoursesLoaded={(courses) => setCourseRecommendations(courses)}
+                      limit={3}
+                    />
+                  </div>
                 </CardContent>
               </Card>
 

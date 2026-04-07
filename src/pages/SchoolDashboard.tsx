@@ -7,6 +7,8 @@ import SchoolOnboarding from '@/components/school/SchoolOnboarding'
 import InviteTeacher from '@/components/school/InviteTeacher'
 import SubscriptionCard from '@/components/school/SubscriptionCard'
 import SchoolInsights from '@/components/school/SchoolInsights'
+import { subscriptionService, type SubscriptionStatus } from '@/lib/subscription-service'
+import PaymentWall from '@/components/PaymentWall'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -28,6 +30,7 @@ const SchoolDashboard: React.FC = () => {
   const [stats, setStats] = useState({ teacherCount: 0, classCount: 0, studentCount: 0 })
   const [loading, setLoading] = useState(true)
   const [needsOnboarding, setNeedsOnboarding] = useState(false)
+  const [subscriptionStatus, setSubscriptionStatus] = useState<SubscriptionStatus | null>(null)
 
   const loadData = useCallback(async () => {
     if (!user) return
@@ -50,12 +53,16 @@ const SchoolDashboard: React.FC = () => {
       if (classList.status === 'fulfilled') setClasses(classList.value)
       if (invites.status === 'fulfilled') setPendingInvites(invites.value)
       if (schoolStats.status === 'fulfilled') setStats(schoolStats.value)
+
+      // Check subscription status
+      const status = await subscriptionService.checkSubscriptionStatus(profile)
+      setSubscriptionStatus(status)
     } catch (err) {
       console.error('School dashboard load error:', err)
     } finally {
       setLoading(false)
     }
-  }, [user])
+  }, [user, profile])
 
   useEffect(() => { loadData() }, [loadData])
 
@@ -64,6 +71,11 @@ const SchoolDashboard: React.FC = () => {
 
   if (needsOnboarding) {
     return <SchoolOnboarding onComplete={() => { refreshProfile(); loadData() }} />
+  }
+
+  // If school sub is expired (past grace period), show Payment Wall as a hard lockout
+  if (!loading && subscriptionStatus && !subscriptionStatus.isActive && !subscriptionStatus.isTrialEligible) {
+    return <PaymentWall onPaymentSuccess={loadData} />
   }
 
   return (

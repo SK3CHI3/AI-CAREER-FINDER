@@ -30,6 +30,7 @@ interface CourseRecommendationsProps {
   initialCourses?: CourseRecommendation[]
   initialLoading?: boolean
   onCoursesLoaded?: (courses: CourseRecommendation[]) => void
+  limit?: number
 }
 
 
@@ -39,7 +40,8 @@ const CourseRecommendations: React.FC<CourseRecommendationsProps> = ({
   strongSubjects = [],
   initialCourses = [],
   initialLoading = false,
-  onCoursesLoaded
+  onCoursesLoaded,
+  limit
 }) => {
   const [courses, setCourses] = useState<CourseRecommendation[]>(initialCourses)
   const [isLoading, setIsLoading] = useState(initialLoading && initialCourses.length === 0)

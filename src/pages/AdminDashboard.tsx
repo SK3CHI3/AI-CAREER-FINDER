@@ -121,6 +121,8 @@ const AdminDashboard = () => {
   const [selectedSchool, setSelectedSchool] = useState<School | null>(null)
   const [isSidebarOpen, setIsSidebarOpen] = useState(true)
   const [dateRange, setDateRange] = useState('30d')
+  const [termDates, setTermDates] = useState<any>(null)
+  const [isSavingSettings, setIsSavingSettings] = useState(false)
 
   const rangeDays = dateRange === '7d' ? 7 : dateRange === '14d' ? 14 : dateRange === '30d' ? 30 : dateRange === '90d' ? 90 : dateRange === '1y' ? 365 : 365
 
@@ -143,6 +145,23 @@ const AdminDashboard = () => {
     setLoading(true)
     setError(null)
     try {
+      // Fetch term dates first
+      const { data: settingsData } = await supabase
+        .from('global_settings')
+        .select('value')
+        .eq('key', 'current_term_dates')
+        .single()
+      
+      if (settingsData) {
+        setTermDates(settingsData.value)
+      } else {
+        // Fallback default
+        setTermDates({
+          term1: { start: '2026-01-05', end: '2026-04-10' },
+          term2: { start: '2026-05-04', end: '2026-08-07' },
+          term3: { start: '2026-08-31', end: '2026-10-30' }
+        })
+      }
       const [
         { count: totalStudents },
         { count: totalSchools },
@@ -327,6 +346,37 @@ const AdminDashboard = () => {
     } finally {
       setLoading(false)
     }
+  }
+
+  const handleSaveTermDates = async () => {
+    if (!termDates) return
+    setIsSavingSettings(true)
+    try {
+      const { error } = await supabase
+        .from('global_settings')
+        .upsert({ 
+          key: 'current_term_dates', 
+          value: termDates,
+          updated_at: new Date().toISOString()
+        }, { onConflict: 'key' })
+
+      if (error) throw error
+      // Success - could add a toast here if available
+    } catch (err) {
+      console.error('Error saving settings:', err)
+    } finally {
+      setIsSavingSettings(false)
+    }
+  }
+
+  const updateTermDate = (term: string, field: 'start' | 'end', value: string) => {
+    setTermDates((prev: any) => ({
+      ...prev,
+      [term]: {
+        ...prev[term],
+        [field]: value
+      }
+    }))
   }
 
   const loadFeedbacks = async () => {
@@ -1351,8 +1401,9 @@ const AdminDashboard = () => {
                     <p className="text-slate-400 text-sm">Control platform-wide parameters.</p>
                   </div>
 
-                  <div className="max-w-2xl">
+                  <div className="grid lg:grid-cols-2 gap-8">
                     <Card className="bg-slate-950/40 backdrop-blur-md border-white/5 shadow-glass overflow-hidden px-8 py-10">
+                      <h3 className="text-xl font-black mb-6 uppercase tracking-wider text-primary">System Toggles</h3>
                       <div className="space-y-12">
                         <div className="flex items-center justify-between">
                           <div className="space-y-1">
@@ -1381,6 +1432,53 @@ const AdminDashboard = () => {
                         <div className="pt-8 border-t border-white/5 flex gap-4">
                           <Button className="bg-primary hover:bg-primary/90 text-white font-bold rounded-xl h-12 flex-1 shadow-glow transition-all active:scale-95">Save Config</Button>
                           <Button variant="outline" className="border-white/10 bg-white/5 hover:bg-white/10 rounded-xl h-12 flex-1 font-bold text-slate-400">Export State</Button>
+                        </div>
+                      </div>
+                    </Card>
+
+                    <Card className="bg-slate-950/40 backdrop-blur-md border-white/5 shadow-glass overflow-hidden px-8 py-10">
+                      <h3 className="text-xl font-black mb-6 uppercase tracking-wider text-amber-500">Academic Calendar (2026)</h3>
+                      <div className="space-y-8">
+                        {termDates && ['term1', 'term2', 'term3'].map((term: string, idx) => (
+                          <div key={term} className="space-y-4">
+                            <h4 className="font-black text-white text-[10px] uppercase tracking-[0.2em] opacity-50 flex items-center gap-2">
+                              <span className="w-4 h-[1px] bg-white/20" /> Term {idx + 1}
+                            </h4>
+                            <div className="grid grid-cols-2 gap-4">
+                              <div className="space-y-1.5">
+                                <label className="text-[9px] font-black uppercase text-slate-400 tracking-widest ml-1">Start Date</label>
+                                <Input 
+                                  type="date"
+                                  value={termDates[term].start}
+                                  onChange={(e) => updateTermDate(term, 'start', e.target.value)}
+                                  className="bg-white/5 border-white/10 h-10 rounded-xl font-bold text-xs focus:ring-amber-500/50"
+                                />
+                              </div>
+                              <div className="space-y-1.5">
+                                <label className="text-[9px] font-black uppercase text-slate-400 tracking-widest ml-1">End Date</label>
+                                <Input 
+                                  type="date"
+                                  value={termDates[term].end}
+                                  onChange={(e) => updateTermDate(term, 'end', e.target.value)}
+                                  className="bg-white/5 border-white/10 h-10 rounded-xl font-bold text-xs focus:ring-amber-500/50"
+                                />
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+
+                        <div className="pt-6 border-t border-white/5">
+                          <Button 
+                            onClick={handleSaveTermDates}
+                            disabled={isSavingSettings}
+                            className="w-full bg-amber-500 hover:bg-amber-600 text-white font-black rounded-xl h-12 shadow-lg shadow-amber-500/20 transition-all active:scale-95 flex items-center justify-center gap-2"
+                          >
+                            {isSavingSettings ? <Loader2 className="w-5 h-5 animate-spin" /> : <Database className="w-5 h-5" />}
+                            Update Academic Terms
+                          </Button>
+                          <p className="text-[9px] text-slate-500 mt-3 text-center font-bold italic">
+                            * Changes will globally affect subscription expiry and trial eligibility for 2026.
+                          </p>
                         </div>
                       </div>
                     </Card>

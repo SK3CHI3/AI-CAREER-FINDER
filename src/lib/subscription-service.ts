@@ -15,6 +15,8 @@ export interface SubscriptionStatus {
   isTrialEligible: boolean
 }
 
+const GRACE_PERIOD_DAYS = 3
+
 class SubscriptionService {
   private async getTermDates(): Promise<TermDates> {
     const { data, error } = await supabase
@@ -64,6 +66,7 @@ class SubscriptionService {
     }
 
     const now = new Date()
+    const gracePeriodMs = GRACE_PERIOD_DAYS * 24 * 60 * 60 * 1000
     
     // 1. Check if institutional subscription exists via school
     if (profile.school_id) {
@@ -82,12 +85,17 @@ class SubscriptionService {
           .limit(1)
           .maybeSingle()
 
-        if (schoolSub && schoolSub.expires_at && new Date(schoolSub.expires_at) > now) {
-          return {
-            isActive: true,
-            type: 'institutional',
-            expiresAt: schoolSub.expires_at,
-            isTrialEligible: false
+        if (schoolSub && schoolSub.expires_at) {
+          const actualExpiry = new Date(schoolSub.expires_at)
+          const graceExpiry = new Date(actualExpiry.getTime() + gracePeriodMs)
+          
+          if (now <= graceExpiry) {
+            return {
+              isActive: true,
+              type: 'institutional',
+              expiresAt: schoolSub.expires_at,
+              isTrialEligible: false
+            }
           }
         }
 
@@ -97,10 +105,10 @@ class SubscriptionService {
           const schoolCreated = new Date(school.created_at!)
           const termStart = new Date(currentTerm.dates.start)
           const termEnd = new Date(currentTerm.dates.end)
+          const trialGraceEnd = new Date(termEnd.getTime() + gracePeriodMs)
           
-          // If school was created in this term or earlier, but term hasn't ended yet
-          // Actually "First Term Free" means if current date is within the term where they created
-          if (schoolCreated <= termEnd && schoolCreated >= termStart) {
+          // If school was created in this term or earlier, but term hasn't ended yet (+ grace)
+          if (schoolCreated <= trialGraceEnd && schoolCreated >= termStart) {
             return {
               isActive: true,
               type: 'trial',
@@ -113,12 +121,17 @@ class SubscriptionService {
     }
 
     // 2. Check individual subscription
-    if (profile.subscription_expires_at && new Date(profile.subscription_expires_at) > now) {
-      return {
-        isActive: true,
-        type: (profile.subscription_type as 'individual' | 'institutional' | 'trial') || 'individual',
-        expiresAt: profile.subscription_expires_at,
-        isTrialEligible: !profile.is_trial_used
+    if (profile.subscription_expires_at) {
+      const individualExpiry = new Date(profile.subscription_expires_at)
+      const individualGraceExpiry = new Date(individualExpiry.getTime() + gracePeriodMs)
+      
+      if (now <= individualGraceExpiry) {
+        return {
+          isActive: true,
+          type: (profile.subscription_type as 'individual' | 'institutional' | 'trial') || 'individual',
+          expiresAt: profile.subscription_expires_at,
+          isTrialEligible: !profile.is_trial_used
+        }
       }
     }
 
@@ -128,9 +141,10 @@ class SubscriptionService {
         if (currentTerm) {
             const userCreated = new Date(profile.created_at!)
             const termEnd = new Date(currentTerm.dates.end)
+            const trialGraceEnd = new Date(termEnd.getTime() + gracePeriodMs)
             
-            // If they signed up during this term, they are in their free trial
-            if (userCreated <= termEnd) {
+            // If they signed up during this term (+ grace), they are in their free trial
+            if (userCreated <= trialGraceEnd) {
                 return {
                     isActive: true,
                     type: 'trial',
