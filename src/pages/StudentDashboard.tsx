@@ -475,13 +475,7 @@ const StudentDashboard = () => {
                   )}
                 </TabsTrigger>
             <TabsTrigger value="chat">AI Chat</TabsTrigger>
-            <TabsTrigger value="human-chat" className="relative group">
-              Counselor Directory
-              <span className="absolute -top-1 -right-2 flex h-2.5 w-2.5">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
-              </span>
-            </TabsTrigger>
+
             <TabsTrigger value="progress">Progress</TabsTrigger>
           </TabsList>
 
@@ -714,24 +708,24 @@ const StudentDashboard = () => {
                 <CardHeader>
                   <div className="flex items-center gap-3">
                     <div className="w-12 h-12 bg-purple-500/20 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-                      <Lightbulb className="w-6 h-6 text-purple-500" />
+                      <Users className="w-6 h-6 text-purple-500" />
                     </div>
                     <div>
-                      <CardTitle className="text-lg">Get AI Guidance</CardTitle>
-                      <CardDescription>Chat with our AI</CardDescription>
+                      <CardTitle className="text-lg">Talk to a Counselor</CardTitle>
+                      <CardDescription>Book a human expert</CardDescription>
                     </div>
                   </div>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-sm text-foreground-muted mb-4">Get personalized career advice from our AI counselor.</p>
+                  <p className="text-sm text-foreground-muted mb-4">Connect with verified professional career counselors for 1-on-1 guidance.</p>
                   <Button
                     className="w-full bg-purple-600 hover:bg-purple-700 text-white"
                     onClick={() => {
-                      setActiveTab('chat')
-                      trackButtonClick('Start Chat', 'Action Cards')
+                      setActiveTab('human-chat')
+                      trackButtonClick('Start Counselor Directory', 'Action Cards')
                     }}
                   >
-                    Start Chat <ArrowRight className="w-4 h-4 ml-1" />
+                    View Counselors <ArrowRight className="w-4 h-4 ml-1" />
                   </Button>
                 </CardContent>
               </Card>
@@ -891,13 +885,13 @@ const StudentDashboard = () => {
                     <div
                       className="flex flex-col sm:flex-row items-center justify-between p-3 rounded-lg bg-emerald-500/5 border border-emerald-500/20 cursor-pointer hover:bg-emerald-500/10 transition-colors"
                       onClick={() => {
-                        setActiveTab('chat')
-                        trackButtonClick('Complete Assessment', 'Journey Actions')
+                        setActiveTab('human-chat')
+                        trackButtonClick('Book Counselor', 'Journey Actions')
                       }}
                     >
                       <div className="flex items-center space-x-3">
                         <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                        <span className="text-sm font-medium">Complete Skills Assessment</span>
+                        <span className="text-sm font-medium">Book a Career Counselor</span>
                       </div>
                       <ArrowRight className="w-4 h-4 text-green-500" />
                     </div>
