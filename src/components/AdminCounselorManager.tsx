@@ -7,7 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Input } from '@/components/ui/input';
-import { Loader2, CheckCircle, Clock, Video, SwitchCamera, MessageSquare, DollarSign, UserCog, Edit } from 'lucide-react';
+import { Loader2, CheckCircle, Clock, Video, SwitchCamera, MessageSquare, DollarSign, UserCog, Edit, Trash2, Image as ImageIcon } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Switch } from '@/components/ui/switch';
@@ -37,8 +37,11 @@ export const AdminCounselorManager = () => {
     title: '',
     bio: '',
     hourly_rate: 1500,
+    image_url: '',
     specialties: [] as string[]
   });
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
   const [editingMode, setEditingMode] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
 
@@ -103,6 +106,35 @@ export const AdminCounselorManager = () => {
     }
   };
 
+  const handleDeleteCounselor = async (id: string, image_url?: string) => {
+    if (!confirm('Are you sure you want to delete this counselor? This cannot be undone.')) return;
+
+    setIsLoadingCounselors(true);
+    
+    // 1. Delete image from storage if exists
+    if (image_url && image_url.includes('counselor-images')) {
+      try {
+        const path = image_url.split('counselor-images/').pop();
+        if (path) {
+          await supabase.storage.from('counselor-images').remove([path]);
+        }
+      } catch (e) {
+        console.error('Error deleting image:', e);
+      }
+    }
+
+    // 2. Delete database record
+    const { error } = await supabase.from('counselor_profiles').delete().eq('id', id);
+
+    if (error) {
+      toast({ title: 'Error', description: 'Failed to delete counselor.', variant: 'destructive' });
+    } else {
+      toast({ title: 'Counselor Deleted', description: 'Record removed successfully.' });
+      loadCounselors();
+    }
+    setIsLoadingCounselors(false);
+  };
+
   const handleSaveCounselor = async () => {
     if (!newCounsellor.full_name) {
       toast({ title: 'Validation Error', description: 'Counselor Name is required.', variant: 'destructive' });
@@ -114,6 +146,28 @@ export const AdminCounselorManager = () => {
     }
 
     setIsSubmitting(true);
+    let imageUrl = newCounsellor.image_url || '';
+
+    // Handle Image Upload
+    if (imageFile) {
+      const fileExt = imageFile.name.split('.').pop();
+      const fileName = `${Math.random().toString(36).substring(2)}.${fileExt}`;
+      const filePath = `profiles/${fileName}`;
+      
+      const { error: uploadError } = await supabase.storage
+        .from('counselor-images')
+        .upload(filePath, imageFile);
+        
+      if (!uploadError) {
+        const { data: { publicUrl } } = supabase.storage
+          .from('counselor-images')
+          .getPublicUrl(filePath);
+        imageUrl = publicUrl;
+      } else {
+        toast({ title: 'Upload Failed', description: uploadError.message, variant: 'destructive' });
+      }
+    }
+
     let error;
 
     if (editingMode && editingId) {
@@ -123,7 +177,8 @@ export const AdminCounselorManager = () => {
           title: newCounsellor.title,
           full_name: newCounsellor.full_name,
           bio: newCounsellor.bio,
-          hourly_rate: newCounsellor.hourly_rate
+          hourly_rate: newCounsellor.hourly_rate,
+          image_url: imageUrl
         })
         .eq('id', editingId);
       error = res.error;
@@ -135,6 +190,7 @@ export const AdminCounselorManager = () => {
           title: newCounsellor.title,
           bio: newCounsellor.bio,
           hourly_rate: newCounsellor.hourly_rate,
+          image_url: imageUrl,
           is_active: true,
           created_at: new Date().toISOString()
         }]);
@@ -147,6 +203,7 @@ export const AdminCounselorManager = () => {
     } else {
       toast({ title: 'Success', description: editingMode ? 'Counselor updated.' : 'New counselor registered.' });
       setIsCounsellorModalOpen(false);
+      setImageFile(null);
       loadCounselors();
     }
   };
@@ -251,7 +308,8 @@ export const AdminCounselorManager = () => {
               <Button size="sm" onClick={() => {
                 setEditingMode(false);
                 setEditingId(null);
-                setNewCounsellor({ full_name: '', title: '', bio: '', hourly_rate: 1500, specialties: [] });
+                setNewCounsellor({ full_name: '', title: '', bio: '', hourly_rate: 1500, image_url: '', specialties: [] });
+                setImageFile(null);
                 setIsCounsellorModalOpen(true);
               }}>
                 <UserCog className="w-4 h-4 mr-2" /> Add Counselor
@@ -300,13 +358,23 @@ export const AdminCounselorManager = () => {
                                 title: c.title || '',
                                 bio: c.bio || '',
                                 hourly_rate: c.hourly_rate || 1500,
+                                image_url: c.image_url || '',
                                 specialties: []
                               });
+                              setImageFile(null);
                               setIsCounsellorModalOpen(true);
                             }}
                           >
                             <Edit className="w-4 h-4 mr-2" />
                             Edit
+                          </Button>
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            className="text-rose-500 hover:text-rose-600 hover:bg-rose-50"
+                            onClick={() => handleDeleteCounselor(c.id, c.image_url)}
+                          >
+                            <Trash2 className="w-4 h-4" />
                           </Button>
                         </div>
                       </div>
@@ -334,6 +402,27 @@ export const AdminCounselorManager = () => {
                 value={newCounsellor.full_name}
                 onChange={e => setNewCounsellor({...newCounsellor, full_name: e.target.value})}
               />
+            </div>
+            
+            <div className="space-y-2">
+              <Label>Profile Picture</Label>
+              <div className="flex items-center gap-4">
+                <Avatar className="w-16 h-16 rounded-lg border-2 border-border">
+                  <AvatarImage src={imageFile ? URL.createObjectURL(imageFile) : newCounsellor.image_url} />
+                  <AvatarFallback className="bg-muted"><ImageIcon className="w-6 h-6 text-muted-foreground" /></AvatarFallback>
+                </Avatar>
+                <div className="flex-1 space-y-1">
+                  <Input 
+                    type="file" 
+                    accept="image/*" 
+                    onChange={(e) => {
+                      if (e.target.files?.[0]) setImageFile(e.target.files[0]);
+                    }}
+                    className="text-xs h-9 cursor-pointer"
+                  />
+                  <p className="text-[10px] text-muted-foreground uppercase tracking-widest pl-1">PNG, JPG or WebP (Max 2MB)</p>
+                </div>
+              </div>
             </div>
             <div className="space-y-2">
               <Label>Professional Title</Label>

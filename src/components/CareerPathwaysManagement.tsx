@@ -16,26 +16,31 @@ export const CareerPathwaysManagement = () => {
   const [formData, setFormData] = useState<Partial<CareerPath>>({});
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
+  const [currentPage, setCurrentPage] = useState(0);
+  const [totalCount, setTotalCount] = useState(0);
+  const ITEMS_PER_PAGE = 10;
   const { toast } = useToast();
 
   const fetchPaths = async () => {
     setIsLoading(true);
-    const { data, error } = await supabase
+    const { data, error, count } = await supabase
       .from('career_paths')
-      .select('*')
-      .order('created_at', { ascending: false });
+      .select('*', { count: 'exact' })
+      .order('created_at', { ascending: false })
+      .range(currentPage * ITEMS_PER_PAGE, (currentPage + 1) * ITEMS_PER_PAGE - 1);
 
     if (error) {
       toast({ title: 'Error fetching pathways', description: error.message, variant: 'destructive' });
     } else {
       setCareerPaths(data || []);
+      setTotalCount(count || 0);
     }
     setIsLoading(false);
   };
 
   useEffect(() => {
     fetchPaths();
-  }, []);
+  }, [currentPage]);
 
   const handleEdit = (path: CareerPath) => {
     setIsEditing(path.id);
@@ -316,6 +321,32 @@ export const CareerPathwaysManagement = () => {
               ))}
             </TableBody>
           </Table>
+          
+          <div className="p-4 border-t border-border flex items-center justify-between bg-muted/20">
+            <div className="text-xs text-muted-foreground font-medium uppercase tracking-wider">
+              Showing <span className="text-foreground">{Math.min(totalCount, currentPage * ITEMS_PER_PAGE + 1)}-{Math.min(totalCount, (currentPage + 1) * ITEMS_PER_PAGE)}</span> of <span className="text-foreground">{totalCount}</span> Pathways
+            </div>
+            <div className="flex gap-2">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={() => setCurrentPage(p => Math.max(0, p - 1))}
+                disabled={currentPage === 0 || isLoading}
+                className="text-xs h-8"
+              >
+                Previous
+              </Button>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={() => setCurrentPage(p => p + 1)}
+                disabled={(currentPage + 1) * ITEMS_PER_PAGE >= totalCount || isLoading}
+                className="text-xs h-8"
+              >
+                Next
+              </Button>
+            </div>
+          </div>
         </div>
       )}
     </div>
