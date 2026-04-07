@@ -315,8 +315,8 @@ Keep it concise and Kenya-focused.`
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-gray-700 mb-4">{details.description}</p>
-                <p className="text-sm text-gray-600 italic">"{details.whyRecommended}"</p>
+                <p className="text-foreground mb-4">{details.description}</p>
+                <p className="text-sm text-muted-foreground italic">"{details.whyRecommended}"</p>
               </CardContent>
             </Card>
 
@@ -337,11 +337,11 @@ Keep it concise and Kenya-focused.`
                     </div>
                     <div>
                       <span className="font-medium">Market Value:</span>
-                      <p className="text-sm text-gray-600">{details.marketValue}</p>
+                      <p className="text-sm text-muted-foreground">{details.marketValue}</p>
                     </div>
                     <div>
                       <span className="font-medium">Growth Prospect:</span>
-                      <p className="text-sm text-gray-600">{details.growthProspect}</p>
+                      <p className="text-sm text-muted-foreground">{details.growthProspect}</p>
                     </div>
                   </div>
                 </CardContent>
@@ -358,15 +358,15 @@ Keep it concise and Kenya-focused.`
                   <div className="space-y-2">
                     <div>
                       <span className="font-medium">Current Market:</span>
-                      <p className="text-sm text-gray-600">{details.jobMarket}</p>
+                      <p className="text-sm text-muted-foreground">{details.jobMarket}</p>
                     </div>
                     <div>
                       <span className="font-medium">Timeline:</span>
-                      <p className="text-sm text-gray-600">{details.timeline}</p>
+                      <p className="text-sm text-muted-foreground">{details.timeline}</p>
                     </div>
                     <div>
                       <span className="font-medium">Education Path:</span>
-                      <p className="text-sm text-gray-600">{details.educationPath}</p>
+                      <p className="text-sm text-muted-foreground">{details.educationPath}</p>
                     </div>
                   </div>
                 </CardContent>

@@ -50,7 +50,7 @@ const CourseRecommendations: React.FC<CourseRecommendationsProps> = ({
         const cachedCourses = await aiCacheService.getCachedCourseRecommendations(user.id)
         if (cachedCourses && cachedCourses.length > 0) {
           console.log('✅ Using cached course recommendations')
-          setCourses(cachedCourses)
+          setCourses(cachedCourses as unknown as CourseRecommendation[])
           setIsLoading(false)
           return
         }
@@ -76,10 +76,11 @@ const CourseRecommendations: React.FC<CourseRecommendationsProps> = ({
         const cachedCourses = await aiCacheService.getCachedCourseRecommendations(user.id)
         if (cachedCourses && cachedCourses.length > 0) {
           console.log('✅ Using cached course recommendations')
-          setCourses(cachedCourses)
+          setCourses(cachedCourses as unknown as CourseRecommendation[])
           setIsLoading(false)
           return
         }
+
       } catch (error) {
         console.warn('Failed to load cached courses:', error)
       }
@@ -253,10 +254,10 @@ Focus on:
 
   const getDifficultyColor = (difficulty: string) => {
     switch (difficulty) {
-      case 'Beginner': return 'bg-green-100 text-green-800'
-      case 'Intermediate': return 'bg-yellow-100 text-yellow-800'
-      case 'Advanced': return 'bg-red-100 text-red-800'
-      default: return 'bg-gray-100 text-gray-800'
+      case 'Beginner': return 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
+      case 'Intermediate': return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400'
+      case 'Advanced': return 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400'
+      default: return 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300'
     }
   }
 
@@ -291,9 +292,10 @@ Focus on:
         <CardContent>
           <div className="text-center py-4">
             <p className="text-red-500 mb-4">{error}</p>
-            <Button onClick={generateCourseRecommendations} variant="outline">
+            <Button onClick={() => generateCourseRecommendations()} variant="outline">
               Try Again
             </Button>
+
           </div>
         </CardContent>
       </Card>
@@ -328,14 +330,14 @@ Focus on:
                 <div className="flex-1">
                   <h4 className="font-semibold text-lg mb-1">{course.title}</h4>
                   <p className="text-sm text-muted-foreground mb-2">{course.description}</p>
-                  <p className="text-xs text-blue-600 italic">"{course.whyRecommended}"</p>
+                  <p className="text-xs text-blue-600 dark:text-blue-400 italic">"{course.whyRecommended}"</p>
                 </div>
                 <div className="flex items-center gap-2 ml-4">
                   <Badge variant="secondary" className="text-xs">
                     {course.provider}
                   </Badge>
                   {course.free && (
-                    <Badge className="bg-green-100 text-green-800 text-xs">
+                    <Badge className="bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400 text-xs">
                       FREE
                     </Badge>
                   )}
@@ -400,12 +402,13 @@ Focus on:
         <div className="mt-4 text-center">
           <Button
             variant="outline"
-            onClick={generateCourseRecommendations}
+            onClick={() => generateCourseRecommendations()}
             disabled={isLoading}
           >
             {isLoading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
             Refresh Recommendations
           </Button>
+
         </div>
       </CardContent>
     </Card>

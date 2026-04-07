@@ -7,7 +7,10 @@ import { Badge } from '@/components/ui/badge'
 import { Progress } from '@/components/ui/progress'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar } from 'recharts'
+import { useNavigate } from 'react-router-dom'
 import { RIASEC_LABELS } from '@/data/riasec-assessment'
+
+
 import {
   User,
   BookOpen,
@@ -82,8 +85,10 @@ interface CareerDataItem {
 
 
 const StudentDashboard = () => {
+  const navigate = useNavigate()
   const { user, profile, signOut } = useAuth()
   const [activeTab, setActiveTab] = useState('overview')
+
   const [careerData, setCareerData] = useState<CareerDataItem[]>([])
   const [isLoadingRecommendations, setIsLoadingRecommendations] = useState(false)
   const [dynamicStats, setDynamicStats] = useState<UserStat[]>([])
@@ -339,13 +344,44 @@ const StudentDashboard = () => {
   const dominantType = profile?.assessment_results?.personality_type || 'Discovery Pending'
 
   const RIASEC_INFO: Record<string, { moniker: string; description: string; color: string; icon: any }> = {
-    Realistic: { moniker: 'The Doer', description: 'Practical, hands-on, and mechanical.', color: '#ef4444', icon: Hammer },
-    Investigative: { moniker: 'The Thinker', description: 'Analytical, curious, and methodical.', color: '#3b82f6', icon: Search },
-    Artistic: { moniker: 'The Creator', description: 'Imaginative, expressive, and original.', color: '#ec4899', icon: Palette },
-    Social: { moniker: 'The Helper', description: 'Kind, generous, and cooperative.', color: '#10b981', icon: Heart },
-    Enterprising: { moniker: 'The Persuader', description: 'Confident, energetic, and ambitious.', color: '#f59e0b', icon: Megaphone },
-    Conventional: { moniker: 'The Organizer', description: 'Efficient, careful, and systematic.', color: '#6366f1', icon: ClipboardCheck }
+    Realistic: { 
+      moniker: 'Technical Specialist', 
+      description: 'Hands-on problem solver with a focus on practical implementations and tangible results.', 
+      color: '#ef4444', 
+      icon: Hammer 
+    },
+    Investigative: { 
+      moniker: 'Analytical Strategist', 
+      description: 'Curious researcher who excels at solving complex problems through data and research.', 
+      color: '#3b82f6', 
+      icon: Search 
+    },
+    Artistic: { 
+      moniker: 'Creative Visionary', 
+      description: 'Imaginative designer who creates original solutions and meaningful self-expression.', 
+      color: '#ec4899', 
+      icon: Palette 
+    },
+    Social: { 
+      moniker: 'Collaborative Leader', 
+      description: 'Empathetic professional dedicated to teaching, helping, and empowering others.', 
+      color: '#10b981', 
+      icon: Heart 
+    },
+    Enterprising: { 
+      moniker: 'Dynamic Entrepreneur', 
+      description: 'Ambitious communicator who excels at leading teams and making strategic decisions.', 
+      color: '#f59e0b', 
+      icon: Megaphone 
+    },
+    Conventional: { 
+      moniker: 'Process Architect', 
+      description: 'Systematic expert focused on efficiency, precision, and organizational structure.', 
+      color: '#6366f1', 
+      icon: ClipboardCheck 
+    }
   };
+
 
   const getDominantInfo = () => {
     if (!profile?.assessment_results?.riasec_scores) return null;
@@ -619,10 +655,10 @@ const StudentDashboard = () => {
                           </Pie>
                           <Tooltip
                             formatter={(value) => [`${value}%`, 'Match']}
-                            labelStyle={{ color: 'var(--foreground)' }}
+                            labelStyle={{ color: 'hsl(var(--foreground))' }}
                             contentStyle={{
-                              backgroundColor: 'var(--background)',
-                              border: '1px solid var(--border)',
+                              backgroundColor: 'hsl(var(--background))',
+                              border: '1px solid hsl(var(--border))',
                               borderRadius: '8px'
                             }}
                           />
@@ -645,31 +681,39 @@ const StudentDashboard = () => {
                         <div className="p-2 bg-purple-500/10 rounded-lg">
                           <Brain className="w-5 h-5 text-purple-500" />
                         </div>
-                        <CardTitle className="text-lg">Core Traits</CardTitle>
+                        <CardTitle className="text-lg bg-clip-text text-transparent bg-gradient-to-r from-purple-500 to-blue-500">Professional DNA</CardTitle>
                       </div>
                       {dominantInfo && (
-                        <Badge className="bg-purple-500/10 text-purple-500 border-purple-500/20 hover:bg-purple-500/20 transition-colors">
-                          Primary: {dominantInfo.label}
+                        <Badge variant="outline" className="bg-purple-500/10 text-purple-600 border-purple-500/30 hover:bg-purple-500/20 transition-all shadow-sm">
+                          {dominantInfo.label}
                         </Badge>
                       )}
                     </div>
-                    <CardDescription>Your unique professional DNA</CardDescription>
+                    <CardDescription className="text-xs font-medium">Your unique RIASEC archetype mix</CardDescription>
                   </CardHeader>
                   
-                  <CardContent className="space-y-3 pb-4">
+                  <CardContent className="space-y-4 pb-4">
                     {dominantInfo && (
-                      <div className="bg-muted/30 border border-card-border/40 rounded-xl p-2.5 flex items-center gap-3 transition-all duration-300 hover:bg-muted/50">
-                        <div className="p-1.5 rounded-lg bg-background shadow-sm flex-shrink-0">
-                          <dominantInfo.icon className="w-4 h-4" style={{ color: dominantInfo.color }} />
-                        </div>
-                        <div className="flex-1 min-w-0 leading-tight">
-                          <h4 className="text-xs font-bold text-foreground truncate">{dominantInfo.moniker}</h4>
-                          <p className="text-[9px] text-foreground-muted line-clamp-1">
-                            {dominantInfo.description}
-                          </p>
+                      <div className="relative overflow-hidden group/card bg-gradient-to-br from-muted/30 to-background border border-card-border/40 rounded-2xl p-4 transition-all duration-500 hover:shadow-lg hover:shadow-primary/5 hover:border-primary/20">
+                        {/* Decorative background pulse */}
+                        <div className="absolute inset-0 bg-gradient-to-tr from-primary/5 to-transparent opacity-0 group-hover/card:opacity-100 transition-opacity duration-700" />
+                        
+                        <div className="relative flex items-start gap-4">
+                          <div className="p-3 rounded-xl bg-card shadow-inner-sm flex-shrink-0 group-hover/card:scale-110 transition-transform duration-500" style={{ boxShadow: `0 0 20px ${dominantInfo.color}15` }}>
+                            <dominantInfo.icon className="w-6 h-6" style={{ color: dominantInfo.color }} />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <h4 className="text-base font-bold tracking-tight text-foreground mb-1">
+                              {dominantInfo.moniker}
+                            </h4>
+                            <p className="text-xs text-muted-foreground leading-relaxed line-clamp-3">
+                              {dominantInfo.description}
+                            </p>
+                          </div>
                         </div>
                       </div>
                     )}
+
 
                     <div className="h-[160px] mt-1 relative">
                       <ResponsiveContainer width="100%" height="100%">
@@ -677,7 +721,7 @@ const StudentDashboard = () => {
                           <PolarGrid stroke="rgba(156, 163, 175, 0.15)" />
                           <PolarAngleAxis
                             dataKey="subject"
-                            tick={{ fill: 'var(--foreground-muted)', fontSize: 9, fontWeight: 500 }}
+                            tick={{ fill: 'hsl(var(--foreground-muted))', fontSize: 9, fontWeight: 500 }}
                           />
                           <Tooltip
                             content={({ active, payload }) => {
@@ -695,8 +739,8 @@ const StudentDashboard = () => {
                           <Radar
                             name="Personality"
                             dataKey="A"
-                            stroke="var(--primary)"
-                            fill="var(--primary)"
+                            stroke="hsl(var(--primary))"
+                            fill="hsl(var(--primary))"
                             fillOpacity={0.35}
                             animationDuration={1500}
                           />
@@ -704,8 +748,8 @@ const StudentDashboard = () => {
                       </ResponsiveContainer>
                     </div>
 
-                    <p className="text-[9px] text-center text-foreground-muted italic px-2 line-clamp-1">
-                      Hover for detailed strengths across each domain.
+                    <p className="text-[10px] text-center text-muted-foreground font-medium px-4">
+                      Explore your strengths across all six professional domains to build a target career roadmap.
                     </p>
                   </CardContent>
                 </Card>
@@ -822,7 +866,7 @@ const StudentDashboard = () => {
                               </div>
                             </div>
                             <div className="flex items-center gap-2">
-                              <Badge variant="outline" className="text-[10px] h-5 border-orange-200 text-orange-700 bg-orange-50">
+                              <Badge variant="outline" className="text-[10px] h-5 border-orange-200 text-orange-700 dark:text-orange-400 bg-orange-50 dark:bg-orange-900/20">
                                 {career.actionabilityScore || 85}% Actionable
                               </Badge>
                               <div className="flex flex-col gap-1 w-20">
@@ -850,17 +894,17 @@ const StudentDashboard = () => {
                       <div className="p-3 rounded-lg bg-emerald-500/10 border border-emerald-500/20">
                         <div className="flex items-center gap-2 mb-1">
                           <DollarSign className="w-4 h-4 text-emerald-500" />
-                          <span className="text-xs font-medium text-emerald-600 dark:text-emerald-400">Salary Range</span>
+                          <span className="text-xs font-semibold text-emerald-700 dark:text-emerald-400">Salary Range</span>
                         </div>
-                        <p className="text-sm font-semibold text-emerald-700 dark:text-emerald-300">{career.salaryRange || 'KSh 60K - 200K'}</p>
+                        <p className="text-sm font-bold text-emerald-800 dark:text-emerald-200">{career.salaryRange || 'KSh 60K - 200K'}</p>
                       </div>
 
                       <div className="p-3 rounded-lg bg-blue-500/10 border border-blue-500/20">
                         <div className="flex items-center gap-2 mb-1">
                           <TrendingUp className="w-4 h-4 text-blue-500" />
-                          <span className="text-xs font-medium text-blue-600 dark:text-blue-400">Growth</span>
+                          <span className="text-xs font-semibold text-blue-700 dark:text-blue-400">Growth</span>
                         </div>
-                        <p className="text-sm font-semibold text-blue-700 dark:text-blue-300">{career.growth || 'High Growth'}</p>
+                        <p className="text-sm font-bold text-blue-800 dark:text-blue-200">{career.growth || 'High Growth'}</p>
                       </div>
                     </div>
 
@@ -868,9 +912,9 @@ const StudentDashboard = () => {
                     <div className="p-3 rounded-lg bg-purple-500/10 border border-purple-500/20">
                       <div className="flex items-center gap-2 mb-1">
                         <GraduationCap className="w-4 h-4 text-purple-500" />
-                        <span className="text-xs font-medium text-purple-600 dark:text-purple-400">Education</span>
+                        <span className="text-xs font-semibold text-purple-700 dark:text-purple-400">Education</span>
                       </div>
-                      <p className="text-sm text-purple-700 dark:text-purple-300">{career.education || "Bachelor's Degree Required"}</p>
+                      <p className="text-sm text-purple-800 dark:text-purple-200 font-medium">{career.education || "Bachelor's Degree Required"}</p>
                     </div>
 
                     {/* Action Button */}
@@ -929,52 +973,55 @@ const StudentDashboard = () => {
                     <h4 className="text-sm font-bold text-primary mb-2 flex items-center gap-2">
                       <UserCog className="w-4 h-4" /> Recommended Next Step
                     </h4>
-                    <p className="text-xs text-muted-foreground mb-4">
-                      Connect with a professional counselor to validate your AI report and build your roadmap.
+                    <p className="text-xs text-muted-foreground mb-4 leading-relaxed">
+                      Connect with a professional counselor to validate your AI career report and build your practical roadmap for university.
                     </p>
-                    <CounselorDirectory limit={1} />
-                  </div>
-                  <div className="space-y-2 sm:space-y-3">
-                    <div
-                      className="flex flex-col sm:flex-row items-center justify-between p-3 rounded-lg bg-blue-500/5 border border-blue-500/20 cursor-pointer hover:bg-blue-500/10 transition-colors mt-2 sm:mt-0"
-                      onClick={() => {
-                        setActiveTab('progress')
-                        trackButtonClick('View Academic Insights', 'Journey Actions')
-                      }}
-                    >
-                      <div className="flex items-center space-x-2">
-                        <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                        <span className="text-sm sm:text-base font-medium">View your academic insights</span>
-                      </div>
-                      <ArrowRight className="w-4 h-4 text-blue-500 mt-2 sm:mt-0" />
-                    </div>
-                    <div
-                      className="flex flex-col sm:flex-row items-center justify-between p-3 rounded-lg bg-emerald-500/5 border border-emerald-500/20 cursor-pointer hover:bg-emerald-500/10 transition-colors"
+                    <Button
+                      variant="outline"
+                      className="w-full bg-background border-primary/20 hover:bg-primary/5 group"
                       onClick={() => {
                         navigate('/student/counselors')
-                        trackButtonClick('Book Counselor', 'Journey Actions')
+                        trackButtonClick('Book Counselor Link', 'Journey Actions')
                       }}
                     >
-                      <div className="flex items-center space-x-3">
-                        <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                        <span className="text-sm font-medium">Explore Specialized Counselors</span>
-                      </div>
-                      <ArrowRight className="w-4 h-4 text-green-500" />
-                    </div>
+                      Browse Specialized Counselors
+                      <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
+                    </Button>
+                  </div>
+                  <div className="space-y-3">
                     <div
-                      className="flex flex-col sm:flex-row items-center justify-between p-3 rounded-lg bg-purple-500/5 border border-purple-500/20 cursor-pointer hover:bg-purple-500/10 transition-colors"
+                      className="p-3 rounded-lg bg-blue-500/5 border border-blue-500/20 cursor-pointer hover:bg-blue-500/10 transition-colors"
+                      onClick={() => {
+                        setActiveTab('careers')
+                        trackButtonClick('Jump to Careers', 'Journey Actions')
+                      }}
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-3">
+                          <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                          <span className="text-sm font-medium text-foreground">View your top AI career matches</span>
+                        </div>
+                        <ArrowRight className="w-4 h-4 text-blue-500" />
+                      </div>
+                    </div>
+
+                    <div
+                      className="p-3 rounded-lg bg-purple-500/5 border border-purple-500/20 cursor-pointer hover:bg-purple-500/10 transition-colors"
                       onClick={() => {
                         setActiveTab('careers')
                         trackButtonClick('Explore Programs', 'Journey Actions')
                       }}
                     >
-                      <div className="flex items-center space-x-3">
-                        <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
-                        <span className="text-sm font-medium">Explore university programs</span>
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-3">
+                          <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
+                          <span className="text-sm font-medium text-foreground">Explore university programs</span>
+                        </div>
+                        <ArrowRight className="w-4 h-4 text-purple-500" />
                       </div>
-                      <ArrowRight className="w-4 h-4 text-purple-500" />
                     </div>
                   </div>
+
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3 mt-3 sm:mt-4">
                     <Button
                       className="w-full min-h-[44px]"
