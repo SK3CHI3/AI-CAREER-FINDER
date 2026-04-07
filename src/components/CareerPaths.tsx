@@ -4,6 +4,8 @@ import { Badge } from "@/components/ui/badge";
 import { TrendingUp, DollarSign, Clock, ArrowRight } from "lucide-react";
 import { useState, useEffect } from "react";
 import { dashboardService, CareerPath } from "@/lib/dashboard-service";
+import CareerDetailModal from "./CareerDetailModal";
+import { useAuth } from "@/contexts/AuthContext";
 
 const getDemandColor = (demand: string) => {
   switch (demand) {
@@ -19,13 +21,18 @@ const CareerPaths = () => {
   const [dynamicCareerPaths, setDynamicCareerPaths] = useState<CareerPath[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [selectedCareer, setSelectedCareer] = useState<any>(null)
+  const [isModalOpen, setIsModalOpen] = useState(false)
+  const { profile } = useAuth()
 
   useEffect(() => {
     const loadCareerPaths = async () => {
       try {
         setIsLoading(true)
         const paths = await dashboardService.getCareerPaths()
-        setDynamicCareerPaths(paths)
+        // Filter for featured items and limit to 3
+        const featuredPaths = paths.filter(p => p.is_featured).slice(0, 3)
+        setDynamicCareerPaths(featuredPaths)
       } catch (err) {
         console.error('Failed to load career paths:', err)
         setError('Real-time career paths are currently unavailable. Showing last available data.')
@@ -49,7 +56,7 @@ const CareerPaths = () => {
               Careers in Kenya
             </span>
           </h2>
-            <p className="text-xl text-foreground-muted max-w-3xl mx-auto">
+            <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
               Explore high-demand career paths in Kenya's evolving job market, 
               with real-time insights on demand, salaries, and growth projections.
             </p>
@@ -97,14 +104,14 @@ const CareerPaths = () => {
               Careers in Kenya
             </span>
           </h2>
-          <p className="text-xl text-foreground-muted max-w-3xl mx-auto">
+          <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
             Explore high-demand career paths in Kenya's evolving job market, 
             with real-time insights on demand, salaries, and growth projections.
           </p>
         </div>
         
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {dynamicCareerPaths.slice(0, 3).map((career) => (
+          {dynamicCareerPaths.map((career) => (
             <Card 
               key={career.id}
               className="bg-gradient-surface border-card-border hover:shadow-card transition-all duration-300 group overflow-hidden flex flex-col"
@@ -116,43 +123,57 @@ const CareerPaths = () => {
                   alt={career.title}
                   className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-[#020617] via-[#020617]/50 to-transparent"></div>
-                <div className="absolute bottom-4 left-4 right-4 flex justify-between items-end">
-                  <h3 className="text-xl font-bold text-white group-hover:text-primary transition-colors line-clamp-2 drop-shadow-md">
-                    {career.title}
-                  </h3>
-                  <Badge className={`backdrop-blur-md whitespace-nowrap ml-2 ${getDemandColor(career.demand_level)} border-none shadow-sm`}>
-                    {career.demand_level}
-                  </Badge>
-                </div>
+                <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
               </div>
 
               {/* Content Section */}
               <div className="p-6 space-y-4 flex-1 flex flex-col">
-                <p className="text-foreground-muted text-sm line-clamp-3">
+                <div className="flex justify-between items-start gap-4">
+                  <h3 
+                    className="text-xl font-bold text-foreground group-hover:text-primary transition-colors line-clamp-2 cursor-pointer"
+                    onClick={() => {
+                      setSelectedCareer({
+                        name: career.title,
+                        value: 95,
+                        color: '#6366f1',
+                        description: career.description,
+                        salaryRange: career.salary_range,
+                        growth: career.growth_percentage
+                      });
+                      setIsModalOpen(true);
+                    }}
+                  >
+                    {career.title}
+                  </h3>
+                  <Badge className={`whitespace-nowrap ${getDemandColor(career.demand_level)} border-none shadow-sm`}>
+                    {career.demand_level}
+                  </Badge>
+                </div>
+
+                <p className="text-muted-foreground text-sm line-clamp-2">
                   {career.description}
                 </p>
                 
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-2">
-                      <DollarSign className="w-4 h-4 text-foreground-muted" />
-                      <span className="text-sm text-foreground-muted">Salary Range</span>
+                      <DollarSign className="w-4 h-4 text-muted-foreground" />
+                      <span className="text-sm text-muted-foreground">Salary Range</span>
                     </div>
                     <span className="text-sm font-medium text-foreground">{career.salary_range}</span>
                   </div>
                   
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-2">
-                      <TrendingUp className="w-4 h-4 text-foreground-muted" />
-                      <span className="text-sm text-foreground-muted">Growth Rate</span>
+                      <TrendingUp className="w-4 h-4 text-muted-foreground" />
+                      <span className="text-sm text-muted-foreground">Growth Rate</span>
                     </div>
                     <span className="text-sm font-medium text-success">{career.growth_percentage}</span>
                   </div>
                 </div>
                 
                 <div className="space-y-2">
-                  <span className="text-sm text-foreground-muted">Key Skills:</span>
+                  <span className="text-sm text-muted-foreground">Key Skills:</span>
                   <div className="flex flex-wrap gap-2">
                     {career.skills_required.map((skill, skillIndex) => (
                       <Badge 
@@ -169,11 +190,21 @@ const CareerPaths = () => {
                 <div className="mt-auto pt-4">
                   <Button 
                     variant="ghost" 
-                    className="w-full justify-between hover:bg-surface group-hover:text-primary"
-                    onClick={() => window.location.href = '/careers'}
+                    className="w-full justify-between hover:bg-surface group-hover:text-primary font-bold"
+                    onClick={() => {
+                      setSelectedCareer({
+                        name: career.title,
+                        value: 95,
+                        color: '#6366f1',
+                        description: career.description,
+                        salaryRange: career.salary_range,
+                        growth: career.growth_percentage
+                      });
+                      setIsModalOpen(true);
+                    }}
                   >
-                    Explore Path
-                    <ArrowRight className="w-4 h-4" />
+                    View Details
+                    <ArrowRight className="w-4 h-4 ml-2" />
                   </Button>
                 </div>
               </div>
@@ -192,6 +223,25 @@ const CareerPaths = () => {
           </Button>
         </div>
       </div>
+
+      {selectedCareer && (
+        <CareerDetailModal
+          isOpen={isModalOpen}
+          onClose={() => setIsModalOpen(false)}
+          career={selectedCareer}
+          studentProfile={profile ? {
+            id: profile.id,
+            name: profile.full_name || '',
+            schoolLevel: profile.school_level,
+            currentGrade: profile.current_grade,
+            cbeSubjects: profile.cbe_subjects || profile.subjects,
+            careerInterests: profile.career_interests || profile.interests,
+            strongSubjects: [],
+            weakSubjects: [],
+            overallAverage: 0
+          } : {}}
+        />
+      )}
     </section>
   );
 };

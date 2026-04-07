@@ -26,6 +26,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { BlogManagement } from '@/components/BlogManagement'
 import { CareerPathwaysManagement } from '@/components/CareerPathwaysManagement'
 import { AdminCounselorManager } from '@/components/AdminCounselorManager'
+import { ThemeToggle } from '@/components/ThemeToggle'
 
 interface AdminStats {
   totalStudents: number
@@ -79,11 +80,11 @@ const StatCard = ({ label, value, icon: Icon, color, trend, description }: any) 
     animate={{ opacity: 1, y: 0 }}
     className="relative group h-full"
   >
-    <Card className="h-full bg-slate-950/40 backdrop-blur-md border-white/5 shadow-glass overflow-hidden">
+    <Card className="h-full bg-card/50 backdrop-blur-md border-border shadow-glass overflow-hidden">
       <div className={`absolute top-0 right-0 w-32 h-32 -mr-12 -mt-12 rounded-full opacity-10 blur-3xl transition-opacity group-hover:opacity-20`} style={{ backgroundColor: color }} />
       <CardContent className="p-6">
         <div className="flex justify-between items-start mb-4">
-          <div className="p-3 rounded-2xl bg-white/5 border border-white/10">
+          <div className="p-3 rounded-2xl bg-muted border border-border">
             <Icon className="w-6 h-6" style={{ color }} />
           </div>
           {trend && (
@@ -93,11 +94,11 @@ const StatCard = ({ label, value, icon: Icon, color, trend, description }: any) 
           )}
         </div>
         <div>
-          <h3 className="text-3xl font-black text-white tracking-tighter tabular-nums mb-1">
+          <h3 className="text-3xl font-black text-foreground tracking-tighter tabular-nums mb-1">
             {typeof value === 'number' ? value.toLocaleString() : value}
           </h3>
-          <p className="text-sm font-bold text-slate-200 uppercase tracking-widest">{label}</p>
-          <p className="text-[10px] text-slate-400 mt-2 leading-relaxed">{description}</p>
+          <p className="text-sm font-bold text-muted-foreground uppercase tracking-widest">{label}</p>
+          <p className="text-[10px] text-muted-foreground mt-2 leading-relaxed">{description}</p>
         </div>
       </CardContent>
     </Card>
@@ -372,7 +373,7 @@ const AdminDashboard = () => {
   )
 
   return (
-    <div className="h-screen bg-[#020617] text-slate-100 flex overflow-hidden font-sans">
+    <div className="h-screen bg-background text-foreground flex overflow-hidden font-sans">
       {/* Sidebar Overlay for Mobile */}
       <AnimatePresence>
         {!isSidebarOpen && (
@@ -394,10 +395,10 @@ const AdminDashboard = () => {
           opacity: isSidebarOpen ? 1 : 0,
           x: isSidebarOpen ? 0 : -280
         }}
-        className="fixed lg:sticky top-0 lg:h-screen z-[70] bg-[#020617]/95 border-r border-white/5 flex flex-col overflow-hidden"
+        className="fixed lg:sticky top-0 lg:h-screen z-[70] bg-background/95 backdrop-blur-md border-r border-border flex flex-col overflow-hidden shadow-2xl"
       >
         {/* Sidebar Header */}
-        <div className="p-10 flex flex-col items-center border-b border-white/5 bg-white/[0.01] relative group/header gap-6">
+        <div className="p-10 flex flex-col items-center border-b border-border bg-muted/10 relative group/header gap-6">
           <div 
             className="relative cursor-pointer transition-transform hover:scale-105 duration-500 overflow-visible" 
             onClick={() => setActiveTab('overview')}
@@ -434,8 +435,8 @@ const AdminDashboard = () => {
                 onClick={() => setActiveTab(item.id)}
                 className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all group relative ${
                   isActive 
-                  ? 'bg-primary/10 text-primary border border-primary/30 shadow-[inset_0_0_20px_rgba(99,102,241,0.05)]' 
-                  : 'text-slate-300 hover:text-white hover:bg-white/5 border border-transparent'
+                  ? 'bg-primary/10 text-primary border border-primary/30 shadow-[inset_0_0_20px_rgba(var(--primary),0.05)]' 
+                  : 'text-muted-foreground hover:text-foreground hover:bg-muted border border-transparent'
                 }`}
               >
                 {isActive && (
@@ -445,7 +446,7 @@ const AdminDashboard = () => {
                     transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
                   />
                 )}
-                <Icon className={`w-5 h-5 transition-transform group-hover:scale-110 ${isActive ? 'text-primary' : 'text-slate-400 group-hover:text-white'}`} />
+                <Icon className={`w-5 h-5 transition-transform group-hover:scale-110 ${isActive ? 'text-primary' : 'text-muted-foreground group-hover:text-foreground'}`} />
                 {item.label}
                 {isActive && <ChevronRight className="w-4 h-4 ml-auto" />}
               </button>
@@ -454,20 +455,20 @@ const AdminDashboard = () => {
         </nav>
 
         {/* User Section */}
-        <div className="p-4 border-t border-white/5 bg-white/[0.02]">
+        <div className="p-4 border-t border-border bg-muted/20">
           <div className="flex items-center gap-3 mb-4">
-            <Avatar className="w-10 h-10 border border-white/10 ring-2 ring-primary/20">
+            <Avatar className="w-10 h-10 border border-border ring-2 ring-primary/20">
               <AvatarImage src={profile?.avatar_url} />
-              <AvatarFallback className="bg-slate-800 text-xs font-bold">{getInitials(profile?.full_name ?? 'A')}</AvatarFallback>
+              <AvatarFallback className="bg-muted text-xs font-bold">{getInitials(profile?.full_name ?? 'A')}</AvatarFallback>
             </Avatar>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-bold text-white truncate">{profile?.full_name || user?.email?.split('@')[0]}</p>
-              <p className="text-[10px] text-slate-400 truncate uppercase tracking-widest font-black opacity-90">System Administrator</p>
+              <p className="text-sm font-bold text-foreground truncate">{profile?.full_name || user?.email?.split('@')[0]}</p>
+              <p className="text-[10px] text-muted-foreground truncate uppercase tracking-widest font-black opacity-90">System Administrator</p>
             </div>
           </div>
           <Button 
             variant="ghost" 
-            className="w-full justify-start text-slate-300 hover:text-destructive hover:bg-destructive/10 group transition-colors px-4 py-2"
+            className="w-full justify-start text-muted-foreground hover:text-destructive hover:bg-destructive/10 group transition-colors px-4 py-2"
             onClick={() => signOut()}
           >
             <LogOut className="w-4 h-4 mr-3 group-hover:translate-x-1 transition-transform" />
@@ -477,17 +478,17 @@ const AdminDashboard = () => {
       </motion.aside>
 
       {/* Main Content */}
-      <main className="flex-1 overflow-y-auto relative bg-[#020617]">
+      <main className="flex-1 overflow-y-auto relative bg-background/50">
         {/* Header / Top Bar */}
-        <nav className="sticky top-0 z-50 bg-[#020617]/80 backdrop-blur-md border-b border-white/5 p-4 flex items-center justify-between">
+        <nav className="sticky top-0 z-50 bg-background/80 backdrop-blur-md border-b border-border p-4 flex items-center justify-between">
           <div className="flex items-center gap-4">
             {!isSidebarOpen && (
-              <Button variant="ghost" size="icon" onClick={() => setIsSidebarOpen(true)} className="text-slate-300 hover:text-white">
+              <Button variant="ghost" size="icon" onClick={() => setIsSidebarOpen(true)} className="text-muted-foreground hover:text-foreground">
                 <Menu className="w-5 h-5" />
               </Button>
             )}
             <div>
-              <h2 className="text-sm font-black uppercase tracking-widest text-slate-300">
+              <h2 className="text-sm font-black uppercase tracking-widest text-muted-foreground">
                 / {sidebarItems.find(i => i.id === activeTab)?.label}
               </h2>
             </div>
@@ -495,7 +496,7 @@ const AdminDashboard = () => {
 
           <div className="flex items-center gap-4">
             <ThemeToggle />
-            <Button variant="ghost" size="sm" onClick={loadData} className="text-slate-300 hover:text-white hover:bg-white/5">
+            <Button variant="ghost" size="sm" onClick={loadData} className="text-muted-foreground hover:text-foreground hover:bg-muted">
               <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
             </Button>
             <div className="h-8 w-px bg-white/5 hidden md:block" />
@@ -503,10 +504,10 @@ const AdminDashboard = () => {
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 w-4 h-4" />
               <Input
                 placeholder="Global search..."
-                className="bg-white/[0.03] border-white/10 w-64 h-9 pl-9 text-xs focus:ring-primary/40 focus:border-primary/40 rounded-full"
+                className="bg-muted/30 border-border w-64 h-9 pl-9 text-xs focus:ring-primary/40 focus:border-primary/40 rounded-full"
               />
             </div>
-            <div className="flex bg-slate-900/40 border border-white/5 rounded-xl p-1 shadow-inner">
+            <div className="flex bg-muted/40 border border-border rounded-xl p-1 shadow-inner">
               {['7d', '14d', '30d', '90d', '1y'].map((range) => (
                 <button
                   key={range}
@@ -521,10 +522,10 @@ const AdminDashboard = () => {
                 </button>
               ))}
             </div>
-            <div className="h-8 w-px bg-white/5 hidden md:block" />
-            <button className="relative p-2 text-slate-300 hover:text-white transition-colors">
+            <div className="h-8 w-px bg-border hidden md:block" />
+            <button className="relative p-2 text-muted-foreground hover:text-foreground transition-colors">
               <Bell className="w-5 h-5" />
-              <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-primary rounded-full ring-4 ring-[#020617]" />
+              <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-primary rounded-full ring-4 ring-background" />
             </button>
           </div>
         </nav>
@@ -580,22 +581,22 @@ const AdminDashboard = () => {
                   {/* Charts Grid */}
                   <div className="grid lg:grid-cols-3 gap-6">
                     {/* Main Growth Chart */}
-                    <Card className="lg:col-span-2 bg-slate-950/40 backdrop-blur-md border-white/5 shadow-glass overflow-hidden">
-                      <CardHeader className="flex flex-row items-center justify-between border-b border-white/5 py-6">
+                    <Card className="lg:col-span-2 bg-card/50 backdrop-blur-md border-border shadow-glass overflow-hidden">
+                      <CardHeader className="flex flex-row items-center justify-between border-b border-border py-6">
                         <div>
-                          <CardTitle className="text-lg font-black tracking-tight text-white">Ecosystem Growth</CardTitle>
-                          <CardDescription className="text-xs text-slate-300">
+                          <CardTitle className="text-lg font-black tracking-tight text-foreground">Ecosystem Growth</CardTitle>
+                          <CardDescription className="text-xs text-muted-foreground">
                             Onboarding dynamics for the current period ({dateRange})
                           </CardDescription>
                         </div>
                         <div className="flex gap-4">
                           <div className="flex items-center gap-1.5">
                             <div className="w-2.5 h-2.5 rounded-full bg-primary" />
-                            <span className="text-[10px] uppercase font-black text-white">Students</span>
+                            <span className="text-[10px] uppercase font-black text-foreground">Students</span>
                           </div>
                           <div className="flex items-center gap-1.5">
                             <div className="w-2.5 h-2.5 rounded-full bg-emerald-400" />
-                            <span className="text-[10px] uppercase font-black text-white">Schools</span>
+                            <span className="text-[10px] uppercase font-black text-foreground">Schools</span>
                           </div>
                         </div>
                       </CardHeader>
@@ -613,7 +614,7 @@ const AdminDashboard = () => {
                                   <stop offset="95%" stopColor="#10b981" stopOpacity={0}/>
                                 </linearGradient>
                               </defs>
-                              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(255,255,255,0.05)" />
+                              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--muted-foreground) / 0.1)" />
                               <XAxis 
                                 dataKey="month" 
                                 axisLine={false} 
@@ -629,14 +630,14 @@ const AdminDashboard = () => {
                               />
                               <Tooltip 
                                 contentStyle={{ 
-                                  backgroundColor: '#020617', 
-                                  border: '1px solid rgba(99,102,241,0.2)', 
+                                  backgroundColor: 'hsl(var(--card))', 
+                                  border: '1px solid hsl(var(--border))', 
                                   borderRadius: '16px',
                                   boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.4)',
                                   padding: '12px'
                                 }} 
-                                itemStyle={{ fontSize: '12px', fontWeight: '900', color: '#fff' }}
-                                labelStyle={{ color: '#94a3b8', fontWeight: 'bold', marginBottom: '4px', textTransform: 'uppercase', fontSize: '10px', letterSpacing: '0.05em' }}
+                                itemStyle={{ fontSize: '12px', fontWeight: '900', color: 'hsl(var(--foreground))' }}
+                                labelStyle={{ color: 'hsl(var(--muted-foreground))', fontWeight: 'bold', marginBottom: '4px', textTransform: 'uppercase', fontSize: '10px', letterSpacing: '0.05em' }}
                               />
                               <Area 
                                 type="monotone" 
@@ -661,10 +662,10 @@ const AdminDashboard = () => {
                     </Card>
 
                     {/* Adoption Pie */}
-                    <Card className="bg-slate-950/40 backdrop-blur-md border-white/5 shadow-glass overflow-hidden flex flex-col">
-                      <CardHeader className="border-b border-white/5 py-6">
-                        <CardTitle className="text-lg font-black tracking-tight text-white">Institutional Adoption</CardTitle>
-                        <CardDescription className="text-xs text-slate-300">Subscription tier distribution</CardDescription>
+                    <Card className="bg-card/50 backdrop-blur-md border-border shadow-glass overflow-hidden flex flex-col">
+                      <CardHeader className="border-b border-border py-6">
+                        <CardTitle className="text-lg font-black tracking-tight text-foreground">Institutional Adoption</CardTitle>
+                        <CardDescription className="text-xs text-muted-foreground">Subscription tier distribution</CardDescription>
                       </CardHeader>
                       <CardContent className="p-6 flex-1 flex flex-col justify-center gap-8">
                         <div className="h-52 w-full">
@@ -684,7 +685,7 @@ const AdminDashboard = () => {
                                 ))}
                               </Pie>
                               <Tooltip 
-                                contentStyle={{ backgroundColor: '#0f172a', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px' }}
+                                contentStyle={{ backgroundColor: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', borderRadius: '12px' }}
                               />
                             </PieChart>
                           </ResponsiveContainer>
@@ -694,11 +695,11 @@ const AdminDashboard = () => {
                             <div key={item.name} className="flex justify-between items-center group cursor-default">
                               <div className="flex items-center gap-3">
                                 <div className="w-2.5 h-2.5 rounded-full shadow-glow" style={{ backgroundColor: item.color, boxShadow: `0 0 10px ${item.color}44` }} />
-                                <span className="text-sm font-bold text-slate-300 group-hover:text-slate-100 transition-colors uppercase tracking-widest text-[10px]">{item.name}</span>
+                                <span className="text-sm font-bold text-muted-foreground group-hover:text-foreground transition-colors uppercase tracking-widest text-[10px]">{item.name}</span>
                               </div>
                               <div className="flex items-center gap-2">
-                                <span className="text-sm font-black text-white">{item.value}</span>
-                                <span className="text-[10px] text-slate-200 font-bold">({Math.round(item.value / stats.totalSchools * 100) || 0}%)</span>
+                                <span className="text-sm font-black text-foreground">{item.value}</span>
+                                <span className="text-[10px] text-muted-foreground font-bold">({Math.round(item.value / stats.totalSchools * 100) || 0}%)</span>
                               </div>
                             </div>
                           ))}
@@ -726,15 +727,15 @@ const AdminDashboard = () => {
                     </div>
                     <div className="flex items-center gap-3 w-full md:w-auto">
                       <div className="relative flex-1 md:w-80">
-                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 w-4 h-4" />
+                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground w-4 h-4" />
                         <Input
                           placeholder="Search identity or email..."
                           value={searchTerm}
                           onChange={(e) => setSearchTerm(e.target.value)}
-                          className="bg-white/[0.03] border-white/10 h-12 pl-12 rounded-2xl focus:ring-primary/40 focus:border-primary/40 shadow-inner"
+                          className="bg-muted/30 border-border h-12 pl-12 rounded-2xl focus:ring-primary/40 focus:border-primary/40 shadow-inner"
                         />
                       </div>
-                      <Button variant="outline" className="h-12 w-12 rounded-2xl border-white/10 bg-white/5 hover:bg-white/10 p-0 shadow-glass">
+                      <Button variant="outline" className="h-12 w-12 rounded-2xl border-border bg-muted/50 hover:bg-muted p-0 shadow-glass">
                         <Filter className="w-5 h-5" />
                       </Button>
                       <Button className="h-12 rounded-2xl bg-primary hover:bg-primary/90 text-white font-bold px-6 shadow-glow transition-all active:scale-95">
@@ -743,23 +744,23 @@ const AdminDashboard = () => {
                     </div>
                   </div>
 
-                  <Card className="bg-slate-950/40 backdrop-blur-md border-white/5 shadow-glass overflow-hidden">
-                    <CardHeader className="border-b border-white/5 py-6">
-                      <CardTitle className="text-lg font-black tracking-tight text-white flex items-center gap-2">
+                  <Card className="bg-card/50 backdrop-blur-md border-border shadow-glass overflow-hidden">
+                    <CardHeader className="border-b border-border py-6">
+                      <CardTitle className="text-lg font-black tracking-tight text-foreground flex items-center gap-2">
                         <Users className="w-5 h-5 text-primary" />
                         User Directory
                       </CardTitle>
-                      <CardDescription className="text-xs text-slate-300">Manage all registered accounts</CardDescription>
+                      <CardDescription className="text-xs text-muted-foreground">Manage all registered accounts</CardDescription>
                     </CardHeader>
                     <CardContent className="p-0">
                       <Table>
-                        <TableHeader className="bg-white/[0.02]">
-                          <TableRow className="hover:bg-transparent border-white/5">
-                            <TableHead className="py-5 px-6 font-black uppercase tracking-widest text-[10px] text-slate-300">Identity</TableHead>
-                            <TableHead className="font-black uppercase tracking-widest text-[10px] text-slate-300">Role</TableHead>
-                            <TableHead className="font-black uppercase tracking-widest text-[10px] text-slate-300">Status</TableHead>
-                            <TableHead className="font-black uppercase tracking-widest text-[10px] text-slate-300">Joined</TableHead>
-                            <TableHead className="font-black uppercase tracking-widest text-[10px] text-slate-300 text-right pr-6">Management</TableHead>
+                        <TableHeader className="bg-muted/10">
+                          <TableRow className="hover:bg-transparent border-border">
+                            <TableHead className="py-5 px-6 font-black uppercase tracking-widest text-[10px] text-muted-foreground">Identity</TableHead>
+                            <TableHead className="font-black uppercase tracking-widest text-[10px] text-muted-foreground">Role</TableHead>
+                            <TableHead className="font-black uppercase tracking-widest text-[10px] text-muted-foreground">Status</TableHead>
+                            <TableHead className="font-black uppercase tracking-widest text-[10px] text-muted-foreground">Joined</TableHead>
+                            <TableHead className="font-black uppercase tracking-widest text-[10px] text-muted-foreground text-right pr-6">Management</TableHead>
                           </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -772,25 +773,25 @@ const AdminDashboard = () => {
                             </TableRow>
                           ) : (
                             filteredUsers.map((u) => (
-                              <TableRow key={u.id} className="border-white/5 hover:bg-white/[0.02] transition-colors group">
+                              <TableRow key={u.id} className="border-border hover:bg-muted/20 transition-colors group">
                                 <TableCell className="py-4 px-6">
                                   <div className="flex items-center gap-4">
-                                    <Avatar className="w-8 h-8 border border-white/5 shadow-inner">
-                                      <AvatarFallback className="bg-slate-800 text-[10px] font-bold">
+                                    <Avatar className="w-8 h-8 border border-border shadow-inner">
+                                      <AvatarFallback className="bg-muted text-[10px] font-bold">
                                         {getInitials(u.name)}
                                       </AvatarFallback>
                                     </Avatar>
                                     <div>
-                                      <p className="font-bold text-xs text-white group-hover:text-primary transition-colors">{u.name}</p>
-                                      <p className="text-[10px] text-slate-400 font-mono tracking-tight">{u.email}</p>
+                                      <p className="font-bold text-xs text-foreground group-hover:text-primary transition-colors">{u.name}</p>
+                                      <p className="text-[10px] text-muted-foreground font-mono tracking-tight">{u.email}</p>
                                     </div>
                                   </div>
                                 </TableCell>
                                 <TableCell>
-                                  <Badge variant="outline" className={`text-[9px] uppercase font-black px-2 py-0 border-white/10 bg-white/5 ${
+                                  <Badge variant="outline" className={`text-[9px] uppercase font-black px-2 py-0 border-border bg-muted ${
                                     u.role === 'admin' ? 'text-rose-400' : 
                                     u.role === 'school' ? 'text-amber-400' : 
-                                    u.role === 'teacher' ? 'text-blue-400' : 'text-slate-300'
+                                    u.role === 'teacher' ? 'text-blue-400' : 'text-muted-foreground'
                                   }`}>
                                     {u.role}
                                   </Badge>

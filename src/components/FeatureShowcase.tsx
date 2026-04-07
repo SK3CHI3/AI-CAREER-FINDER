@@ -112,11 +112,6 @@ const FeatureShowcase = () => {
 
           {/* Right Content */}
           <div className="order-1 lg:order-2 space-y-8">
-            <div className="flex items-center space-x-2 text-primary">
-              <UserCircle2 className="w-5 h-5" />
-              <span className="text-sm font-bold uppercase tracking-wider">For Students</span>
-            </div>
-            
             <h2 className="text-4xl md:text-5xl font-bold font-serif text-foreground leading-tight">
               What do students get?
             </h2>
@@ -151,6 +146,17 @@ const FeatureShowcase = () => {
                   <p className="text-sm text-foreground-muted leading-relaxed font-medium">
                     Spend a day with professionals in your target field and unlock exclusive scholarship opportunities to fund your dreams.
                   </p>
+                </div>
+              </div>
+
+              {/* Career Counseling Section */}
+              <div className="flex items-start gap-5 bg-card p-5 rounded-2xl shadow-sm border border-border group hover:border-primary/30 transition-colors">
+                <div className="bg-primary/10 p-2.5 rounded-full text-primary shrink-0 border border-primary/20">
+                  <UserCircle2 className="w-5 h-5" />
+                </div>
+                <div className="pt-0.5">
+                  <h4 className="text-[15px] font-bold text-card-foreground mb-1">Career Counseling</h4>
+                  <p className="text-sm text-foreground-muted leading-snug font-medium">Book 1-on-1 sessions with certified career experts to refine your path.</p>
                 </div>
               </div>
             </div>

@@ -8,7 +8,9 @@ import { dashboardService, CareerPath } from "@/lib/dashboard-service";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
 import BackgroundGradient from "@/components/BackgroundGradient";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
+import CareerDetailModal from "@/components/CareerDetailModal";
+import { useAuth } from "@/contexts/AuthContext";
 
 const Careers = () => {
   const [careers, setCareers] = useState<CareerPath[]>([]);
@@ -16,6 +18,9 @@ const Careers = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All");
+  const [selectedCareer, setSelectedCareer] = useState<any>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const { profile } = useAuth();
 
   useEffect(() => {
     const loadCareers = async () => {
@@ -131,20 +136,34 @@ const Careers = () => {
                       alt={career.title}
                       className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                     />
-                    <div className="absolute inset-0 bg-gradient-to-t from-[#020617] via-[#020617]/50 to-transparent"></div>
-                    <div className="absolute bottom-4 left-4 right-4 flex justify-between items-end">
-                      <h3 className="text-xl font-bold text-white group-hover:text-primary transition-colors line-clamp-2 drop-shadow-md">
-                        {career.title}
-                      </h3>
-                      <Badge className={`backdrop-blur-md whitespace-nowrap ml-2 ${getDemandColor(career.demand_level)} border-none shadow-sm`}>
-                        {career.demand_level}
-                      </Badge>
-                    </div>
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
                   </div>
 
                   {/* Content Section */}
                   <div className="p-6 flex-1 flex flex-col space-y-4">
-                    <p className="text-foreground-muted mb-6 flex-1 line-clamp-3 text-sm">
+                    <div className="flex justify-between items-start gap-4">
+                      <h3 
+                        className="text-xl font-bold text-foreground group-hover:text-primary transition-colors line-clamp-2 cursor-pointer"
+                        onClick={() => {
+                          setSelectedCareer({
+                            name: career.title,
+                            value: 95, // Representative match
+                            color: '#6366f1',
+                            description: career.description,
+                            salaryRange: career.salary_range,
+                            growth: career.growth_percentage
+                          });
+                          setIsModalOpen(true);
+                        }}
+                      >
+                        {career.title}
+                      </h3>
+                      <Badge className={`whitespace-nowrap ${getDemandColor(career.demand_level)} border-none shadow-sm`}>
+                        {career.demand_level}
+                      </Badge>
+                    </div>
+
+                    <p className="text-muted-foreground mb-6 flex-1 line-clamp-2 text-sm">
                       {career.description}
                     </p>
                   
@@ -166,13 +185,29 @@ const Careers = () => {
                       </div>
                     </div>
                     
-                    <div className="pt-0 mt-auto">
+                    <div className="grid grid-cols-2 gap-3 pt-2">
+                       <Button 
+                        variant="outline"
+                        onClick={() => {
+                          setSelectedCareer({
+                            name: career.title,
+                            value: 95,
+                            color: '#6366f1',
+                            description: career.description,
+                            salaryRange: career.salary_range,
+                            growth: career.growth_percentage
+                          });
+                          setIsModalOpen(true);
+                        }}
+                        className="bg-muted/50 border-border hover:bg-muted text-foreground transition-all font-bold"
+                      >
+                        Details
+                      </Button>
                       <Button 
                         onClick={() => window.location.href = `/quick-assessment?career=${encodeURIComponent(career.title)}`}
-                        className="w-full bg-primary/10 hover:bg-primary text-primary hover:text-primary-foreground border border-primary/20 transition-all font-bold"
+                        className="bg-primary/10 hover:bg-primary text-primary hover:text-white border border-primary/20 transition-all font-bold"
                       >
-                        Assess My Fit
-                        <ArrowRight className="w-4 h-4 ml-2" />
+                        Assess Fit
                       </Button>
                     </div>
                   </div>
@@ -221,6 +256,25 @@ const Careers = () => {
       </div>
 
       <Footer />
+
+      {selectedCareer && (
+        <CareerDetailModal
+          isOpen={isModalOpen}
+          onClose={() => setIsModalOpen(false)}
+          career={selectedCareer}
+          studentProfile={profile ? {
+            id: profile.id,
+            name: profile.full_name || '',
+            schoolLevel: profile.school_level,
+            currentGrade: profile.current_grade,
+            cbeSubjects: profile.cbe_subjects || profile.subjects,
+            careerInterests: profile.career_interests || profile.interests,
+            strongSubjects: [], // To be calculated or fetched
+            weakSubjects: [],
+            overallAverage: 0
+          } : {}}
+        />
+      )}
     </div>
   );
 };
