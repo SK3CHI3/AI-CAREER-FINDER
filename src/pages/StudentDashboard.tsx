@@ -43,7 +43,13 @@ import {
   RefreshCw,
   School,
   X,
-  UserCog
+  UserCog,
+  Search,
+  Palette,
+  Heart,
+  Megaphone,
+  ClipboardCheck,
+  Hammer
 } from 'lucide-react'
 import { ThemeToggle } from '@/components/ThemeToggle'
 import AIChat from '@/components/AIChat'
@@ -332,6 +338,25 @@ const StudentDashboard = () => {
 
   const dominantType = profile?.assessment_results?.personality_type || 'Discovery Pending'
 
+  const RIASEC_INFO: Record<string, { moniker: string; description: string; color: string; icon: any }> = {
+    Realistic: { moniker: 'The Doer', description: 'Practical, hands-on, and mechanical.', color: '#ef4444', icon: Hammer },
+    Investigative: { moniker: 'The Thinker', description: 'Analytical, curious, and methodical.', color: '#3b82f6', icon: Search },
+    Artistic: { moniker: 'The Creator', description: 'Imaginative, expressive, and original.', color: '#ec4899', icon: Palette },
+    Social: { moniker: 'The Helper', description: 'Kind, generous, and cooperative.', color: '#10b981', icon: Heart },
+    Enterprising: { moniker: 'The Persuader', description: 'Confident, energetic, and ambitious.', color: '#f59e0b', icon: Megaphone },
+    Conventional: { moniker: 'The Organizer', description: 'Efficient, careful, and systematic.', color: '#6366f1', icon: ClipboardCheck }
+  };
+
+  const getDominantInfo = () => {
+    if (!profile?.assessment_results?.riasec_scores) return null;
+    const scores = profile.assessment_results.riasec_scores;
+    const topEntry = Object.entries(scores).reduce((a, b) => (a[1] > b[1] ? a : b));
+    const label = topEntry[0].charAt(0).toUpperCase() + topEntry[0].slice(1);
+    return { label, ...RIASEC_INFO[label] };
+  };
+
+  const dominantInfo = getDominantInfo();
+
 
 
   const handleSignOut = async () => {
@@ -611,42 +636,77 @@ const StudentDashboard = () => {
 
               {/* RIASEC Personality Profile Card */}
               {riasecChartData.length > 0 && (
-                <Card className="lg:col-span-1 bg-gradient-to-br from-card to-card/50 border-card-border/60 shadow-lg dark:shadow-purple-500/5 overflow-hidden relative">
-                  <div className="absolute -bottom-24 -left-24 w-48 h-48 bg-purple-500/10 rounded-full blur-3xl pointer-events-none" />
+                <Card className="lg:col-span-1 bg-gradient-to-br from-card to-card/50 border-card-border/60 shadow-lg dark:shadow-purple-500/5 overflow-hidden relative group">
+                  <div className="absolute -bottom-24 -left-24 w-48 h-48 bg-purple-500/10 rounded-full blur-3xl pointer-events-none group-hover:bg-purple-500/20 transition-colors duration-500" />
+                  
                   <CardHeader className="pb-2">
-                    <CardTitle className="text-lg flex items-center gap-2">
-                      <Brain className="w-5 h-5 text-purple-500" />
-                      Personality Profile
-                    </CardTitle>
-                    <CardDescription>Your unique RIASEC mix</CardDescription>
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center gap-2">
+                        <div className="p-2 bg-purple-500/10 rounded-lg">
+                          <Brain className="w-5 h-5 text-purple-500" />
+                        </div>
+                        <CardTitle className="text-lg">Core Traits</CardTitle>
+                      </div>
+                      {dominantInfo && (
+                        <Badge className="bg-purple-500/10 text-purple-500 border-purple-500/20 hover:bg-purple-500/20 transition-colors">
+                          Primary: {dominantInfo.label}
+                        </Badge>
+                      )}
+                    </div>
+                    <CardDescription>Your unique professional DNA</CardDescription>
                   </CardHeader>
-                  <CardContent>
-                    <div className="h-[200px] -mt-4">
+                  
+                  <CardContent className="space-y-3 pb-4">
+                    {dominantInfo && (
+                      <div className="bg-muted/30 border border-card-border/40 rounded-xl p-2.5 flex items-center gap-3 transition-all duration-300 hover:bg-muted/50">
+                        <div className="p-1.5 rounded-lg bg-background shadow-sm flex-shrink-0">
+                          <dominantInfo.icon className="w-4 h-4" style={{ color: dominantInfo.color }} />
+                        </div>
+                        <div className="flex-1 min-w-0 leading-tight">
+                          <h4 className="text-xs font-bold text-foreground truncate">{dominantInfo.moniker}</h4>
+                          <p className="text-[9px] text-foreground-muted line-clamp-1">
+                            {dominantInfo.description}
+                          </p>
+                        </div>
+                      </div>
+                    )}
+
+                    <div className="h-[160px] mt-1 relative">
                       <ResponsiveContainer width="100%" height="100%">
-                          <RadarChart cx="50%" cy="50%" outerRadius="70%" data={riasecChartData}>
-                            <PolarGrid stroke="var(--card-border)" />
-                            <PolarAngleAxis
-                              dataKey="subject"
-                              tick={{ fill: 'var(--foreground-muted)', fontSize: 10 }}
-                            />
-                            <Tooltip
-                              formatter={(value) => [`${value}/5`, 'Score']}
-                              contentStyle={{
-                                backgroundColor: 'var(--background)',
-                                border: '1px solid var(--border)',
-                                borderRadius: '8px'
-                              }}
-                            />
-                            <Radar
-                              name="Personality"
-                              dataKey="A"
-                              stroke="var(--primary)"
-                              fill="var(--primary)"
-                              fillOpacity={0.6}
-                            />
-                          </RadarChart>
+                        <RadarChart cx="50%" cy="50%" outerRadius="68%" data={riasecChartData}>
+                          <PolarGrid stroke="rgba(156, 163, 175, 0.15)" />
+                          <PolarAngleAxis
+                            dataKey="subject"
+                            tick={{ fill: 'var(--foreground-muted)', fontSize: 9, fontWeight: 500 }}
+                          />
+                          <Tooltip
+                            content={({ active, payload }) => {
+                              if (active && payload && payload.length) {
+                                return (
+                                  <div className="bg-background/95 backdrop-blur-md border border-card-border p-1.5 rounded-lg shadow-xl text-[9px]">
+                                    <p className="font-bold text-foreground">{payload[0].payload.subject}</p>
+                                    <p className="text-primary font-medium">Score: {payload[0].value}/5</p>
+                                  </div>
+                                );
+                              }
+                              return null;
+                            }}
+                          />
+                          <Radar
+                            name="Personality"
+                            dataKey="A"
+                            stroke="var(--primary)"
+                            fill="var(--primary)"
+                            fillOpacity={0.35}
+                            animationDuration={1500}
+                          />
+                        </RadarChart>
                       </ResponsiveContainer>
                     </div>
+
+                    <p className="text-[9px] text-center text-foreground-muted italic px-2 line-clamp-1">
+                      Hover for detailed strengths across each domain.
+                    </p>
                   </CardContent>
                 </Card>
               )}
