@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge'
 import { Loader2, CheckCircle, XCircle, CreditCard, Smartphone, Shield, Lock, MessageCircle } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
 import { supabase } from '@/lib/supabase'
+import { subscriptionService } from '@/lib/subscription-service'
 
 // Declare IntaSend types for TypeScript
 declare global {
@@ -25,8 +26,37 @@ const PaymentWall: React.FC<PaymentWallProps> = ({ onPaymentSuccess }) => {
   const [error, setError] = useState<string | null>(null)
   const [isIntaSendLoaded, setIsIntaSendLoaded] = useState(false)
   const [intaSendInstance, setIntaSendInstance] = useState<any>(null)
+  const [pricingInfo, setPricingInfo] = useState<{ amount: number; label: string; count: number }>({ 
+    amount: 499, 
+    label: 'Individual Student Subscription',
+    count: 1
+  })
 
-  // Load IntaSend SDK from CDN
+  useEffect(() => {
+    const calculatePricing = async () => {
+      if (profile?.role === 'school') {
+        const { count } = await supabase
+          .from('class_enrollments')
+          .select('*', { count: 'exact', head: true })
+          .eq('school_id', profile.school_id)
+        
+        const studentCount = count || 0
+        setPricingInfo({
+          amount: studentCount * 100,
+          label: 'Institutional Subscription',
+          count: studentCount
+        })
+      } else {
+        setPricingInfo({
+          amount: 499,
+          label: 'Individual Student Subscription',
+          count: 1
+        })
+      }
+    }
+    calculatePricing()
+  }, [profile])
+
   useEffect(() => {
     console.log('🔄 Loading IntaSend SDK from CDN...')
     
@@ -143,33 +173,24 @@ const PaymentWall: React.FC<PaymentWallProps> = ({ onPaymentSuccess }) => {
       setIsLoading(true)
       setPaymentStatus('success')
       
-      // Update user profile with payment details
-      const { error: updateError } = await supabase
-        .from('profiles')
-        .update({
-          payment_status: 'completed',
-          payment_reference: results.reference || `PAY_${Date.now()}`,
-          payment_amount: 1500.00,
-          intasend_transaction_id: results.transaction_id || results.id
-        })
-        .eq('id', user?.id)
+      // The secure background webhook (intasend-webhook) will update the Supabase profile.
+      // We will just wait a moment and then trigger a context refresh here so the UI updates.
+      
+      console.log('Payment marked success in IntaSend popup. Waiting for back-end webhook sync...')
 
-      if (updateError) {
-        console.error('Error updating payment status:', updateError)
-        setError('Payment successful but failed to update profile. Please contact support.')
-        return
-      }
-
-      // Show success message briefly then redirect
-      setTimeout(() => {
+      setTimeout(async () => {
+        // Refresh the profile to get the updated payment_status from the server
+        if (typeof (window as any).refreshProfile === 'function') {
+           await (window as any).refreshProfile()
+        }
         onPaymentSuccess()
-      }, 2000)
+      }, 3000)
 
     } catch (err) {
       console.error('Error handling payment success:', err)
-      setError('Payment successful but failed to update profile. Please contact support.')
+      setError('Payment successful but failed to update local profile. Please refresh the page.')
     } finally {
-      setIsLoading(false)
+      // Keep loading true while waiting for the redirect
     }
   }
 
@@ -201,10 +222,10 @@ const PaymentWall: React.FC<PaymentWallProps> = ({ onPaymentSuccess }) => {
     try {
       // Trigger the payment using IntaSend's run method
       intaSendInstance.run({
-        amount: 1500,
+        amount: pricingInfo.amount,
         currency: 'KES',
         email: profile?.email || user?.email || '',
-        phone_number: '254700000000',
+        phone_number: profile?.phone || '254700000000',
         api_ref: `PAY_${user?.id}_${Date.now()}`,
         first_name: profile?.full_name?.split(' ')[0] || 'User',
         last_name: profile?.full_name?.split(' ').slice(1).join(' ') || 'Name'
@@ -251,7 +272,7 @@ const PaymentWall: React.FC<PaymentWallProps> = ({ onPaymentSuccess }) => {
             Book Career Counselor Session
           </CardTitle>
             <CardDescription className="text-base sm:text-lg text-foreground-muted mt-2">
-              Unlock full platform access including live chat with professional career counselors.
+              Unlock term-based platform access and professional career features.
             </CardDescription>
         </CardHeader>
 
@@ -295,19 +316,19 @@ const PaymentWall: React.FC<PaymentWallProps> = ({ onPaymentSuccess }) => {
             
             <div className="space-y-3">
               <div className="flex justify-between items-center">
-                <span className="text-sm sm:text-base text-foreground-muted">Professional Counselor Access</span>
-                <span className="font-extrabold text-primary text-xl sm:text-2xl">KSh 1,500</span>
+                <span className="text-sm sm:text-base text-foreground-muted">{pricingInfo.label}</span>
+                <span className="font-extrabold text-primary text-xl sm:text-2xl">KSh {pricingInfo.amount.toLocaleString()}</span>
               </div>
               <div className="flex justify-between items-center text-xs sm:text-sm text-foreground-muted">
-                <span>Includes:</span>
-                <span>Full platform & Live Chat</span>
+                <span>{profile?.role === 'school' ? `Covering ${pricingInfo.count} students` : 'Single term access'}</span>
+                <span>Active until end of academic term</span>
               </div>
             </div>
 
             <div className="mt-5 pt-5 border-t border-card-border">
               <div className="flex justify-between items-center text-lg sm:text-xl font-black text-foreground">
                 <span>Total</span>
-                <span className="text-primary">KSh 1,500</span>
+                <span className="text-primary">KSh {pricingInfo.amount.toLocaleString()}</span>
               </div>
             </div>
           </div>
@@ -374,7 +395,7 @@ const PaymentWall: React.FC<PaymentWallProps> = ({ onPaymentSuccess }) => {
                 ) : (
                   <>
                     <CreditCard className="w-5 h-5 mr-2" />
-                    Pay KSh 1,500 Now
+                    Pay KSh {pricingInfo.amount.toLocaleString()} Now
                   </>
                 )}
               </Button>

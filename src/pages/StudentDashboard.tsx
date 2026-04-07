@@ -8,6 +8,7 @@ import { Progress } from '@/components/ui/progress'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar } from 'recharts'
 import { useNavigate } from 'react-router-dom'
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { RIASEC_LABELS } from '@/data/riasec-assessment'
 
 
@@ -55,6 +56,8 @@ import {
   Hammer
 } from 'lucide-react'
 import { ThemeToggle } from '@/components/ThemeToggle'
+import { FieldDayRequestModal } from '@/components/FieldDayRequestModal'
+import { subscriptionService } from '@/lib/subscription-service'
 import AIChat from '@/components/AIChat'
 import { ReportGenerator } from '@/lib/report-generator'
 import { ProfileSetup } from '@/components/ProfileSetup'
@@ -96,6 +99,8 @@ const StudentDashboard = () => {
   const [isLoadingStats, setIsLoadingStats] = useState(true)
   const [selectedCareer, setSelectedCareer] = useState<CareerDataItem | null>(null)
   const [isCareerModalOpen, setIsCareerModalOpen] = useState(false)
+  const [isFieldDayModalOpen, setIsFieldDayModalOpen] = useState(false)
+  const [subscriptionStatus, setSubscriptionStatus] = useState<any>(null)
   const [isGradesModalOpen, setIsGradesModalOpen] = useState(false)
   const [schoolInfo, setSchoolInfo] = useState<{ name: string; status: string } | null>(null)
   const [courseRecommendations, setCourseRecommendations] = useState<CourseRecommendation[]>([])
@@ -126,17 +131,34 @@ const StudentDashboard = () => {
   const checkAccessStatus = async () => {
     if (!profile) return;
 
-    if (profile.school_id) {
-      try {
-        const { schoolService } = await import('@/lib/school-service');
-        const schoolData = await schoolService.getSchoolById(profile.school_id);
-        
-        if (schoolData) {
-          setSchoolInfo({ name: schoolData.name, status: schoolData.status || 'active' });
+    try {
+        const status = await subscriptionService.checkSubscriptionStatus(profile);
+        setSubscriptionStatus(status);
+
+        if (profile.school_id) {
+            const { schoolService } = await import('@/lib/school-service');
+            const schoolData = await schoolService.getSchoolById(profile.school_id);
+            if (schoolData) {
+                setSchoolInfo({ name: schoolData.name, status: schoolData.status || 'active' });
+            }
         }
-      } catch (err) {
-        console.error('Error checking school status:', err);
-      }
+    } catch (err) {
+        console.error('Error checking access status:', err);
+    }
+  }
+
+  const handleActivateTrial = async () => {
+    if (!user) return;
+    try {
+      setIsLoadingStats(true);
+      await subscriptionService.activateTrial(user.id);
+      await checkAccessStatus();
+      // Reload page to refresh all context/boundaries
+      window.location.reload();
+    } catch (err) {
+      console.error('Error activating trial:', err);
+    } finally {
+      setIsLoadingStats(false);
     }
   }
 
@@ -548,7 +570,37 @@ const StudentDashboard = () => {
         {/* Banner removed */}
         {/* Welcome Section */}
         <div className="mb-6 sm:mb-8">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0">
+          {/* Subscription / Trial Banner */}
+        {subscriptionStatus && !subscriptionStatus.isActive && subscriptionStatus.isTrialEligible && (
+          <Alert className="mb-6 border-primary/20 bg-primary/5 flex items-center justify-between p-6 rounded-2xl shadow-sm animate-in fade-in slide-in-from-top duration-500">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
+                <Sparkles className="w-6 h-6 text-primary animate-pulse" />
+              </div>
+              <div>
+                <AlertTitle className="text-xl font-bold text-foreground">First Term Free Trial Available!</AlertTitle>
+                <AlertDescription className="text-foreground-muted">
+                  Get full access to all features for the remainder of this academic term. No credit card required.
+                </AlertDescription>
+              </div>
+            </div>
+            <Button 
+              onClick={handleActivateTrial} 
+              className="bg-primary hover:bg-primary/90 text-primary-foreground font-bold px-8 h-12 rounded-xl shadow-lg shadow-primary/20 transition-all hover:scale-105 active:scale-95"
+            >
+              Activate Free Term
+            </Button>
+          </Alert>
+        )}
+
+        {subscriptionStatus?.type === 'trial' && (
+          <div className="mb-6 px-4 py-2 bg-yellow-500/10 border border-yellow-500/20 rounded-lg flex items-center justify-center gap-2 text-yellow-600 font-medium text-sm">
+            <Clock className="w-4 h-4" />
+            Your Free Trial ends on {new Date(subscriptionStatus.expiresAt).toLocaleDateString()}
+          </div>
+        )}
+
+        <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-6 mb-8">
             <div>
               <h2 className="text-2xl sm:text-3xl font-bold text-foreground mb-1 sm:mb-2 flex items-center gap-3">
                 Welcome back, {profile?.full_name?.split(' ')[0] || 'Student'}!
@@ -1085,6 +1137,21 @@ const StudentDashboard = () => {
                           <span className="text-sm font-medium text-foreground">Explore university programs</span>
                         </div>
                         <ArrowRight className="w-4 h-4 text-purple-500" />
+                      </div>
+                    </div>
+                    <div
+                      className="p-3 rounded-lg bg-emerald-500/5 border border-emerald-500/20 cursor-pointer hover:bg-emerald-500/10 transition-colors"
+                      onClick={() => {
+                        setIsFieldDayModalOpen(true)
+                        trackButtonClick('Request Field Day', 'Journey Actions')
+                      }}
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-3">
+                          <div className="w-2 h-2 bg-emerald-500 rounded-full"></div>
+                          <span className="text-sm font-medium text-foreground">Request a Career Field Day</span>
+                        </div>
+                        <ArrowRight className="w-4 h-4 text-emerald-500" />
                       </div>
                     </div>
                   </div>

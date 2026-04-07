@@ -248,6 +248,7 @@ export type Database = {
           id: string
           image_url: string | null
           is_active: boolean | null
+          is_featured: boolean | null
           salary_range: string
           skills_required: string[]
           title: string
@@ -264,6 +265,7 @@ export type Database = {
           id?: string
           image_url?: string | null
           is_active?: boolean | null
+          is_featured?: boolean | null
           salary_range: string
           skills_required: string[]
           title: string
@@ -280,6 +282,7 @@ export type Database = {
           id?: string
           image_url?: string | null
           is_active?: boolean | null
+          is_featured?: boolean | null
           salary_range?: string
           skills_required?: string[]
           title?: string
@@ -609,6 +612,78 @@ export type Database = {
         }
         Relationships: []
       }
+      field_day_requests: {
+        Row: {
+          contact_number: string
+          created_at: string | null
+          full_name: string
+          id: string
+          preferred_date: string | null
+          preferred_location: string | null
+          school_id: string | null
+          status: string | null
+          student_id: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          contact_number: string
+          created_at?: string | null
+          full_name: string
+          id?: string
+          preferred_date?: string | null
+          preferred_location?: string | null
+          school_id?: string | null
+          status?: string | null
+          student_id?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          contact_number?: string
+          created_at?: string | null
+          full_name?: string
+          id?: string
+          preferred_date?: string | null
+          preferred_location?: string | null
+          school_id?: string | null
+          status?: string | null
+          student_id?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "field_day_requests_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "field_day_requests_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      global_settings: {
+        Row: {
+          key: string
+          updated_at: string | null
+          value: Json
+        }
+        Insert: {
+          key: string
+          updated_at?: string | null
+          value: Json
+        }
+        Update: {
+          key?: string
+          updated_at?: string | null
+          value: Json
+        }
+        Relationships: []
+      }
       grade_categories: {
         Row: {
           category_name: string
@@ -681,6 +756,7 @@ export type Database = {
           id: string
           intasend_transaction_id: string | null
           interests: string[] | null
+          is_trial_used: boolean | null
           payment_amount: number | null
           payment_currency: string | null
           payment_date: string | null
@@ -691,6 +767,8 @@ export type Database = {
           school_id: string | null
           school_level: string | null
           subjects: string[] | null
+          subscription_expires_at: string | null
+          subscription_type: string | null
           updated_at: string | null
           upi_number: string | null
         }
@@ -708,6 +786,7 @@ export type Database = {
           id: string
           intasend_transaction_id?: string | null
           interests?: string[] | null
+          is_trial_used?: boolean | null
           payment_amount?: number | null
           payment_currency?: string | null
           payment_date?: string | null
@@ -718,6 +797,8 @@ export type Database = {
           school_id?: string | null
           school_level?: string | null
           subjects?: string[] | null
+          subscription_expires_at?: string | null
+          subscription_type?: string | null
           updated_at?: string | null
           upi_number?: string | null
         }
@@ -735,6 +816,7 @@ export type Database = {
           id?: string
           intasend_transaction_id?: string | null
           interests?: string[] | null
+          is_trial_used?: boolean | null
           payment_amount?: number | null
           payment_currency?: string | null
           payment_date?: string | null
@@ -745,6 +827,8 @@ export type Database = {
           school_id?: string | null
           school_level?: string | null
           subjects?: string[] | null
+          subscription_expires_at?: string | null
+          subscription_type?: string | null
           updated_at?: string | null
           upi_number?: string | null
         }
@@ -975,7 +1059,7 @@ export type Database = {
         Update: {
           accepted_at?: string | null
           created_at?: string
-          email?: string
+          email: string
           expires_at?: string
           id?: string
           invited_by?: string

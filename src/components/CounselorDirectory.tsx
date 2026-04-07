@@ -109,7 +109,7 @@ export const CounselorDirectory = ({ limit }: { limit?: number }) => {
         currency: 'KES',
         email: profile?.email || user?.email || '',
         phone_number: '254700000000',
-        api_ref: `BOOK_${counselor.id}_${Date.now()}`,
+        api_ref: `BOOK_${user?.id}_${counselor.id}_${Date.now()}`,
         first_name: profile?.full_name?.split(' ')[0] || 'Student'
       });
       
@@ -120,23 +120,9 @@ export const CounselorDirectory = ({ limit }: { limit?: number }) => {
   };
 
   const handlePaymentSuccess = async (results: any, counselor: any) => {
-    const { error } = await (supabase.from('counselor_sessions') as any).insert([{
-      student_id: user?.id,
-      counselor_id: counselor.id,
-      status: 'requested',
-      payment_amount: counselor.hourly_rate,
-      payment_reference: results.reference,
-      intasend_transaction_id: results.transaction_id || results.id
-    }]);
-
-
+    // The secure background webhook (intasend-webhook) will create the counselor_sessions record.
     setProcessingId(null);
-
-    if (error) {
-      toast({ title: 'Booking Issue', description: 'Payment succeeded but session creation failed. Support has been notified.', variant: 'destructive' });
-    } else {
-      toast({ title: 'Booking Confirmed!', description: `Your session with ${counselor.profile?.full_name} is requested.` });
-    }
+    toast({ title: 'Booking Confirmed!', description: `Your session with ${counselor.profile?.full_name} has been processed successfully. Please check your dashboard shortly.` });
   };
 
   if (isLoading) {

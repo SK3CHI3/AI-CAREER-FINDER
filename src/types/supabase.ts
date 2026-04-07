@@ -44,6 +44,51 @@ export type Database = {
         }
         Relationships: []
       }
+      blog_posts: {
+        Row: {
+          content: string
+          cover_image_url: string | null
+          created_at: string | null
+          excerpt: string | null
+          id: string
+          published: boolean | null
+          published_at: string | null
+          seo_description: string | null
+          seo_title: string | null
+          slug: string
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          content: string
+          cover_image_url?: string | null
+          created_at?: string | null
+          excerpt?: string | null
+          id?: string
+          published?: boolean | null
+          published_at?: string | null
+          seo_description?: string | null
+          seo_title?: string | null
+          slug: string
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          content?: string
+          cover_image_url?: string | null
+          created_at?: string | null
+          excerpt?: string | null
+          id?: string
+          published?: boolean | null
+          published_at?: string | null
+          seo_description?: string | null
+          seo_title?: string | null
+          slug?: string
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       cache_invalidation: {
         Row: {
           cache_type: string
@@ -201,7 +246,9 @@ export type Database = {
           education_requirements: string | null
           growth_percentage: string
           id: string
+          image_url: string | null
           is_active: boolean | null
+          is_featured: boolean | null
           salary_range: string
           skills_required: string[]
           title: string
@@ -216,7 +263,9 @@ export type Database = {
           education_requirements?: string | null
           growth_percentage: string
           id?: string
+          image_url?: string | null
           is_active?: boolean | null
+          is_featured?: boolean | null
           salary_range: string
           skills_required: string[]
           title: string
@@ -231,7 +280,9 @@ export type Database = {
           education_requirements?: string | null
           growth_percentage?: string
           id?: string
+          image_url?: string | null
           is_active?: boolean | null
+          is_featured?: boolean | null
           salary_range?: string
           skills_required?: string[]
           title?: string
@@ -317,6 +368,7 @@ export type Database = {
           enrolled_at: string | null
           id: string
           source: string | null
+          student_name: string | null
           student_phone: string | null
           student_upi: string | null
           student_user_id: string | null
@@ -326,6 +378,7 @@ export type Database = {
           enrolled_at?: string | null
           id?: string
           source?: string | null
+          student_name?: string | null
           student_phone?: string | null
           student_upi?: string | null
           student_user_id?: string | null
@@ -335,6 +388,7 @@ export type Database = {
           enrolled_at?: string | null
           id?: string
           source?: string | null
+          student_name?: string | null
           student_phone?: string | null
           student_upi?: string | null
           student_user_id?: string | null
@@ -345,6 +399,13 @@ export type Database = {
             columns: ["class_id"]
             isOneToOne: false
             referencedRelation: "classes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "class_enrollments_student_profile_fkey"
+            columns: ["student_user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -390,6 +451,137 @@ export type Database = {
           },
         ]
       }
+      counselor_messages: {
+        Row: {
+          content: string
+          created_at: string | null
+          id: string
+          sender_id: string
+          session_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string | null
+          id?: string
+          sender_id: string
+          session_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string | null
+          id?: string
+          sender_id?: string
+          session_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "counselor_messages_sender_id_fkey"
+            columns: ["sender_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "counselor_messages_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "counselor_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      counselor_profiles: {
+        Row: {
+          bio: string | null
+          created_at: string | null
+          hourly_rate: number
+          id: string
+          image_url: string | null
+          is_active: boolean | null
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          bio?: string | null
+          created_at?: string | null
+          hourly_rate?: number
+          id: string
+          image_url?: string | null
+          is_active?: boolean | null
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          bio?: string | null
+          created_at?: string | null
+          hourly_rate?: number
+          id?: string
+          image_url?: string | null
+          is_active?: boolean | null
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "counselor_profiles_id_fkey"
+            columns: ["id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      counselor_sessions: {
+        Row: {
+          counselor_id: string | null
+          created_at: string | null
+          id: string
+          intasend_transaction_id: string | null
+          payment_amount: number | null
+          payment_reference: string | null
+          status: string
+          student_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          counselor_id?: string | null
+          created_at?: string | null
+          id?: string
+          intasend_transaction_id?: string | null
+          payment_amount?: number | null
+          payment_reference?: string | null
+          status?: string
+          student_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          counselor_id?: string | null
+          created_at?: string | null
+          id?: string
+          intasend_transaction_id?: string | null
+          payment_amount?: number | null
+          payment_reference?: string | null
+          status?: string
+          student_id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "counselor_sessions_counselor_id_fkey"
+            columns: ["counselor_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "counselor_sessions_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       feedbacks: {
         Row: {
           category: string
@@ -417,6 +609,78 @@ export type Database = {
           status?: string
           user_email?: string | null
           user_id?: string | null
+        }
+        Relationships: []
+      }
+      field_day_requests: {
+        Row: {
+          contact_number: string
+          created_at: string | null
+          full_name: string
+          id: string
+          preferred_date: string | null
+          preferred_location: string | null
+          school_id: string | null
+          status: string | null
+          student_id: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          contact_number: string
+          created_at?: string | null
+          full_name: string
+          id?: string
+          preferred_date?: string | null
+          preferred_location?: string | null
+          school_id?: string | null
+          status?: string | null
+          student_id?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          contact_number?: string
+          created_at?: string | null
+          full_name?: string
+          id?: string
+          preferred_date?: string | null
+          preferred_location?: string | null
+          school_id?: string | null
+          status?: string | null
+          student_id?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "field_day_requests_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "field_day_requests_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      global_settings: {
+        Row: {
+          key: string
+          updated_at: string | null
+          value: Json
+        }
+        Insert: {
+          key: string
+          updated_at?: string | null
+          value: Json
+        }
+        Update: {
+          key?: string
+          updated_at?: string | null
+          value: Json
         }
         Relationships: []
       }
@@ -486,11 +750,13 @@ export type Database = {
           cbe_subjects: string[] | null
           created_at: string | null
           current_grade: string | null
+          curriculum: string | null
           email: string
           full_name: string | null
           id: string
           intasend_transaction_id: string | null
           interests: string[] | null
+          is_trial_used: boolean | null
           payment_amount: number | null
           payment_currency: string | null
           payment_date: string | null
@@ -501,6 +767,8 @@ export type Database = {
           school_id: string | null
           school_level: string | null
           subjects: string[] | null
+          subscription_expires_at: string | null
+          subscription_type: string | null
           updated_at: string | null
           upi_number: string | null
         }
@@ -512,11 +780,13 @@ export type Database = {
           cbe_subjects?: string[] | null
           created_at?: string | null
           current_grade?: string | null
+          curriculum?: string | null
           email: string
           full_name?: string | null
           id: string
           intasend_transaction_id?: string | null
           interests?: string[] | null
+          is_trial_used?: boolean | null
           payment_amount?: number | null
           payment_currency?: string | null
           payment_date?: string | null
@@ -527,6 +797,8 @@ export type Database = {
           school_id?: string | null
           school_level?: string | null
           subjects?: string[] | null
+          subscription_expires_at?: string | null
+          subscription_type?: string | null
           updated_at?: string | null
           upi_number?: string | null
         }
@@ -538,11 +810,13 @@ export type Database = {
           cbe_subjects?: string[] | null
           created_at?: string | null
           current_grade?: string | null
+          curriculum?: string | null
           email?: string
           full_name?: string | null
           id?: string
           intasend_transaction_id?: string | null
           interests?: string[] | null
+          is_trial_used?: boolean | null
           payment_amount?: number | null
           payment_currency?: string | null
           payment_date?: string | null
@@ -553,6 +827,8 @@ export type Database = {
           school_id?: string | null
           school_level?: string | null
           subjects?: string[] | null
+          subscription_expires_at?: string | null
+          subscription_type?: string | null
           updated_at?: string | null
           upi_number?: string | null
         }
@@ -749,7 +1025,15 @@ export type Database = {
           verified_at?: string | null
           verified_by?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "student_grades_user_profile_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       teacher_invites: {
         Row: {
@@ -775,7 +1059,7 @@ export type Database = {
         Update: {
           accepted_at?: string | null
           created_at?: string
-          email?: string
+          email: string
           expires_at?: string
           id?: string
           invited_by?: string
@@ -897,96 +1181,23 @@ export type Database = {
         }
         Relationships: []
       }
-      counselor_profiles: {
-        Row: {
-          bio: string | null
-          created_at: string | null
-          hourly_rate: number
-          id: string
-          image_url: string | null
-          is_active: boolean | null
-          title: string | null
-          updated_at: string | null
-        }
-        Insert: {
-          bio?: string | null
-          created_at?: string | null
-          hourly_rate: number
-          id?: string
-          image_url?: string | null
-          is_active?: boolean | null
-          title?: string | null
-          updated_at?: string | null
-        }
-        Update: {
-          bio?: string | null
-          created_at?: string | null
-          hourly_rate?: number
-          id?: string
-          image_url?: string | null
-          is_active?: boolean | null
-          title?: string | null
-          updated_at?: string | null
-        }
-        Relationships: []
-      }
-      counselor_sessions: {
-        Row: {
-          counselor_id: string
-          created_at: string | null
-          id: string
-          intasend_transaction_id: string | null
-          payment_amount: number
-          payment_reference: string | null
-          status: string
-          student_id: string
-        }
-        Insert: {
-          counselor_id: string
-          created_at?: string | null
-          id?: string
-          intasend_transaction_id?: string | null
-          payment_amount: number
-          payment_reference?: string | null
-          status?: string
-          student_id: string
-        }
-        Update: {
-          counselor_id?: string
-          created_at?: string | null
-          id?: string
-          intasend_transaction_id?: string | null
-          payment_amount?: number
-          payment_reference?: string | null
-          status?: string
-          student_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "counselor_sessions_counselor_id_fkey"
-            columns: ["counselor_id"]
-            isOneToOne: false
-            referencedRelation: "counselor_profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "counselor_sessions_student_id_fkey"
-            columns: ["student_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
+      accept_teacher_invite: { Args: { p_token: string }; Returns: undefined }
+      get_class_school_id: { Args: { p_class_id: string }; Returns: string }
+      get_user_email: { Args: { p_identifier: string }; Returns: string }
       has_no_school_members: { Args: { p_school_id: string }; Returns: boolean }
       is_admin: { Args: never; Returns: boolean }
       is_school_admin: { Args: { p_school_id: string }; Returns: boolean }
       is_school_member: { Args: { p_school_id: string }; Returns: boolean }
+      is_student_in_class: { Args: { p_class_id: string }; Returns: boolean }
+      sync_student_data: {
+        Args: { p_upi: string; p_user_id: string }
+        Returns: undefined
+      }
     }
     Enums: {
       assessment_type: "personality" | "skills" | "interests" | "comprehensive"
@@ -1123,4 +1334,3 @@ export const Constants = {
     },
   },
 } as const
-

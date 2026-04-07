@@ -8,6 +8,7 @@ import { schoolService } from '@/lib/school-service'
 import PaymentWall from './PaymentWall'
 import { ProfileSetup } from './ProfileSetup'
 import { Loader2 } from 'lucide-react'
+import { subscriptionService } from '@/lib/subscription-service'
 
 interface PaymentGateProps {
   children: React.ReactNode
@@ -34,23 +35,11 @@ const PaymentGate: React.FC<PaymentGateProps> = ({ children }) => {
         setIsProfileComplete(profileComplete)
 
         if (profileComplete) {
-          // Check individual payment status (lowercase correctly matches Profile type)
-          const paymentComplete = profile.payment_status === 'completed'
-          setIsPaymentComplete(paymentComplete)
-          setIsPaid(paymentComplete || profile.role === 'admin' || profile.role === 'school')
-
-          // Check school subscription if applicable
-          if (profile.school_id) {
-            try {
-              const hasSub = await schoolService.hasActiveSubscription(profile.school_id)
-              setIsSchoolSubscribed(hasSub)
-            } catch (err) {
-              console.error('Error checking school subscription:', err)
-              setIsSchoolSubscribed(false) // Assume no subscription on error
-            }
-          } else {
-            setIsSchoolSubscribed(false)
-          }
+          const status = await subscriptionService.checkSubscriptionStatus(profile)
+          
+          setIsPaid(status.isActive || profile.role === 'admin')
+          setIsPaymentComplete(status.type === 'individual' || status.type === 'institutional')
+          setIsSchoolSubscribed(status.type === 'institutional' || (status.type === 'trial' && !!profile.school_id))
         } else {
           // Profile is not complete, reset payment and subscription states
           setIsPaymentComplete(false)
