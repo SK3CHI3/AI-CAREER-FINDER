@@ -318,7 +318,7 @@ class DashboardService {
   }
 
   // Career Paths
-  async getCareerPaths(category?: string, limit: number = 20): Promise<CareerPath[]> {
+  async getCareerPaths(category?: string, limit: number = 1000): Promise<CareerPath[]> {
     try {
       // Data is now managed strictly via the Admin Dashboard.
       // Auto-sync from AI is disabled to prevent overwriting manual image/description updates.
