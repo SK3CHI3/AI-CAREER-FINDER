@@ -1,178 +1,143 @@
-import { useState, useEffect, useRef } from "react";
-import { motion } from "framer-motion";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Send, User, Sparkles, Loader2, AlertCircle, Download, ArrowRight, RefreshCw } from "lucide-react";
-import { aiCareerService, type ChatMessage } from "@/lib/ai-service";
+import { Sparkles, Loader2, Download, ArrowRight, ArrowLeft, CheckCircle, Brain, Target, User } from "lucide-react";
+import { aiCareerService } from "@/lib/ai-service";
 import { ReportGenerator, type GuestProfile } from "@/lib/report-generator";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
 import BackgroundGradient from "@/components/BackgroundGradient";
+import { RIASEC_ACTIVITIES, RIASEC_LABELS } from "@/data/riasec-assessment";
 
 const QuickAssessment = () => {
-    const [message, setMessage] = useState("");
-    const [conversation, setConversation] = useState<ChatMessage[]>([]);
+    const [currentStep, setCurrentStep] = useState(1);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
-    const [guestProfile, setGuestProfile] = useState<GuestProfile>({});
-    const [showFinishCTA, setShowFinishCTA] = useState(false);
-    const [assessmentComplete, setAssessmentComplete] = useState(false);
     const [showReport, setShowReport] = useState(false);
-    const [isGeneratingReport, setIsGeneratingReport] = useState(false);
-    const scrollAreaRef = useRef<HTMLDivElement>(null);
-    const messagesEndRef = useRef<HTMLDivElement>(null);
+    
+    // Form State
+    const [name, setName] = useState("");
+    const [curriculum, setCurriculum] = useState<'cbc' | 'igcse' | null>(null);
+    const [grade, setGrade] = useState("");
+    const [selectedSubjects, setSelectedSubjects] = useState<string[]>([]);
+    const [selectedActivities, setSelectedActivities] = useState<string[]>([]);
+    const [finalRecommendations, setFinalRecommendations] = useState<any[]>([]);
+    const [guestProfile, setGuestProfile] = useState<GuestProfile>({});
 
-    const scrollToBottom = () => {
-        if (scrollAreaRef.current) {
-            const scrollElement = scrollAreaRef.current.querySelector('[data-radix-scroll-area-viewport]');
-            if (scrollElement) {
-                scrollElement.scrollTo({
-                    top: scrollElement.scrollHeight,
-                    behavior: 'smooth'
-                });
+    const commonSubjects = [
+        "Mathematics", "English / Literature", "Sciences (Physics/Chem/Bio)",
+        "Computer Science / IT", "Business / Economics", "Arts & Design",
+        "Humanities (History/Geo)", "Physical Education / Sports",
+        "Technical / Applied Skills"
+    ];
+
+    const handleNext = () => {
+        if (currentStep === 1) {
+            if (!name.trim()) return setError("Please enter your name");
+            if (!curriculum) return setError("Please select your curriculum");
+            if (!grade.trim()) return setError("Please enter your current grade/year");
+        }
+        if (currentStep === 2 && selectedSubjects.length === 0) {
+            return setError("Please select at least one subject area");
+        }
+        if (currentStep === 3 && selectedActivities.length === 0) {
+            return setError("Please select at least one activity you enjoy");
+        }
+        setError(null);
+        setCurrentStep(prev => prev + 1);
+    };
+
+    const handleBack = () => {
+        setError(null);
+        setCurrentStep(prev => prev - 1);
+    };
+
+    const calculateRiasec = () => {
+        const scores = { realistic: 0, investigative: 0, artistic: 0, social: 0, enterprising: 0, conventional: 0 };
+        selectedActivities.forEach(id => {
+            const activity = RIASEC_ACTIVITIES.find(a => a.id === id);
+            if (activity) {
+                const key = activity.code === 'R' ? 'realistic' : 
+                            activity.code === 'I' ? 'investigative' : 
+                            activity.code === 'A' ? 'artistic' : 
+                            activity.code === 'S' ? 'social' : 
+                            activity.code === 'E' ? 'enterprising' : 'conventional';
+                scores[key]++;
             }
-        }
+        });
+        const sortedTypes = Object.entries(scores)
+                            .sort((a, b) => b[1] - a[1])
+                            .filter(s => s[1] > 0)
+                            .map(s => RIASEC_LABELS[s[0].charAt(0).toUpperCase() as keyof typeof RIASEC_LABELS]);
+        return { scores, personalityTypes: sortedTypes };
     };
 
-    useEffect(() => {
-        setTimeout(scrollToBottom, 100);
-    }, [conversation]);
-
-    const cleanMarkdownFormatting = (text: string): string => {
-        return text
-            .replace(/\*\*(.*?)\*\*/g, '$1')
-            .replace(/\*(.*?)\*/g, '$1')
-            .replace(/#{1,6}\s/g, '')
-            .replace(/`{1,3}(.*?)`{1,3}/g, '$1')
-            .trim();
-    };
-
-    // Auto-start for standalone page
-    useEffect(() => {
-        const welcomeMessage: ChatMessage = {
-            id: crypto.randomUUID(),
-            role: 'assistant',
-            content: `Welcome to CareerGuide AI! 🎓\n\nI'm going to guide you through a rapid 4-step assessment to find your perfect Kenyan CBE career path.\n\nFirst, what is your **name** and your **current grade/class**?`,
-            timestamp: new Date()
-        };
-        setConversation([welcomeMessage]);
-    }, []);
-
-    const extractProfileInfo = (userMessage: string, aiResponse: string) => {
-        // We will rely on the final JSON extraction phase for complete accuracy,
-        // but we can try to grab the name early just to personalize the chat context.
-        const message = userMessage.toLowerCase();
-        const newProfile = { ...guestProfile };
-        if (!newProfile.name) {
-            const nameMatch = message.match(/(?:my name is|i'm|i am|call me)\s+([a-zA-Z\s]+)/i);
-            if (nameMatch) newProfile.name = nameMatch[1].trim();
-        }
-        setGuestProfile(newProfile);
-    };
-
-    const handleSend = async () => {
-        if (!message.trim() || isLoading) return;
-
-        const userMsg: ChatMessage = {
-            id: crypto.randomUUID(),
-            role: 'user',
-            content: message.trim(),
-            timestamp: new Date()
-        };
-
-        setConversation(prev => [...prev, userMsg]);
-        setMessage("");
+    const finishAssessment = async () => {
         setIsLoading(true);
-
+        setError(null);
         try {
-            const response = await aiCareerService.sendMessage(userMsg.content, conversation, {
-                name: guestProfile.name,
-                schoolLevel: 'secondary',
-                constraints: ["CRITICAL: You are conducting a strict 4-step Quick Assessment. Do not give open ended chats. Step 1: Ask Name & Grade. Step 2: Ask top 3 Favorite Subjects. Step 3: Conduct a 1-question Mini-RIASEC scenario test (e.g. Would you rather fix a drone, analyze data, or manage a team?). Step 4: Summarize and tell them to click Finish. MOVE STRICTLY ONE STEP AT A TIME."]
-            });
-
-            const assistantMsg: ChatMessage = {
-                id: crypto.randomUUID(),
-                role: 'assistant',
-                content: cleanMarkdownFormatting(response),
-                timestamp: new Date()
+            const { personalityTypes } = calculateRiasec();
+            const topPersonality = personalityTypes[0] || 'Balanced';
+            
+            const profile: GuestProfile = {
+                name,
+                curriculum: curriculum || undefined,
+                grade,
+                subjects: selectedSubjects,
+                interests: [`RIASEC Type: ${personalityTypes.join(', ')}`],
+                careerGoals: "Seeking career alignment via AI Quick Assessment."
             };
+            setGuestProfile(profile);
 
-            setConversation(prev => [...prev, assistantMsg]);
-            extractProfileInfo(userMsg.content, response);
+            // Fetch recommendations
+            const recommendations = await aiCareerService.generateCareerRecommendations({
+                name: profile.name,
+                curriculum: profile.curriculum,
+                currentGrade: profile.grade,
+                subjects: profile.subjects,
+                interests: profile.interests,
+            });
+            
+            setFinalRecommendations(recommendations);
+            
+            // Also generate an AI Summary to append to the report since we removed the conversational history
+            const summaryString = await aiCareerService.sendMessage(
+                "Generate a 3-paragraph executive summary detailing why the selected career paths fit the student based on their selected RIASEC profile (" + topPersonality + ") and their chosen subjects. Emphasize either Kenyan CBC or IGCSE pathways depending on context. Keep it highly professional like a consultancy report. Use markdown formatting. DO NOT ask any questions.",
+                [],
+                {
+                    name: profile.name,
+                    curriculum: profile.curriculum,
+                    currentGrade: profile.grade,
+                    subjects: profile.subjects,
+                    interests: profile.interests,
+                    assessmentResults: {
+                        riasec_scores: calculateRiasec().scores,
+                        personality_type: personalityTypes
+                    }
+                }
+            );
 
-            const userTurns = conversation.filter(m => m.role === 'user').length + 1;
-            if (userTurns >= 6) setShowFinishCTA(true);
-            if (userTurns >= 8) setAssessmentComplete(true);
+            setGuestProfile(prev => ({
+                ...prev,
+                aiSummary: summaryString
+            }));
 
-        } catch (err) {
-            setError('Failed to connect to AI. Please try again.');
+            setShowReport(true);
+            setCurrentStep(4);
+        } catch (err: any) {
+            console.error(err);
+            setError(err.message || 'Failed to generate assessment. Please try again.');
         } finally {
             setIsLoading(false);
         }
     };
 
-    const [finalRecommendations, setFinalRecommendations] = useState<any[]>([]);
-
-    const finishAssessment = async () => {
-        setIsGeneratingReport(true);
-        try {
-            // Step 1: Extract real profile via hidden JSON prompt
-            const extractPrompt = "Extract the student's profile from our conversation into a strict JSON format. Return ONLY a JSON object with these exact keys and nothing else: 'name' (string), 'grade' (string), 'subjects' (array of strings), 'riasecCode' (string: their 3-letter Holland Code based on evaluating their answers, e.g. 'IRE'. If unsure, guess based on their subjects/answers). Example: {\"name\":\"John\",\"grade\":\"Form 3\",\"subjects\":[\"Math\",\"Physics\"],\"riasecCode\":\"IRE\"}";
-            const extractionObjStr = await aiCareerService.sendMessage(extractPrompt, conversation, {});
-            
-            let extractedProfile: GuestProfile = { ...guestProfile };
-            try {
-                // Ensure we just grab the JSON part if the AI wrapped it in markdown
-                const jsonMatch = extractionObjStr.match(/\{[\s\S]*?\}/);
-                if (jsonMatch) {
-                   const parsed = JSON.parse(jsonMatch[0]);
-                   extractedProfile = {
-                       name: parsed.name || guestProfile.name,
-                       grade: parsed.grade || 'Unknown',
-                       subjects: parsed.subjects || [],
-                       interests: [parsed.riasecCode ? `RIASEC: ${parsed.riasecCode}` : 'General Exploration'],
-                       careerGoals: "Seeking career alignment via AI Quick Assessment."
-                   };
-                   setGuestProfile(extractedProfile);
-                }
-            } catch (e) {
-                console.error("Failed to parse extracted JSON profile", e);
-            }
-
-            // Step 2: Generate actual career recommendations based on the extracted profile
-            const recommendations = await aiCareerService.generateCareerRecommendations({
-                name: extractedProfile.name,
-                currentGrade: extractedProfile.grade,
-                subjects: extractedProfile.subjects,
-                interests: extractedProfile.interests,
-            });
-            setFinalRecommendations(recommendations);
-
-            // Step 3: Provide a closing conversational summary
-            const summaryPrompt = "The assessment is complete. Provide a warm 2-sentence closing message thanking them by name and telling them their PDF report is ready to download containing their personalized career matches based on their RIASEC code.";
-            const summary = await aiCareerService.sendMessage(summaryPrompt, conversation, {});
-            const assistantMsg: ChatMessage = {
-                id: crypto.randomUUID(),
-                role: 'assistant',
-                content: cleanMarkdownFormatting(summary),
-                timestamp: new Date()
-            };
-            setConversation(prev => [...prev, assistantMsg]);
-            setShowReport(true);
-        } catch (e) {
-            console.error(e);
-            setError('Error generating report.');
-        } finally {
-            setIsGeneratingReport(false);
-        }
-    };
-
     const downloadReport = async () => {
-        const html = ReportGenerator.generatePDFReport(guestProfile, conversation, finalRecommendations);
+        const html = ReportGenerator.generatePDFReport(guestProfile, [], finalRecommendations);
         await ReportGenerator.downloadPDF(html, `${guestProfile.name || 'CareerGuide'}-Assessment-Report.pdf`);
     };
 
@@ -181,111 +146,173 @@ const QuickAssessment = () => {
             <BackgroundGradient />
             <Navigation />
             
-            <main className="max-w-4xl mx-auto px-4 py-8 relative z-10">
-                {/* Removed Hero title section for a cleaner assessment focus */}
+            <main className="max-w-3xl mx-auto px-4 py-12 relative z-10">
+                <div className="text-center mb-8">
+                    <h1 className="text-4xl font-extrabold tracking-tight bg-gradient-to-r from-primary to-blue-600 bg-clip-text text-transparent pb-2">Comprehensive Quick Assessment</h1>
+                    <p className="text-lg text-foreground-muted mt-2">Discover your perfectly aligned career paths in less than 3 minutes.</p>
+                </div>
+
+                <div className="mb-8">
+                    <div className="flex justify-center gap-2 mb-2">
+                        {[1, 2, 3, 4].map(s => (
+                            <div key={s} className={`h-2 w-16 rounded-full transition-all ${currentStep >= s ? 'bg-primary shadow-[0_0_10px_rgba(var(--primary),0.5)]' : 'bg-muted'}`} />
+                        ))}
+                    </div>
+                </div>
+
+                {error && (
+                    <Alert variant="destructive" className="mb-6 border-destructive/50 bg-destructive/5">
+                        <AlertDescription>{error}</AlertDescription>
+                    </Alert>
+                )}
 
                 <Card className="bg-gradient-surface border-card-border shadow-elevated overflow-hidden">
-                    <CardHeader className="border-b border-card-border bg-muted/30">
-                        <div className="flex items-center justify-between">
-                            <div className="flex items-center space-x-3">
-                                <span className="bg-primary/10 text-primary text-[11px] font-bold px-2 py-0.5 rounded-full border border-primary/20 animate-pulse flex items-center shrink-0">
-                                    <Sparkles className="w-3 h-3 mr-1" /> AI Active
-                                </span>
-                                <span className="text-sm font-medium">CareerGuide AI Counselor</span>
-                            </div>
-                        </div>
-                    </CardHeader>
-                    
-                    <CardContent className="p-0">
-                        <ScrollArea ref={scrollAreaRef} className="h-[500px] p-6">
-                            <div className="space-y-6">
-                                {conversation.map((msg) => (
-                                    <div key={msg.id} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                                        <div className={`flex max-w-[85%] ${msg.role === 'user' ? 'flex-row-reverse' : 'flex-row'} items-end gap-3 group`}>
-                                            <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 shadow-glow transition-transform group-hover:scale-110 ${
-                                                msg.role === 'user' 
-                                                ? 'bg-gradient-to-br from-primary to-primary-hover text-white' 
-                                                : 'bg-gradient-to-br from-secondary to-secondary-hover text-white'
-                                            }`}>
-                                                {msg.role === 'user' ? (
-                                                  <User className="w-5 h-5" />
-                                                ) : (
-                                                  <img 
-                                                    src="/logos/CareerGuide_Logo.png" 
-                                                    alt="AI" 
-                                                    className="w-6 h-auto" 
-                                                  />
-                                                )}
-                                            </div>
-                                            <div className={`p-4 rounded-[1.25rem] shadow-sm leading-relaxed ${
-                                                msg.role === 'user' 
-                                                ? 'bg-primary text-white rounded-br-none' 
-                                                : 'bg-background border border-card-border rounded-bl-none'
-                                            }`}>
-                                                <p className="text-sm whitespace-pre-wrap">{msg.content}</p>
-                                            </div>
-                                        </div>
+                    <CardContent className="p-6 sm:p-10">
+                        <AnimatePresence mode="wait">
+                            
+                            {/* STEP 1: BASICS */}
+                            {currentStep === 1 && (
+                                <motion.div key="step1" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-8">
+                                    <div className="text-center">
+                                        <h2 className="text-3xl font-bold flex items-center justify-center gap-2"><User className="w-8 h-8 text-primary"/> Let's Start with You</h2>
+                                        <p className="text-foreground-muted mt-2">Before we dive in, tell us a bit about where you are in school.</p>
                                     </div>
-                                ))}
-                                {isLoading && (
-                                    <div className="flex justify-start items-center gap-3">
-                                        <div className="w-10 h-10 rounded-full bg-white/5 text-white flex items-center justify-center animate-pulse shadow-sm">
-                                            <img 
-                                              src="/logos/CareerGuide_Logo.png" 
-                                              alt="AI" 
-                                              className="w-6 h-auto" 
+
+                                    <div className="space-y-6">
+                                        <div className="space-y-2">
+                                            <Label className="text-lg font-semibold">Your Full Name</Label>
+                                            <Input 
+                                                value={name} onChange={e => setName(e.target.value)} 
+                                                placeholder="e.g. John Kamau" 
+                                                className="text-lg p-6 bg-background/50 focus:ring-primary border-2"
                                             />
                                         </div>
-                                        <div className="bg-muted/40 p-4 rounded-[1.25rem] rounded-bl-none flex items-center gap-2">
-                                            <div className="flex gap-1">
-                                                <motion.div animate={{ y: [0, -4, 0] }} transition={{ duration: 0.6, repeat: Infinity }} className="w-1.5 h-1.5 bg-primary rounded-full" />
-                                                <motion.div animate={{ y: [0, -4, 0] }} transition={{ duration: 0.6, repeat: Infinity, delay: 0.2 }} className="w-1.5 h-1.5 bg-primary rounded-full" />
-                                                <motion.div animate={{ y: [0, -4, 0] }} transition={{ duration: 0.6, repeat: Infinity, delay: 0.4 }} className="w-1.5 h-1.5 bg-primary rounded-full" />
+
+                                        <div className="space-y-3">
+                                            <Label className="text-lg font-semibold">Which Curriculum are you studying?</Label>
+                                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                                <button type="button" onClick={() => setCurriculum('cbc')} className={`p-5 rounded-2xl border-2 transition-all flex flex-col items-start gap-2 ${curriculum === 'cbc' ? 'border-primary bg-primary/5 ring-1 ring-primary' : 'border-card-border hover:border-primary/50'}`}>
+                                                    <span className="font-bold text-lg">Kenyan CBC</span>
+                                                    <span className="text-sm text-left text-foreground-muted">Junior/Senior Secondary</span>
+                                                </button>
+                                                <button type="button" onClick={() => setCurriculum('igcse')} className={`p-5 rounded-2xl border-2 transition-all flex flex-col items-start gap-2 ${curriculum === 'igcse' ? 'border-primary bg-primary/5 ring-1 ring-primary' : 'border-card-border hover:border-primary/50'}`}>
+                                                    <span className="font-bold text-lg">British IGCSE</span>
+                                                    <span className="text-sm text-left text-foreground-muted">Key Stage 3-4 / A-Levels</span>
+                                                </button>
                                             </div>
                                         </div>
-                                    </div>
-                                )}
-                            </div>
-                        </ScrollArea>
 
-                        <div className="p-6 border-t border-card-border bg-muted/20">
-                            {showReport ? (
-                                <div className="text-center space-y-4 py-4">
-                                    <div className="flex items-center justify-center gap-2 text-green-500 font-bold text-lg">
-                                        <Sparkles className="w-6 h-6" /> Assessment Complete
+                                        <div className="space-y-2">
+                                            <Label className="text-lg font-semibold">Current Grade / Year</Label>
+                                            <Input 
+                                                value={grade} onChange={e => setGrade(e.target.value)} 
+                                                placeholder={curriculum === 'cbc' ? "e.g. Grade 9" : "e.g. Year 10"} 
+                                                className="text-lg p-6 bg-background/50 focus:ring-primary border-2"
+                                            />
+                                        </div>
                                     </div>
-                                    <Button onClick={downloadReport} size="lg" className="bg-gradient-primary shadow-glow ring-offset-background transition-all hover:scale-105">
-                                        <Download className="w-5 h-5 mr-2" /> Download PDF Report
-                                    </Button>
-                                    <p className="text-xs text-foreground-muted">Your report includes top 3 career matches and CBE subjects focus.</p>
-                                </div>
-                            ) : (
-                                <div className="space-y-4">
-                                    {(showFinishCTA || assessmentComplete) && (
-                                        <Alert className="bg-primary/5 border-primary/20">
-                                            <AlertDescription className="text-center">
-                                                <Button onClick={finishAssessment} variant="link" className="text-primary font-bold">
-                                                    Click here to finish and generate your report
-                                                </Button>
-                                            </AlertDescription>
-                                        </Alert>
-                                    )}
-                                    <div className="flex gap-4">
-                                        <Input
-                                            value={message}
-                                            onChange={(e) => setMessage(e.target.value)}
-                                            onKeyPress={(e) => e.key === 'Enter' && handleSend()}
-                                            placeholder="Type your message..."
-                                            className="bg-background border-card-border focus:ring-primary"
-                                            disabled={isLoading}
-                                        />
-                                        <Button onClick={handleSend} disabled={isLoading || !message.trim()} className="bg-primary hover:bg-primary-hover shadow-sm">
-                                            <Send className="w-4 h-4" />
+                                    
+                                    <div className="pt-4 flex justify-end">
+                                        <Button onClick={handleNext} className="h-14 px-8 text-lg rounded-2xl bg-primary text-primary-foreground shadow-lg hover:translate-x-1 transition-transform">
+                                            Continue <ArrowRight className="ml-2 w-5 h-5" />
                                         </Button>
                                     </div>
-                                </div>
+                                </motion.div>
                             )}
-                        </div>
+
+                            {/* STEP 2: LEARNING AREAS */}
+                            {currentStep === 2 && (
+                                <motion.div key="step2" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-8">
+                                    <div className="text-center">
+                                        <h2 className="text-3xl font-bold flex items-center justify-center gap-2"><Target className="w-8 h-8 text-primary"/> Learning Interests</h2>
+                                        <p className="text-foreground-muted mt-2">Select the general subject areas you naturally excel at or enjoy the most.</p>
+                                    </div>
+
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-[60vh] overflow-y-auto p-2">
+                                        {commonSubjects.map(sub => (
+                                            <button
+                                                key={sub} type="button"
+                                                onClick={() => setSelectedSubjects(p => p.includes(sub) ? p.filter(x => x !== sub) : [...p, sub])}
+                                                className={`p-4 rounded-xl border-2 transition-all text-left flex items-center gap-3 ${selectedSubjects.includes(sub) ? 'border-primary bg-primary text-white shadow-md' : 'border-card-border hover:border-primary/30 bg-background/50'}`}
+                                            >
+                                                {selectedSubjects.includes(sub) ? <CheckCircle className="w-5 h-5 shrink-0" /> : <div className="w-5 h-5 shrink-0 border-2 rounded-full border-muted-foreground/30" />}
+                                                <span className="font-medium">{sub}</span>
+                                            </button>
+                                        ))}
+                                    </div>
+
+                                    <div className="pt-4 flex justify-between">
+                                        <Button variant="outline" onClick={handleBack} className="h-14 px-8 text-lg rounded-2xl border-2 font-bold mb-4 sm:mb-0">
+                                            <ArrowLeft className="mr-2 w-5 h-5" /> Back
+                                        </Button>
+                                        <Button onClick={handleNext} className="h-14 px-8 text-lg rounded-2xl bg-primary text-primary-foreground shadow-lg hover:translate-x-1 transition-transform">
+                                            Continue <ArrowRight className="ml-2 w-5 h-5" />
+                                        </Button>
+                                    </div>
+                                </motion.div>
+                            )}
+
+                            {/* STEP 3: WORK STYLES */}
+                            {currentStep === 3 && (
+                                <motion.div key="step3" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-8">
+                                    <div className="text-center">
+                                        <h2 className="text-3xl font-bold flex items-center justify-center gap-2"><Brain className="w-8 h-8 text-primary"/> What Do You Enjoy Doing?</h2>
+                                        <p className="text-foreground-muted mt-2">Pick activities below that sound fun to you. This builds your psychological profile.</p>
+                                    </div>
+
+                                    <div className="grid grid-cols-1 gap-3 max-h-[50vh] overflow-y-auto p-2 custom-scrollbar">
+                                        {RIASEC_ACTIVITIES.slice(0, 15).map(a => (
+                                            <button
+                                                key={a.id} type="button"
+                                                onClick={() => setSelectedActivities(p => p.includes(a.id) ? p.filter(x => x !== a.id) : [...p, a.id])}
+                                                className={`p-4 rounded-xl border-2 transition-all text-left flex items-start gap-4 ${selectedActivities.includes(a.id) ? 'border-primary bg-primary/10 ring-1 ring-primary' : 'border-card-border hover:border-primary/20 bg-background/50'}`}
+                                            >
+                                                <div className={`mt-0.5 w-5 h-5 shrink-0 rounded border-2 flex items-center justify-center ${selectedActivities.includes(a.id) ? 'border-primary bg-primary text-white' : 'border-muted-foreground/30'}`}>
+                                                    {selectedActivities.includes(a.id) && <CheckCircle className="w-3 h-3" />}
+                                                </div>
+                                                <p className="text-base font-medium">{a.text}</p>
+                                            </button>
+                                        ))}
+                                    </div>
+
+                                    <div className="pt-4 flex flex-col sm:flex-row justify-between gap-4">
+                                        <Button variant="outline" onClick={handleBack} className="h-14 px-8 text-lg rounded-2xl border-2 font-bold order-2 sm:order-1 disabled:opacity-50" disabled={isLoading}>
+                                            <ArrowLeft className="mr-2 w-5 h-5" /> Back
+                                        </Button>
+                                        <Button onClick={finishAssessment} disabled={isLoading} className="h-14 px-8 text-lg rounded-2xl bg-gradient-to-r from-primary to-blue-600 text-white shadow-xl hover:shadow-primary/20 order-1 sm:order-2">
+                                            {isLoading ? (
+                                                <><Loader2 className="mr-2 w-5 h-5 animate-spin" /> Analyzing Everything...</>
+                                            ) : (
+                                                <><Sparkles className="mr-2 w-5 h-5" /> Discover My Future</>
+                                            )}
+                                        </Button>
+                                    </div>
+                                </motion.div>
+                            )}
+
+                            {/* STEP 4: RESULTS */}
+                            {currentStep === 4 && (
+                                <motion.div key="step4" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="space-y-8 text-center py-10">
+                                    <div className="w-20 h-20 bg-green-500/10 rounded-full flex items-center justify-center mx-auto mb-6">
+                                        <CheckCircle className="w-10 h-10 text-green-500" />
+                                    </div>
+                                    <h2 className="text-4xl font-extrabold tracking-tight">Your Action Plan is Ready</h2>
+                                    <p className="text-xl text-foreground-muted max-w-lg mx-auto">
+                                        We evaluated your curriculum, subjects, and personality. Your premium PDF report contains your top 3 matching career paths and AI guidance.
+                                    </p>
+
+                                    <div className="pt-8 flex flex-col items-center gap-4">
+                                        <Button onClick={downloadReport} size="lg" className="h-16 px-10 text-xl font-bold bg-gradient-to-r from-primary via-blue-600 to-indigo-600 text-white rounded-full shadow-2xl hover:scale-105 transition-transform duration-300">
+                                            <Download className="w-6 h-6 mr-3" /> Download Professional Report
+                                        </Button>
+                                        
+                                        <Button variant="ghost" onClick={() => { setCurrentStep(1); setGuestProfile({}); }} className="mt-4">
+                                            Retake Assessment
+                                        </Button>
+                                    </div>
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
                     </CardContent>
                 </Card>
             </main>

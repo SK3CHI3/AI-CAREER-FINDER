@@ -2,11 +2,13 @@ import { ChatMessage } from './ai-service';
 
 export interface GuestProfile {
   name?: string;
+  curriculum?: string;
   age?: string;
   grade?: string;
   subjects?: string[];
   interests?: string[];
   careerGoals?: string;
+  aiSummary?: string;
   strengths?: string[];
   challenges?: string[];
   dreamJob?: string;
@@ -90,26 +92,37 @@ export class ReportGenerator {
 
         .header-text {
           flex: 1;
+          text-align: left;
         }
         
         .brand-title {
-          font-size: 32px;
+          font-size: 24px;
           font-weight: 800;
           color: var(--brand);
-          margin-bottom: 5px;
-          letter-spacing: -0.02em;
+          margin-bottom: 0px;
+        }
+
+        .student-title {
+          font-size: 18px;
+          font-weight: 600;
+          color: var(--ink);
+          margin-top: 5px;
         }
         
-        .brand-subtitle {
+        .student-details {
           color: var(--muted);
-          font-size: 16px;
+          font-size: 14px;
           font-weight: 500;
+          margin-top: 2px;
         }
         
         .report-meta {
           text-align: right;
           font-size: 12px;
           color: var(--muted);
+          background: var(--light);
+          padding: 10px;
+          border-radius: 6px;
         }
         
         /* Main Content */
@@ -391,12 +404,15 @@ export class ReportGenerator {
                 <img src="${window.location.origin}/logos/CareerGuide_Logo.png" alt="CareerGuide Logo" onerror="this.style.display='none'"/>
             </div>
             <div class="header-text">
-                <div class="brand-title">CareerGuide AI</div>
-                <div class="brand-subtitle">Kenya's Premier CBE Career Guidance Platform</div>
+                <div class="brand-title">CareerGuide AI Report</div>
+                <div class="student-title">${profile.name ? profile.name.toUpperCase() : 'STUDENT ASSESSMENT'}</div>
+                <div class="student-details">
+                    Curriculum: ${profile.curriculum === 'igcse' ? 'British IGCSE' : 'Kenyan CBC'} | Grade: ${profile.grade || 'N/A'}
+                </div>
             </div>
             <div class="report-meta">
-                <div>Generated: ${currentDate}</div>
-                <div>Report ID: ${Date.now().toString().slice(-6)}</div>
+                <div><strong>Date:</strong> ${currentDate}</div>
+                <div><strong>ID:</strong> ${Date.now().toString().slice(-6)}</div>
             </div>
         </div>
         
@@ -458,17 +474,28 @@ export class ReportGenerator {
             ` : ''}
         </div>
 
-        <!-- CBE Context Section -->
+        <!-- Executive AI Summary -->
+        ${profile.aiSummary ? `
         <div class="section">
-            <h2 class="section-title">CBE Pathway Context</h2>
+            <h2 class="section-title">Executive Career Analysis</h2>
+            <div class="ai-summary" style="font-size: 15px; background: #fffbdf; border-left-color: #eab308; padding: 25px;">
+                ${profile.aiSummary}
+            </div>
+        </div>
+        ` : ''}
+
+        <!-- CBE Context Section -->
+        ${profile.curriculum === 'cbc' ? `
+        <div class="section">
+            <h2 class="section-title">CBC Pathway Context</h2>
             <div class="cbe-context">
                 <h4>Your Current Educational Path</h4>
                 <p>${this.getCBEPathInfo(profile.grade)}</p>
-                
                 <h4>Recommended Next Steps</h4>
                 <p>${this.getNextSteps(profile.grade)}</p>
             </div>
         </div>
+        ` : ''}
 
         <!-- Career Recommendations Section -->
         ${recommendations.length > 0 ? `
@@ -500,11 +527,22 @@ export class ReportGenerator {
         </div>
         ` : ''}
 
-        <!-- AI Assessment Summary -->
-        <div class="section">
-            <h2 class="section-title">AI Assessment Summary</h2>
-            <div class="ai-summary">
-                ${ReportGenerator.extractAISummary(conversation)}
+        <!-- Student Data Reference (Moved down so it's not the first thing they see) -->
+        <div class="section" style="margin-top: 40px; border-top: 1px dashed var(--border); padding-top: 30px;">
+            <h2 class="section-title" style="font-size: 16px; color: var(--muted);">Data Reference</h2>
+            <div class="profile-grid">
+                ${profile.subjects?.length ? `
+                <div class="profile-item">
+                    <div class="profile-label">Subjects Selected</div>
+                    <div class="profile-value">${profile.subjects.join(', ')}</div>
+                </div>
+                ` : ''}
+                ${profile.interests?.length ? `
+                <div class="profile-item">
+                    <div class="profile-label">Interests & RIASEC</div>
+                    <div class="profile-value">${profile.interests.join(', ')}</div>
+                </div>
+                ` : ''}
             </div>
         </div>
 
