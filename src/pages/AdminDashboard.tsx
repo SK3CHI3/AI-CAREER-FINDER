@@ -26,6 +26,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { BlogManagement } from '@/components/BlogManagement'
 import { CareerPathwaysManagement } from '@/components/CareerPathwaysManagement'
 import { AdminCounselorManager } from '@/components/AdminCounselorManager'
+import { ThemeToggle } from '@/components/ThemeToggle'
 
 interface AdminStats {
   totalStudents: number
