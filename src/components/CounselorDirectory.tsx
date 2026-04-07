@@ -140,7 +140,7 @@ export const CounselorDirectory = ({ limit }: { limit?: number }) => {
       {/* Redundant title and description removed */}
 
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
         {counselors.map((counselor) => (
           <Card key={counselor.id} className="group relative bg-card border-card-border shadow-sm hover:shadow-xl hover:border-primary/20 transition-all duration-300 overflow-hidden flex flex-col">
             <div className="h-28 bg-gradient-to-r from-blue-600/10 to-purple-600/10 relative overflow-hidden">

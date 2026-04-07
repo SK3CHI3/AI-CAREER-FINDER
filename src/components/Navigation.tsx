@@ -5,6 +5,7 @@ import { Menu, X, Bot, ChevronDown } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { getDashboardPathForRole } from "@/types/roles";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { motion, AnimatePresence } from "framer-motion";
 
 const scrollToSection = (id: string) => {
   const el = document.getElementById(id);
@@ -123,65 +124,73 @@ const Navigation = () => {
         </div>
 
         {/* Mobile Navigation */}
-        {isOpen && (
-          <div className="md:hidden">
-            <div className="px-2 pt-2 pb-3 space-y-1 bg-surface rounded-lg mt-2 shadow-card">
-              <button onClick={() => handleNavClick('features')} className="block w-full text-left px-3 py-2 text-foreground-muted hover:text-foreground transition-colors">
-                Features
-              </button>
-              <button onClick={() => { navigate('/how-it-works'); setIsOpen(false); }} className="block w-full text-left px-3 py-2 text-foreground-muted hover:text-foreground transition-colors">
-                How it works
-              </button>
-              <button onClick={() => handleNavClick('careers')} className="block w-full text-left px-3 py-2 text-foreground-muted hover:text-foreground transition-colors">
-                Career Paths
-              </button>
-              <button onClick={() => { navigate('/about'); setIsOpen(false); }} className="block w-full text-left px-3 py-2 text-foreground-muted hover:text-foreground transition-colors">
-                About
-              </button>
-              <button onClick={() => { navigate('/faq'); setIsOpen(false); }} className="block w-full text-left px-3 py-2 text-foreground-muted hover:text-foreground transition-colors">
-                FAQ
-              </button>
-              <button onClick={() => { navigate('/blog'); setIsOpen(false); }} className="block w-full text-left px-3 py-2 text-foreground-muted hover:text-foreground transition-colors">
-                Blog
-              </button>
-              <div className="pt-4 border-t border-card-border">
-                {user ? (
-                  <Button
-                    className="w-full bg-gradient-primary text-primary-foreground"
-                    onClick={() => {
-                      navigate(dashboardPath);
-                      setIsOpen(false);
-                    }}
-                  >
-                    Dashboard
-                  </Button>
-                ) : (
-                  <>
+        <AnimatePresence>
+          {isOpen && (
+            <motion.div 
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: 'auto', opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={{ duration: 0.3, ease: 'easeInOut' }}
+              className="md:hidden overflow-hidden"
+            >
+              <div className="px-2 pt-2 pb-6 space-y-1 bg-surface/95 backdrop-blur-xl rounded-2xl mt-2 border border-card-border shadow-2xl mx-1 mb-4">
+                <button onClick={() => handleNavClick('features')} className="block w-full text-left px-4 py-3 text-foreground-muted hover:text-foreground hover:bg-muted/50 rounded-xl transition-all">
+                  Features
+                </button>
+                <button onClick={() => { navigate('/how-it-works'); setIsOpen(false); }} className="block w-full text-left px-4 py-3 text-foreground-muted hover:text-foreground hover:bg-muted/50 rounded-xl transition-all">
+                  How it works
+                </button>
+                <button onClick={() => handleNavClick('careers')} className="block w-full text-left px-4 py-3 text-foreground-muted hover:text-foreground hover:bg-muted/50 rounded-xl transition-all">
+                  Career Paths
+                </button>
+                <button onClick={() => { navigate('/about'); setIsOpen(false); }} className="block w-full text-left px-4 py-3 text-foreground-muted hover:text-foreground hover:bg-muted/50 rounded-xl transition-all">
+                  About
+                </button>
+                <button onClick={() => { navigate('/faq'); setIsOpen(false); }} className="block w-full text-left px-4 py-3 text-foreground-muted hover:text-foreground hover:bg-muted/50 rounded-xl transition-all">
+                  FAQ
+                </button>
+                <button onClick={() => { navigate('/blog'); setIsOpen(false); }} className="block w-full text-left px-4 py-3 text-foreground-muted hover:text-foreground hover:bg-muted/50 rounded-xl transition-all">
+                  Blog
+                </button>
+                <div className="pt-4 mt-2 border-t border-card-border/50 px-2 space-y-3">
+                  {user ? (
                     <Button
-                      variant="ghost"
-                      className="w-full justify-start text-foreground-muted mb-2"
+                      className="w-full bg-gradient-primary text-primary-foreground shadow-glow h-12 rounded-xl"
                       onClick={() => {
-                        navigate('/auth');
+                        navigate(dashboardPath);
                         setIsOpen(false);
                       }}
                     >
-                      Sign In
+                      Dashboard
                     </Button>
-                    <Button
-                      className="w-full bg-gradient-primary text-primary-foreground"
-                      onClick={() => {
-                        navigate('/auth');
-                        setIsOpen(false);
-                      }}
-                    >
-                      Get started
-                    </Button>
-                  </>
-                )}
+                  ) : (
+                    <>
+                      <Button
+                        variant="ghost"
+                        className="w-full justify-center text-foreground-muted h-12 rounded-xl mb-1"
+                        onClick={() => {
+                          navigate('/auth');
+                          setIsOpen(false);
+                        }}
+                      >
+                        Sign In
+                      </Button>
+                      <Button
+                        className="w-full bg-gradient-primary text-primary-foreground shadow-glow h-12 rounded-xl"
+                        onClick={() => {
+                          navigate('/auth');
+                          setIsOpen(false);
+                        }}
+                      >
+                        Get started
+                      </Button>
+                    </>
+                  )}
+                </div>
               </div>
-            </div>
-          </div>
-        )}
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </nav>
   );

@@ -40,7 +40,7 @@ const Hero = () => {
         <div className="grid lg:grid-cols-2 gap-12 items-center">
           {/* LEFT CONTENT */}
           <div className="space-y-8">
-            <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold leading-tight tracking-tight">
+            <h1 className="text-4xl sm:text-6xl lg:text-7xl font-bold leading-tight tracking-tight">
               Help Students Discover{" "}
               <span className="bg-gradient-text bg-clip-text text-transparent">
                 Their Future Careers Earlier.
@@ -58,7 +58,7 @@ const Hero = () => {
                 <>
                   <Button
                     size="lg"
-                    className="bg-gradient-primary hover:opacity-90 text-primary-foreground shadow-glow px-8 py-6 text-lg flex-1"
+                    className="w-full sm:w-auto bg-gradient-primary hover:opacity-90 text-primary-foreground shadow-glow px-8 py-6 text-lg"
                     onClick={() => handleRoleSelect("student")}
                   >
                     <GraduationCap className="w-5 h-5 mr-2" />
@@ -66,7 +66,7 @@ const Hero = () => {
                   </Button>
                   <Button
                     size="lg"
-                    className="bg-gradient-primary hover:opacity-90 text-primary-foreground shadow-glow px-8 py-6 text-lg flex-1"
+                    className="w-full sm:w-auto bg-gradient-primary hover:opacity-90 text-primary-foreground shadow-glow px-8 py-6 text-lg"
                     onClick={() => handleRoleSelect("school")}
                   >
                     <School className="w-5 h-5 mr-2" />
@@ -75,14 +75,14 @@ const Hero = () => {
                   <Button
                     variant="outline"
                     size="lg"
-                    className="border-card-border hover:bg-surface px-8 py-6 text-lg"
+                    className="w-full sm:w-auto border-card-border hover:bg-surface px-8 py-6 text-lg"
                     onClick={() =>
                       document
                         .getElementById("guest-chat")
                         ?.scrollIntoView({ behavior: "smooth" })
                     }
                   >
-                    Quick Assessment.
+                    Quick Assessment
                   </Button>
                 </>
               ) : (

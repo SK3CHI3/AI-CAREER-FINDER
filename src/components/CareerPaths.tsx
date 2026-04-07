@@ -98,7 +98,7 @@ const CareerPaths = () => {
     <section id="careers" className="py-20">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-16">
-          <h2 className="text-3xl sm:text-4xl font-bold mb-6">
+          <h2 className="text-2xl sm:text-4xl font-bold mb-6">
             Trending{" "}
             <span className="bg-gradient-text bg-clip-text text-transparent">
               Careers in Kenya
@@ -110,7 +110,7 @@ const CareerPaths = () => {
           </p>
         </div>
         
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-8">
           {dynamicCareerPaths.map((career) => (
             <Card 
               key={career.id}

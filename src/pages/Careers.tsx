@@ -119,7 +119,7 @@ const Careers = () => {
             <Sparkles className="w-4 h-4" />
             <span>Kenya's Career Library</span>
           </motion.div>
-          <h1 className="text-4xl md:text-5xl font-bold mb-6 bg-gradient-text bg-clip-text text-transparent">
+          <h1 className="text-3xl md:text-5xl font-bold mb-6 bg-gradient-text bg-clip-text text-transparent px-4">
             Explore Your Future
           </h1>
           <p className="text-xl text-foreground-muted max-w-3xl mx-auto leading-relaxed">
@@ -145,9 +145,9 @@ const Careers = () => {
               <button
                 key={cat}
                 onClick={() => setSelectedCategory(cat)}
-                className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all whitespace-nowrap ${
+                className={`px-5 py-2.5 rounded-xl text-sm font-bold transition-all whitespace-nowrap shadow-sm ${
                   selectedCategory === cat 
-                  ? 'bg-primary text-primary-foreground shadow-sm' 
+                  ? 'bg-primary text-primary-foreground' 
                   : 'bg-muted/50 text-foreground-muted hover:bg-muted'
                 }`}
               >
@@ -165,7 +165,7 @@ const Careers = () => {
           </div>
         ) : filteredCareers.length > 0 ? (
           <div className="space-y-12">
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-8">
               {filteredCareers.slice(0, itemsToShow).map((career, index) => (
                 <motion.div
                   key={career.id}
