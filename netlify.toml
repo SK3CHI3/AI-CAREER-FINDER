@@ -8,6 +8,13 @@
   # Functions directory (if using Netlify Functions)
   functions = "netlify/functions"
 
+# Edge Functions for SEO
+[[edge_functions]]
+  function = "seo-injection"
+  path = ["/blog/*", "/*"] 
+  # We use /* but the function itself filters for /blog and /careers
+  # to capture individual blog posts and career lists.
+
 [build.environment]
   # Node.js version (2025 LTS)
   NODE_VERSION = "20"

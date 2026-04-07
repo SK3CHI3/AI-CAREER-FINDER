@@ -3,7 +3,14 @@
 This document explains how we've optimized CareerGuide AI to ensure maximum visibility for Google Search and AI scrapers (like Perplexity, Bing AI, and GPT-4).
 
 ## 🌍 The Challenge: SEO with React
-Since this is a Single-Page Application (SPA) built with React, bots traditionally see an "empty shell" before JavaScript loads. We solved this without needing a complex migration to Next.js by using **Structured Data** and **Automated Discovery**.
+Since this is a Single-Page Application (SPA) built with React, bots traditionally see an "empty shell" before JavaScript loads. We solved this without needing a complex migration to Next.js by using **Netlify Edge Functions** to perform **Server-Side SEO Injection**.
+
+### **How it Works (Edge-Side Injection)**
+1.  **Bot Requests Page**: A bot (Google, Perplexity, etc.) requests `/blog/your-post`.
+2.  **Edge Function Intercepts**: A Netlify Edge Function (Deno-based) catches the request before it reaches the browser.
+3.  **Supabase Fetch**: The function fetches the specific `title`, `description`, and `content` from Supabase on the shelf.
+4.  **HTML Rewriting**: It uses `HTMLRewriter` to inject the tags and JSON-LD directly into the `<head>` of the initial HTML.
+5.  **Bot Sees Everything**: The bot receives a fully populated HTML file with the `articleBody` and `meta` tags instantly, without needing a browser or JavaScript.
 
 ---
 
