@@ -4,6 +4,8 @@ import { Badge } from "@/components/ui/badge";
 import { TrendingUp, DollarSign, Clock, ArrowRight } from "lucide-react";
 import { useState, useEffect } from "react";
 import { dashboardService, CareerPath } from "@/lib/dashboard-service";
+import CareerDetailModal from "./CareerDetailModal";
+import { useAuth } from "@/contexts/AuthContext";
 
 const getDemandColor = (demand: string) => {
   switch (demand) {
@@ -19,6 +21,9 @@ const CareerPaths = () => {
   const [dynamicCareerPaths, setDynamicCareerPaths] = useState<CareerPath[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [selectedCareer, setSelectedCareer] = useState<any>(null)
+  const [isModalOpen, setIsModalOpen] = useState(false)
+  const { profile } = useAuth()
 
   useEffect(() => {
     const loadCareerPaths = async () => {
@@ -122,7 +127,20 @@ const CareerPaths = () => {
               {/* Content Section */}
               <div className="p-6 space-y-4 flex-1 flex flex-col">
                 <div className="flex justify-between items-start gap-4">
-                  <h3 className="text-xl font-bold text-foreground group-hover:text-primary transition-colors line-clamp-2">
+                  <h3 
+                    className="text-xl font-bold text-foreground group-hover:text-primary transition-colors line-clamp-2 cursor-pointer"
+                    onClick={() => {
+                      setSelectedCareer({
+                        name: career.title,
+                        value: 95,
+                        color: '#6366f1',
+                        description: career.description,
+                        salaryRange: career.salary_range,
+                        growth: career.growth_percentage
+                      });
+                      setIsModalOpen(true);
+                    }}
+                  >
                     {career.title}
                   </h3>
                   <Badge className={`whitespace-nowrap ${getDemandColor(career.demand_level)} border-none shadow-sm`}>
@@ -170,11 +188,21 @@ const CareerPaths = () => {
                 <div className="mt-auto pt-4">
                   <Button 
                     variant="ghost" 
-                    className="w-full justify-between hover:bg-surface group-hover:text-primary"
-                    onClick={() => window.location.href = '/careers'}
+                    className="w-full justify-between hover:bg-surface group-hover:text-primary font-bold"
+                    onClick={() => {
+                      setSelectedCareer({
+                        name: career.title,
+                        value: 95,
+                        color: '#6366f1',
+                        description: career.description,
+                        salaryRange: career.salary_range,
+                        growth: career.growth_percentage
+                      });
+                      setIsModalOpen(true);
+                    }}
                   >
-                    Explore Path
-                    <ArrowRight className="w-4 h-4" />
+                    View Details
+                    <ArrowRight className="w-4 h-4 ml-2" />
                   </Button>
                 </div>
               </div>
@@ -193,6 +221,25 @@ const CareerPaths = () => {
           </Button>
         </div>
       </div>
+
+      {selectedCareer && (
+        <CareerDetailModal
+          isOpen={isModalOpen}
+          onClose={() => setIsModalOpen(false)}
+          career={selectedCareer}
+          studentProfile={profile ? {
+            id: profile.id,
+            name: profile.full_name || '',
+            schoolLevel: profile.school_level,
+            currentGrade: profile.current_grade,
+            cbeSubjects: profile.cbe_subjects || profile.subjects,
+            careerInterests: profile.career_interests || profile.interests,
+            strongSubjects: [],
+            weakSubjects: [],
+            overallAverage: 0
+          } : {}}
+        />
+      )}
     </section>
   );
 };

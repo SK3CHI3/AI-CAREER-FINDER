@@ -3,7 +3,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { Loader2, ExternalLink, GraduationCap, DollarSign, TrendingUp, Clock, MapPin, Users, BookOpen, Target } from 'lucide-react'
+import { Loader2, ExternalLink, GraduationCap, DollarSign, TrendingUp, Clock, MapPin, Users, BookOpen, Target, Shield } from 'lucide-react'
 import { aiCacheService } from '@/lib/ai-cache-service'
 import { aiCareerService } from '@/lib/ai-service'
 
@@ -28,6 +28,7 @@ interface CareerDetailModalProps {
     strongSubjects?: string[]
     weakSubjects?: string[]
     overallAverage?: number
+    id?: string
   }
 }
 
@@ -46,6 +47,8 @@ interface CareerDetails {
   relatedCareers: string[]
   timeline: string
   resources: string[]
+  institutions: string[]
+  regulatoryBodies: string[]
 }
 
 const CareerDetailModal: React.FC<CareerDetailModalProps> = ({ isOpen, onClose, career, studentProfile }) => {
@@ -70,12 +73,11 @@ const CareerDetailModal: React.FC<CareerDetailModalProps> = ({ isOpen, onClose, 
         const cachedDetails = await aiCacheService.getCachedCareerDetails(studentProfile.id, career.name)
         if (cachedDetails) {
           console.log('✅ Using cached career details')
-          setDetails(cachedDetails)
+          setDetails(cachedDetails as unknown as CareerDetails)
           setIsLoading(false)
           return
         }
       }
-
       // Get API key from environment variables
       const apiKey = import.meta.env.VITE_DEEPSEEK_API_KEY
       const baseUrl = 'https://api.deepseek.com'
@@ -118,7 +120,9 @@ CAREER: ${career.name} (${career.value}% match)
   "whyRecommended": "Why this career fits",
   "relatedCareers": ["Similar careers"],
   "timeline": "Time to enter this career",
-  "resources": ["Helpful resources"]
+  "resources": ["Helpful resources"],
+  "institutions": ["List at least 5 well-known Kenyan universities/colleges offering this"],
+  "regulatoryBodies": ["Kenyan bodies like EBK, LSK, KMPDC, etc. if applicable"]
 }
 
 Keep it concise and Kenya-focused.`
@@ -240,10 +244,10 @@ Keep it concise and Kenya-focused.`
         timeline: '2-4 years to entry level, with advancement opportunities',
         resources: [
           'Professional associations and networks',
-          'Online courses and certifications',
-          'Mentorship programs',
           'Industry conferences and workshops'
-        ]
+        ],
+        institutions: ['University of Nairobi', 'Kenyatta University', 'JKUAT', 'Strathmore University', 'Moi University'],
+        regulatoryBodies: ['Relevant Kenyan Professional Body']
       })
     } catch (error) {
       console.error('❌ Error generating career details:', error)
@@ -265,7 +269,9 @@ Keep it concise and Kenya-focused.`
         whyRecommended: `Matches your profile with ${career.value}% compatibility`,
         relatedCareers: ['Similar roles'],
         timeline: '2-4 years',
-        resources: ['Professional networks', 'Online courses']
+        resources: ['Professional networks'],
+        institutions: ['Major Kenyan Universities'],
+        regulatoryBodies: ['National Regulatory Bodies']
       })
     } finally {
       console.log('✅ Career details generation completed')
@@ -435,6 +441,46 @@ Keep it concise and Kenya-focused.`
                 </div>
               </CardContent>
             </Card>
+
+            {/* Institutions & Bodies */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <Card className="border-primary/20 bg-primary/5">
+                <CardHeader>
+                  <CardTitle className="text-lg flex items-center gap-2">
+                    <GraduationCap className="h-5 w-5 text-primary" />
+                    Top Kenyan Institutions
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <ul className="space-y-1">
+                    {details.institutions.map((inst, index) => (
+                      <li key={index} className="flex items-start gap-2 text-sm font-medium">
+                        <span className="text-primary mt-1">•</span>
+                        {inst}
+                      </li>
+                    ))}
+                  </ul>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg flex items-center gap-2">
+                    <Shield className="h-5 w-5 text-muted-foreground" />
+                    Regulatory Bodies
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex flex-wrap gap-2">
+                    {details.regulatoryBodies.map((body, index) => (
+                      <Badge key={index} variant="outline" className="bg-muted">
+                        {body}
+                      </Badge>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
 
             {/* Resources */}
             <Card>

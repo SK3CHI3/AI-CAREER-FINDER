@@ -87,6 +87,20 @@ export const AdminCounselorManager = () => {
     }
   };
 
+  const toggleCounselorStatus = async (id: string, currentStatus: boolean) => {
+    const { error } = await supabase
+      .from('counselor_profiles')
+      .update({ is_active: !currentStatus })
+      .eq('id', id);
+      
+    if (error) {
+      toast({ title: 'Error', description: 'Failed to update counselor status.', variant: 'destructive' });
+    } else {
+      toast({ title: 'Status Updated', description: 'Counselor visibility changed.' });
+      loadCounselors();
+    }
+  };
+
   const handleAddCounselor = async () => {
     if (!newCounsellor.user_id || !newCounsellor.title) {
       toast({ title: 'Validation Error', description: 'User ID and Job Title are required.', variant: 'destructive' });
@@ -160,7 +174,7 @@ export const AdminCounselorManager = () => {
                             </Badge>
                           )}
                         </div>
-                        <div className="text-sm text-foreground-muted flex flex-col gap-1">
+                        <div className="text-sm text-muted-foreground flex flex-col gap-1">
                           <span>📧 {booking.student?.email}</span>
                           <span className="flex items-center gap-1">
                             <Clock className="w-3 h-3" /> Booked: {new Date(booking.created_at).toLocaleString()}
@@ -262,9 +276,9 @@ export const AdminCounselorManager = () => {
             <DialogTitle>Register New Counselor</DialogTitle>
             <DialogDescription>Add a verified career expert to the directory.</DialogDescription>
           </DialogHeader>
-          <div className="space-y-4 py-4">
+          <div className="space-y-4 py-4 text-foreground">
             <div className="space-y-2">
-              <Label>User ID (Supabase Auth ID)</Label>
+              <Label className="text-foreground/80">User ID (Supabase Auth ID)</Label>
               <Input 
                 placeholder="Paste the user's UUID here" 
                 value={newCounsellor.user_id}
