@@ -11,9 +11,8 @@
 # Edge Functions for SEO
 [[edge_functions]]
   function = "seo-injection"
-  path = ["/blog/*", "/*"] 
-  # We use /* but the function itself filters for /blog and /careers
-  # to capture individual blog posts and career lists.
+  path = "/*" 
+  # Function logic handles specific filtering for /blog and /careers
 
 [build.environment]
   # Node.js version (2025 LTS)

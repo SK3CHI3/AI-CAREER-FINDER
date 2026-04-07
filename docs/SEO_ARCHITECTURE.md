@@ -65,6 +65,16 @@ We have added a custom **Database Trigger** in your Supabase project.
 - **Action**: Supabase sends an instant "Ping" to your Netlify Build Hook.
 - **Result**: Netlify automatically pulls the latest content and rebuilds the site for the best SEO.
 
+### **📊 How to Test if it's Working**
+You don't need a browser to verify this! Run this command in your terminal:
+```bash
+curl -v https://careerguideai.co.ke/blog/your-post-slug
+```
+If you see the `<title>` and `<script type="application/ld+json">` in the raw text response, the Edge Function is successfully "pre-rendering" for bots.
+
+### **🚀 Future Scaling (Edge Caching)**
+To make the site even faster for bots, we can implement **Edge Caching** by adding `s-maxage` headers in the Edge Function. This would allow Netlify to cache the "pre-rendered" HTML globally for a set period.
+
 ---
 
 ## 📖 Maintenance & Troubleshooting
