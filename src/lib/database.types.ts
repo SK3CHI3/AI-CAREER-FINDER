@@ -675,6 +675,7 @@ export type Database = {
           cbe_subjects: string[] | null
           created_at: string | null
           current_grade: string | null
+          curriculum: string | null
           email: string
           full_name: string | null
           id: string
@@ -701,6 +702,7 @@ export type Database = {
           cbe_subjects?: string[] | null
           created_at?: string | null
           current_grade?: string | null
+          curriculum?: string | null
           email: string
           full_name?: string | null
           id: string
@@ -727,6 +729,7 @@ export type Database = {
           cbe_subjects?: string[] | null
           created_at?: string | null
           current_grade?: string | null
+          curriculum?: string | null
           email?: string
           full_name?: string | null
           id?: string

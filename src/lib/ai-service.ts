@@ -8,6 +8,7 @@ export type { ChatMessage } from '../types/database'
 
 export interface UserContext {
   name?: string
+  curriculum?: 'cbc' | 'igcse' | string
   schoolLevel?: UserProfile['school_level']
   currentGrade?: string
   subjects?: string[]
@@ -62,6 +63,14 @@ ${values ? `- Core Values: ${values}` : ''}
 ${constraints ? `- Real-world Constraints: ${constraints}` : ''}
 ` : '';
 
+    const curriculumSection = userContext.curriculum ? `
+CURRICULUM SPECIFICS:
+- Current Curriculum: ${userContext.curriculum === 'cbc' ? 'Competency-Based Curriculum (Kenya)' : 'British Curriculum (IGCSE / A-Levels)'}
+${userContext.curriculum === 'cbc' ? 
+  '--> MAPPING RULE: Since they are in CBC, strictly map their interests to one of the 3 Senior Secondary Pathways (STEM, Arts & Sports Science, Social Sciences). Reference practical CBC subjects like Pre-Technical Studies or Integrated Science.' : 
+  '--> MAPPING RULE: Since they are in the British Curriculum, strictly map their interests to specific IGCSE subject combinations and leading A-Level paths required for UK/global university entry.'
+}` : '';
+
     const academicSection = userContext.academicPerformance ? `
 ACADEMIC PERFORMANCE:
 - Overall: ${userContext.academicPerformance.overallAverage.toFixed(1)}%
@@ -73,12 +82,14 @@ ACADEMIC PERFORMANCE:
 
 CURRENT USER PROFILE:
 ${userContext.name ? `- Name: ${userContext.name}` : '- Name: Not provided'}
+${userContext.curriculum ? `- Curriculum: ${userContext.curriculum.toUpperCase()}` : '- Curriculum: Not specified'}
 ${userContext.schoolLevel ? `- Education Level: ${userContext.schoolLevel}` : '- Education Level: Not specified'}
 ${userContext.currentGrade ? `- Current Grade: ${userContext.currentGrade}` : '- Current Grade: Not specified'}
-${userContext.subjects?.length ? `- CBE Subjects: ${userContext.subjects.join(', ')}` : '- CBE Subjects: Not specified'}
+${userContext.subjects?.length ? `- Subjects: ${userContext.subjects.join(', ')}` : '- Subjects: Not specified'}
 ${userContext.interests?.length ? `- Career Interests: ${userContext.interests.join(', ')}` : '- Career Interests: Not specified'}
 ${userContext.careerGoals ? `- Career Goals: ${userContext.careerGoals}` : '- Career Goals: Not specified'}
 ${assessmentSection}
+${curriculumSection}
 ${academicSection}
 
 GUIDANCE LOGIC:

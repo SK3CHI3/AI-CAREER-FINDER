@@ -18,9 +18,10 @@ import { dashboardService, CbeSubject, CareerInterest } from '@/lib/dashboard-se
 import { RIASEC_ACTIVITIES, RIASEC_LABELS, CAREER_VALUES, CONTEXTUAL_CONSTRAINTS } from '@/data/riasec-assessment'
 
 const profileSchema = z.object({
+  curriculum: z.enum(['cbc', 'igcse']),
   schoolLevel: z.enum(['primary', 'secondary', 'tertiary']),
   currentGrade: z.string().optional(),
-  subjects: z.array(z.string()).min(3, 'Please select at least 3 CBE subjects'),
+  subjects: z.array(z.string()).min(3, 'Please select at least 3 subjects'),
   interests: z.array(z.string()).min(1, 'Please select at least one pathway or exploration path'),
   careerGoals: z.string().optional(),
 })
@@ -108,12 +109,14 @@ export const ProfileSetup: React.FC<ProfileSetupProps> = ({ onComplete }) => {
   } = useForm<ProfileFormData>({
     resolver: zodResolver(profileSchema),
     defaultValues: {
+      curriculum: 'cbc',
       schoolLevel: 'secondary',
       subjects: [],
       interests: []
     }
   })
 
+  const curriculumType = watch('curriculum')
   const schoolLevel = watch('schoolLevel')
 
   useEffect(() => {
@@ -160,6 +163,7 @@ export const ProfileSetup: React.FC<ProfileSetupProps> = ({ onComplete }) => {
       const { scores, personalityTypes } = calculateRiasec()
       const profileData = {
         email: user.email,
+        curriculum: data.curriculum,
         school_level: data.schoolLevel,
         current_grade: data.currentGrade || null,
         cbe_subjects: selectedSubjects,
@@ -192,15 +196,19 @@ export const ProfileSetup: React.FC<ProfileSetupProps> = ({ onComplete }) => {
   }
 
   const nextStep = () => {
-    if (currentStep === 1 && !schoolLevel) {
+    if (currentStep === 1 && !curriculumType) {
+      setError('Please select your curriculum')
+      return
+    }
+    if (currentStep === 2 && !schoolLevel) {
       setError('Please select your education level')
       return
     }
-    if (currentStep === 2 && selectedSubjects.length < 3) {
+    if (currentStep === 3 && selectedSubjects.length < 3) {
       setError('Please select at least 3 subjects')
       return
     }
-    if (currentStep === 3 && selectedInterests.length < 1 && !watch('careerGoals')) {
+    if (currentStep === 4 && selectedInterests.length < 1 && !watch('careerGoals')) {
       setError('Please pick a path or tell us about your dream')
       return
     }
@@ -221,11 +229,11 @@ export const ProfileSetup: React.FC<ProfileSetupProps> = ({ onComplete }) => {
     <div className="max-w-2xl mx-auto p-4 sm:p-8 min-h-[600px] flex flex-col justify-center">
       <div className="mb-12 text-center">
         <div className="flex justify-center gap-2 mb-4">
-          {[1, 2, 3, 4, 5].map(s => (
-            <div key={s} className={`h-1.5 w-12 rounded-full transition-all ${currentStep >= s ? 'bg-primary shadow-[0_0_10px_rgba(var(--primary),0.5)]' : 'bg-muted'}`} />
+          {[1, 2, 3, 4, 5, 6].map(s => (
+            <div key={s} className={`h-1.5 w-10 sm:w-12 rounded-full transition-all ${currentStep >= s ? 'bg-primary shadow-[0_0_10px_rgba(var(--primary),0.5)]' : 'bg-muted'}`} />
           ))}
         </div>
-        <p className="text-sm font-bold text-primary uppercase tracking-widest">Phase {currentStep} of 5</p>
+        <p className="text-sm font-bold text-primary uppercase tracking-widest">Phase {currentStep} of 6</p>
       </div>
 
       <div className="space-y-8">
@@ -236,15 +244,54 @@ export const ProfileSetup: React.FC<ProfileSetupProps> = ({ onComplete }) => {
             <div className="space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-500">
               <div className="text-center space-y-4">
                 <h2 className="text-5xl font-extrabold tracking-tight bg-gradient-to-r from-primary to-blue-600 bg-clip-text text-transparent pb-2">Start Your Journey</h2>
-                <p className="text-xl text-foreground-muted">What is your current education level?</p>
+                <p className="text-xl text-foreground-muted">Which Curriculum are you currently taking?</p>
               </div>
               <div className="space-y-6">
                 <div className="grid gap-4">
                   {[
+                    { v: 'cbc', l: 'Competency-Based Curriculum (CBC)', d: 'The Kenyan national curriculum (Primary, JS, SS)' },
+                    { v: 'igcse', l: 'British Curriculum (IGCSE / A-Levels)', d: 'Cambridge or Edexcel international system' }
+                  ].map(curr => (
+                    <button
+                      key={curr.v} type="button"
+                      onClick={() => {
+                        setValue('curriculum', curr.v as any);
+                        setValue('subjects', []); // Reset subjects when curriculum changes
+                        setSelectedSubjects([]);
+                      }}
+                      className={`p-6 sm:p-8 rounded-[2.5rem] border-2 text-left transition-all ${curriculumType === curr.v ? 'border-primary bg-primary/5 ring-2 ring-primary/20' : 'border-card-border hover:border-primary/50'}`}
+                    >
+                      <div className="flex justify-between items-center">
+                        <div>
+                          <p className="text-xl sm:text-2xl font-bold">{curr.l}</p>
+                          <p className="text-base text-foreground-muted">{curr.d}</p>
+                        </div>
+                        {curriculumType === curr.v && <CheckCircle className="w-8 h-8 text-primary" />}
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {currentStep === 2 && (
+            <div className="space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-500">
+              <div className="text-center space-y-4">
+                <h2 className="text-5xl font-extrabold tracking-tight bg-gradient-to-r from-primary to-blue-600 bg-clip-text text-transparent pb-2">Your Level</h2>
+                <p className="text-xl text-foreground-muted">What is your current education level?</p>
+              </div>
+              <div className="space-y-6">
+                <div className="grid gap-4">
+                  {(curriculumType === 'cbc' ? [
                     { v: 'primary', l: 'Primary School', d: 'Grade 1-6' },
                     { v: 'secondary', l: 'Junior Secondary', d: 'Grade 7-9' },
                     { v: 'tertiary', l: 'Senior Secondary / Tertiary', d: 'Grade 10-12+' }
-                  ].map(level => (
+                  ] : [
+                    { v: 'primary', l: 'Key Stage 1-2', d: 'Years 1-6' },
+                    { v: 'secondary', l: 'Key Stage 3-4 (IGCSE)', d: 'Years 7-11' },
+                    { v: 'tertiary', l: 'A-Levels', d: 'Years 12-13' }
+                  ]).map(level => (
                     <button
                       key={level.v} type="button"
                       onClick={() => setValue('schoolLevel', level.v as any)}
@@ -264,14 +311,24 @@ export const ProfileSetup: React.FC<ProfileSetupProps> = ({ onComplete }) => {
             </div>
           )}
 
-          {currentStep === 2 && (
+          {currentStep === 3 && (
             <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
               <div className="text-center space-y-3">
                 <h2 className="text-4xl font-extrabold tracking-tight">Learning Areas</h2>
                 <p className="text-lg text-foreground-muted">Pick 3 or more subjects you find exciting.</p>
               </div>
               <div className="grid grid-cols-2 gap-3 max-h-[450px] overflow-y-auto p-2 custom-scrollbar pr-4">
-                {dynamicSubjects.map(s => (
+                {dynamicSubjects
+                  .filter(s => {
+                    // Quick curriculum-based filter hack using naming conventions
+                    // A proper DB setup would rely on s.category === curriculumType
+                    if (curriculumType === 'cbc') {
+                      return ['Core', 'Junior Secondary', 'Senior Secondary', 'CBC'].includes(s.category || 'Core') || s.subject_name.includes('Integrated') || s.subject_name.includes('Education')
+                    } else {
+                      return ['IGCSE', 'A-Level', 'British', 'General'].includes(s.category || 'General') || !s.subject_name.includes('Integrated')
+                    }
+                  })
+                  .map(s => (
                   <button
                     key={s.id} type="button"
                     onClick={() => {
@@ -287,7 +344,7 @@ export const ProfileSetup: React.FC<ProfileSetupProps> = ({ onComplete }) => {
             </div>
           )}
 
-          {currentStep === 3 && (
+          {currentStep === 4 && (
             <div className="space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-500">
               <div className="text-center space-y-4">
                 <h2 className="text-5xl font-extrabold tracking-tight bg-gradient-to-r from-primary to-blue-600 bg-clip-text text-transparent pb-2">Future Aspirations</h2>
@@ -361,7 +418,7 @@ export const ProfileSetup: React.FC<ProfileSetupProps> = ({ onComplete }) => {
             </div>
           )}
 
-          {currentStep === 4 && (
+          {currentStep === 5 && (
             <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
               <div className="text-center space-y-3">
                 <h2 className="text-4xl font-extrabold tracking-tight">Your Values</h2>
@@ -388,7 +445,7 @@ export const ProfileSetup: React.FC<ProfileSetupProps> = ({ onComplete }) => {
             </div>
           )}
 
-          {currentStep === 5 && (
+          {currentStep === 6 && (
             <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
               <div className="text-center space-y-3">
                 <h2 className="text-4xl font-extrabold tracking-tight">Final Step: Work Styles</h2>
@@ -415,7 +472,7 @@ export const ProfileSetup: React.FC<ProfileSetupProps> = ({ onComplete }) => {
                 <ChevronLeft className="mr-2 w-5 h-5" /> Back
               </Button>
             )}
-            {currentStep < 5 ? (
+            {currentStep < 6 ? (
               <Button type="button" onClick={nextStep} className="flex-1 h-16 text-xl rounded-3xl bg-primary text-primary-foreground shadow-2xl shadow-primary/30 font-bold">
                 Continue <ChevronRight className="ml-2 w-5 h-5" />
               </Button>
