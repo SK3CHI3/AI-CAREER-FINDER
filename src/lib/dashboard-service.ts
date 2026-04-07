@@ -326,6 +326,7 @@ class DashboardService {
         .from('career_paths')
         .select('*')
         .eq('is_active', true)
+        .order('is_featured', { ascending: false })
         .order('created_at', { ascending: false })
         .limit(limit)
 
