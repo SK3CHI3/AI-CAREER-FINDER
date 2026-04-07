@@ -11,7 +11,8 @@
     "netlify:functions": "echo 'Netlify functions ready'",
     "lint": "eslint .",
     "preview": "vite preview",
-    "deploy:netlify": "npm run build && netlify deploy --prod"
+    "deploy:netlify": "npm run build && netlify deploy --prod",
+    "sitemap": "node scripts/generate-sitemap.js"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",

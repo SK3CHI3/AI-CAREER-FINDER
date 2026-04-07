@@ -64,11 +64,42 @@ export default function BlogPostPage() {
   return (
     <div className="min-h-screen bg-background font-sans selection:bg-primary/30 selection:text-white flex flex-col overflow-x-hidden relative">
       <Helmet>
-        <title>{post.seo_title || `${post.title} | CareerGuide Blog`}</title>
+        <title>{post.seo_title || `${post.title} | CareerGuide AI Blog`}</title>
         <meta name="description" content={post.seo_description || post.excerpt} />
         <meta property="og:title" content={post.seo_title || post.title} />
         <meta property="og:description" content={post.seo_description || post.excerpt} />
+        <meta property="og:type" content="article" />
         {post.cover_image_url && <meta property="og:image" content={post.cover_image_url} />}
+        <meta name="twitter:card" content="summary_large_image" />
+        
+        {/* JSON-LD Structured Data for AI & Google */}
+        <script type="application/ld+json">
+          {JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "BlogPosting",
+            "headline": post.title,
+            "description": post.seo_description || post.excerpt,
+            "image": post.cover_image_url,
+            "datePublished": post.published_at,
+            "author": {
+              "@type": "Organization",
+              "name": "CareerGuide AI",
+              "url": window.location.origin
+            },
+            "publisher": {
+              "@type": "Organization",
+              "name": "CareerGuide AI",
+              "logo": {
+                "@type": "ImageObject",
+                "url": `${window.location.origin}/logos/CareerGuide_Logo.png`
+              }
+            },
+            "mainEntityOfPage": {
+              "@type": "WebPage",
+              "@id": window.location.href
+            }
+          })}
+        </script>
       </Helmet>
       
       <Navigation />

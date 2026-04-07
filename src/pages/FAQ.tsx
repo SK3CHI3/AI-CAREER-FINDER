@@ -53,6 +53,22 @@ const FAQ = () => {
       <Helmet>
         <title>FAQ | CareerGuide AI - Frequently Asked Questions</title>
         <meta name="description" content="Find answers to common questions about CareerGuide AI, CBC alignment, data security, pricing, and how we help Kenyan schools." />
+        
+        {/* FAQ Structured Data for Google/AI Rich Results */}
+        <script type="application/ld+json">
+          {JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "FAQPage",
+            "mainEntity": faqs.map(faq => ({
+              "@type": "Question",
+              "name": faq.question,
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": faq.answer
+              }
+            }))
+          })}
+        </script>
       </Helmet>
       <BackgroundGradient />
       <Navigation />

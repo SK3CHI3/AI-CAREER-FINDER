@@ -11,6 +11,7 @@ import BackgroundGradient from "@/components/BackgroundGradient";
 import { motion, AnimatePresence } from "framer-motion";
 import CareerDetailModal from "@/components/CareerDetailModal";
 import { useAuth } from "@/contexts/AuthContext";
+import { Helmet } from "react-helmet-async";
 
 const Careers = () => {
   const [careers, setCareers] = useState<CareerPath[]>([]);
@@ -62,6 +63,38 @@ const Careers = () => {
 
   return (
     <div className="min-h-screen text-foreground relative overflow-x-hidden pt-20">
+      <Helmet>
+        <title>Career Library | AI-Powered Guidance for Kenya's CBE System</title>
+        <meta name="description" content="Explore high-demand career paths in Kenya. Get AI-powered insights on salary ranges, growth rates, and skill requirements for modern CBE pathways." />
+        <meta property="og:title" content="Kenya's Career Library | CareerGuide AI" />
+        <meta property="og:description" content="Discover your perfect career path with AI-driven insights into Kenya's evolving job market." />
+        
+        {/* JSON-LD for AI & Search Discoverability */}
+        <script type="application/ld+json">
+          {JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "ItemList",
+            "name": "Kenya's Career Library",
+            "description": "Comprehensive library of high-demand career paths in Kenya.",
+            "url": window.location.href,
+            "itemListElement": filteredCareers.slice(0, 12).map((career, index) => ({
+              "@type": "ListItem",
+              "position": index + 1,
+              "item": {
+                "@type": "Occupation",
+                "name": career.title,
+                "description": career.description,
+                "occupationalCategory": career.category,
+                "estimatedSalary": {
+                  "@type": "MonetaryAmount",
+                  "currency": "KES",
+                  "description": career.salary_range
+                }
+              }
+            }))
+          })}
+        </script>
+      </Helmet>
       <BackgroundGradient />
       <Navigation />
       

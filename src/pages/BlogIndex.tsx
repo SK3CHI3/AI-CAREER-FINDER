@@ -51,8 +51,29 @@ export default function BlogIndex() {
   return (
     <div className="min-h-screen bg-background font-sans selection:bg-primary/30 selection:text-white flex flex-col overflow-x-hidden relative">
       <Helmet>
-        <title>Insights & News | CareerGuide AI</title>
-        <meta name="description" content="Read the latest articles on competency-based education, AI career guidance, and student empowerment in Kenya." />
+        <title>Insights & News | CareerGuide AI Blog</title>
+        <meta name="description" content="Stay updated with the latest in Kenya's Competency-Based Education (CBE), career guidance trends, and AI-powered educational insights." />
+        <meta property="og:title" content="CareerGuide AI Blog | Shaping the Future of Kenyan Careers" />
+        <meta property="og:description" content="Deep dives into CBE, career strategy, and student success stories in the modern Kenyan workforce." />
+        
+        {/* JSON-LD for Blog Listing */}
+        <script type="application/ld+json">
+          {JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "Blog",
+            "name": "CareerGuide AI Blog",
+            "description": "Insights on Kenya's Competency-Based Education and career guidance.",
+            "url": window.location.href,
+            "publisher": {
+              "@type": "Organization",
+              "name": "CareerGuide AI",
+              "logo": {
+                "@type": "ImageObject",
+                "url": `${window.location.origin}/logos/CareerGuide_Logo.png`
+              }
+            }
+          })}
+        </script>
       </Helmet>
       
       <Navigation />

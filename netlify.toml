@@ -1,6 +1,6 @@
 [build]
-  # Install dependencies and build (2025 best practice)
-  command = "npm ci --production=false && npm run build"
+  # Install dependencies, build, and generate sitemap for SEO
+  command = "npm ci --production=false && npm run build && npm run sitemap"
   
   # Directory to publish
   publish = "dist"
