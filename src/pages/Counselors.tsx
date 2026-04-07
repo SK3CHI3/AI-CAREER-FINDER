@@ -75,15 +75,23 @@ const Counselors = () => {
           Back to Dashboard
         </Button>
 
-        <div className="mb-8">
-          <h1 className="text-3xl font-extrabold text-foreground tracking-tight mb-2 flex items-center gap-2">
-            <GraduationCap className="w-8 h-8 text-primary" />
-            Specialized Career Counselors
-          </h1>
-          <p className="text-lg text-muted-foreground">
-            Connect with verified Kenyan experts to build your professional roadmap.
-          </p>
+        <div className="relative mb-12">
+          {/* Background Watermark Logo */}
+          <div className="absolute -top-16 -right-16 opacity-[0.03] dark:opacity-[0.05] pointer-events-none">
+            <img src="/logos/CareerGuide_Logo.png" alt="" className="w-80 h-auto grayscale" />
+          </div>
+
+          <div className="relative z-10">
+            <h1 className="text-4xl font-extrabold text-foreground tracking-tight mb-3 flex items-center gap-3">
+              <GraduationCap className="w-10 h-10 text-primary" />
+              Specialized Career Counselors
+            </h1>
+            <p className="text-xl text-muted-foreground max-w-3xl leading-relaxed">
+              Connect with verified Kenyan experts to build your professional roadmap.
+            </p>
+          </div>
         </div>
+
 
         <CounselorDirectory />
       </main>
