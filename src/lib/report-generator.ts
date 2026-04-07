@@ -9,6 +9,12 @@ export interface GuestProfile {
   interests?: string[];
   careerGoals?: string;
   aiSummary?: string;
+  values?: string[];
+  mbti?: string;
+  workStyle?: string;
+  barriers?: string;
+  experience?: string;
+  readiness?: string;
   strengths?: string[];
   challenges?: string[];
   dreamJob?: string;
@@ -483,6 +489,43 @@ export class ReportGenerator {
             </div>
         </div>
         ` : ''}
+
+        <!-- Counselor's Diagnostic Profile -->
+        <div class="section">
+            <h2 class="section-title">Counselor's Diagnostic Profile</h2>
+            <div class="profile-grid">
+                ${profile.mbti ? `
+                <div class="profile-item">
+                    <div class="profile-label">Personality Type (MBTI proxy)</div>
+                    <div class="profile-value">${profile.mbti}</div>
+                </div>
+                ` : ''}
+                ${profile.values?.length ? `
+                <div class="profile-item">
+                    <div class="profile-label">Core Values</div>
+                    <div class="profile-value">${profile.values.join(', ')}</div>
+                </div>
+                ` : ''}
+                ${profile.workStyle ? `
+                <div class="profile-item">
+                    <div class="profile-label">Preferred Work Style</div>
+                    <div class="profile-value">${profile.workStyle}</div>
+                </div>
+                ` : ''}
+                ${profile.barriers ? `
+                <div class="profile-item" style="border-left-color: var(--warning);">
+                    <div class="profile-label">Current Barrier / Challenge</div>
+                    <div class="profile-value">${profile.barriers}</div>
+                </div>
+                ` : ''}
+                ${profile.experience ? `
+                <div class="profile-item">
+                    <div class="profile-label">Real Experience Base</div>
+                    <div class="profile-value">${profile.experience}</div>
+                </div>
+                ` : ''}
+            </div>
+        </div>
 
         <!-- CBE Context Section -->
         ${profile.curriculum === 'cbc' ? `
