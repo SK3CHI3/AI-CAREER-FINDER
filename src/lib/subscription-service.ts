@@ -24,11 +24,11 @@ class SubscriptionService {
       .single()
 
     if (error || !data) {
-      // Fallback to default 2025 dates if not set
+      // Fallback to default 2026 dates (Current Year)
       return {
-        term1: { start: '2025-01-06', end: '2025-04-04' },
-        term2: { start: '2025-04-28', end: '2025-08-01' },
-        term3: { start: '2025-08-25', end: '2025-10-24' }
+        term1: { start: '2026-01-05', end: '2026-04-10' },
+        term2: { start: '2026-05-04', end: '2026-08-07' },
+        term3: { start: '2026-08-31', end: '2026-10-30' }
       }
     }
 
