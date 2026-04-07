@@ -283,155 +283,90 @@ Focus on:
 
   if (isLoading) {
     return (
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <BookOpen className="h-5 w-5" />
-            Recommended Courses
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex items-center justify-center py-8">
-            <Loader2 className="h-6 w-6 animate-spin mr-2" />
-            <span>Finding the best courses for you...</span>
-          </div>
-        </CardContent>
-      </Card>
+      <div className="flex flex-col items-center justify-center py-12 space-y-4">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <p className="text-sm text-muted-foreground font-medium animate-pulse">Analyzing pathways for the best courses...</p>
+      </div>
     )
   }
 
   if (error) {
     return (
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <BookOpen className="h-5 w-5" />
-            Recommended Courses
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="text-center py-4">
-            <p className="text-red-500 mb-4">{error}</p>
-            <Button onClick={() => generateCourseRecommendations()} variant="outline">
-              Try Again
-            </Button>
-
-          </div>
-        </CardContent>
-      </Card>
+      <div className="text-center py-8">
+        <p className="text-red-500 mb-4 text-sm font-medium">{error}</p>
+        <Button onClick={() => generateCourseRecommendations()} variant="outline" size="sm" className="rounded-full">
+          <RefreshCw className="w-4 h-4 mr-2" />
+          Try Again
+        </Button>
+      </div>
     )
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <div className="flex items-center justify-between">
-          <CardTitle className="flex items-center gap-2">
-            <BookOpen className="h-5 w-5" />
-            Recommended Free Courses
-          </CardTitle>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => generateCourseRecommendations(true)}
-            disabled={isLoading}
-            className="flex items-center gap-2"
-          >
-            <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
-            Refresh
-          </Button>
-        </div>
-      </CardHeader>
-      <CardContent>
-        <div className="space-y-4">
-          {courses.map((course, index) => (
-            <div key={index} className="border border-border rounded-lg p-4 hover:shadow-sm transition-shadow">
-              <div className="flex items-start justify-between mb-3">
-                <div className="flex-1">
-                  <h4 className="font-semibold text-lg mb-1">{course.title}</h4>
-                  <p className="text-sm text-muted-foreground mb-2">{course.description}</p>
-                  <p className="text-xs text-blue-600 dark:text-blue-400 italic">"{course.whyRecommended}"</p>
+    <div className="flex flex-col h-full">
+      <div className="flex-1 overflow-y-auto pr-1 space-y-3 max-h-[480px] custom-scrollbar">
+        {courses.slice(0, 3).map((course, index) => (
+          <div key={index} className="group relative bg-surface/30 border border-card-border/40 rounded-2xl p-4 transition-all duration-300 hover:border-primary/30 hover:shadow-md hover:bg-surface/50">
+            <div className="flex items-start justify-between gap-4 mb-3">
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 mb-1">
+                  <h4 className="font-bold text-base truncate text-foreground group-hover:text-primary transition-colors">{course.title}</h4>
                 </div>
-                <div className="flex items-center gap-2 ml-4">
-                  <Badge variant="secondary" className="text-xs">
+                <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed mb-2">{course.description}</p>
+                <div className="flex items-center gap-2">
+                  <Badge variant="secondary" className="text-[10px] py-0 h-4 bg-primary/5 text-primary border-none">
                     {course.provider}
                   </Badge>
-                  {course.free && (
-                    <Badge className="bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400 text-xs">
-                      FREE
-                    </Badge>
-                  )}
+                  <span className="text-[10px] text-primary/60 font-medium italic truncate">"{course.whyRecommended}"</span>
                 </div>
               </div>
-
-              <div className="flex items-center gap-4 text-sm text-muted-foreground mb-3">
-                <div className="flex items-center gap-1">
-                  <Clock className="h-4 w-4" />
-                  {course.duration}
-                </div>
-                <div className="flex items-center gap-1">
-                  <Star className="h-4 w-4 text-yellow-500" />
-                  {course.rating}
-                </div>
-                <div className="flex items-center gap-1">
-                  <Users className="h-4 w-4" />
-                  {course.students.toLocaleString()}
-                </div>
-                <div className="flex items-center gap-1">
-                  <Globe className="h-4 w-4" />
-                  {course.language}
-                </div>
-                {course.certificate && (
-                  <div className="flex items-center gap-1">
-                    <Award className="h-4 w-4 text-blue-500" />
-                    Certificate
-                  </div>
-                )}
-              </div>
-
-              <div className="flex items-center justify-between">
-                <div className="flex flex-wrap gap-2">
-                  <Badge className={getDifficultyColor(course.difficulty)}>
-                    {course.difficulty}
+              <div className="flex flex-col items-end gap-2 shrink-0">
+                {course.free && (
+                  <Badge className="bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-none text-[10px] py-0 h-5 px-2">
+                    FREE
                   </Badge>
-                  {course.skills.slice(0, 3).map((skill, skillIndex) => (
-                    <Badge key={skillIndex} variant="outline" className="text-xs">
-                      {skill}
-                    </Badge>
-                  ))}
-                  {course.skills.length > 3 && (
-                    <Badge variant="outline" className="text-xs">
-                      +{course.skills.length - 3} more
-                    </Badge>
-                  )}
-                </div>
+                )}
                 <Button
-                  size="sm"
-                  variant="outline"
+                  size="icon"
+                  variant="ghost"
                   onClick={() => window.open(course.link, '_blank')}
-                  className="ml-4"
+                  className="h-8 w-8 rounded-full hover:bg-primary hover:text-white transition-all shadow-sm"
                 >
-                  <ExternalLink className="h-4 w-4 mr-1" />
-                  Enroll
+                  <ExternalLink className="h-4 w-4" />
                 </Button>
               </div>
             </div>
-          ))}
-        </div>
 
-        <div className="mt-4 text-center">
-          <Button
-            variant="outline"
-            onClick={() => generateCourseRecommendations()}
-            disabled={isLoading}
-          >
-            {isLoading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
-            Refresh Recommendations
-          </Button>
+            <div className="flex items-center justify-between pt-2 border-t border-card-border/30">
+              <div className="flex items-center gap-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
+                <span className="flex items-center gap-1"><Clock className="h-3 w-3" /> {course.duration}</span>
+                <span className="flex items-center gap-1"><Star className="h-3 w-3 text-yellow-500" /> {course.rating}</span>
+                {course.certificate && <span className="flex items-center gap-1 text-blue-500"><Award className="h-3 w-3" /> Cert</span>}
+              </div>
+              <Badge className={`${getDifficultyColor(course.difficulty)} border-none text-[9px] py-0 h-4 uppercase font-black`}>
+                {course.difficulty}
+              </Badge>
+            </div>
+          </div>
+        ))}
+      </div>
 
-        </div>
-      </CardContent>
-    </Card>
+      <div className="mt-6 flex items-center justify-between gap-4">
+        <p className="text-[10px] text-muted-foreground font-medium italic">
+          Showing top 3 recommendations based on your unique profile.
+        </p>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => generateCourseRecommendations(true)}
+          disabled={isLoading}
+          className="text-[10px] font-bold uppercase tracking-widest hover:text-primary p-0 h-auto"
+        >
+          <RefreshCw className={`h-3 w-3 mr-1.5 ${isLoading ? 'animate-spin' : ''}`} />
+          Refresh
+        </Button>
+      </div>
+    </div>
   )
 }
 

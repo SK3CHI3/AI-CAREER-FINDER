@@ -1056,15 +1056,15 @@ const StudentDashboard = () => {
           <TabsContent value="progress" className="space-y-2 sm:space-y-6 w-full">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-2 sm:gap-6 w-full">
               {/* Free Courses Card */}
-              <Card className="w-full bg-card border-card-border">
-                <CardHeader>
+              <Card className="w-full bg-card border-card-border flex flex-col h-[600px]">
+                <CardHeader className="flex-shrink-0">
                   <CardTitle className="flex items-center gap-2">
                     <BookOpen className="w-5 h-5 text-blue-500" />
                     Recommended Free Courses
                   </CardTitle>
                   <CardDescription>AI-curated courses based on your profile and career interests</CardDescription>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="flex-1 overflow-hidden pt-0 pb-6">
                   <CourseRecommendations
                     careerInterests={profile?.career_interests || profile?.interests}
                     cbeSubjects={profile?.cbe_subjects || profile?.subjects}
@@ -1073,20 +1073,19 @@ const StudentDashboard = () => {
                     initialLoading={isLoadingCourses}
                     onCoursesLoaded={(courses) => setCourseRecommendations(courses)}
                   />
-
                 </CardContent>
               </Card>
 
               {/* Journey Actions Card */}
-              <Card className="w-full bg-card border-card-border overflow-hidden">
-                <CardHeader>
+              <Card className="w-full bg-card border-card-border overflow-hidden h-[600px] flex flex-col">
+                <CardHeader className="flex-shrink-0">
                   <CardTitle className="flex items-center gap-2">
                     <Target className="w-5 h-5 text-green-500" />
                     Your Journey Actions
                   </CardTitle>
                   <CardDescription>Take action to advance your career path</CardDescription>
                 </CardHeader>
-                <CardContent className="space-y-4">
+                <CardContent className="flex-1 overflow-y-auto space-y-4 custom-scrollbar">
                   <div className="bg-primary/5 border border-primary/10 rounded-xl p-4 mb-4">
                     <h4 className="text-sm font-bold text-primary mb-2 flex items-center gap-2">
                       <UserCog className="w-4 h-4" /> Recommended Next Step
