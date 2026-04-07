@@ -7,7 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Input } from '@/components/ui/input';
-import { Loader2, CheckCircle, Clock, Video, SwitchCamera, MessageSquare, DollarSign, UserCog } from 'lucide-react';
+import { Loader2, CheckCircle, Clock, Video, SwitchCamera, MessageSquare, DollarSign, UserCog, Edit } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Switch } from '@/components/ui/switch';
@@ -39,6 +39,8 @@ export const AdminCounselorManager = () => {
     hourly_rate: 1500,
     specialties: [] as string[]
   });
+  const [editingMode, setEditingMode] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
 
   const { toast } = useToast();
 
@@ -101,26 +103,48 @@ export const AdminCounselorManager = () => {
     }
   };
 
-  const handleAddCounselor = async () => {
-    if (!newCounsellor.user_id || !newCounsellor.title) {
-      toast({ title: 'Validation Error', description: 'User ID and Job Title are required.', variant: 'destructive' });
+  const handleSaveCounselor = async () => {
+    if (!newCounsellor.user_id && !editingMode) {
+      toast({ title: 'Validation Error', description: 'User ID is required.', variant: 'destructive' });
+      return;
+    }
+    if (!newCounsellor.title) {
+      toast({ title: 'Validation Error', description: 'Job Title is required.', variant: 'destructive' });
       return;
     }
 
     setIsSubmitting(true);
-    const { error } = await supabase
-      .from('counselor_profiles')
-      .insert([{
-        ...newCounsellor,
-        is_active: true,
-        created_at: new Date().toISOString()
-      }]);
+    let error;
+
+    if (editingMode && editingId) {
+      const res = await supabase
+        .from('counselor_profiles')
+        .update({
+          title: newCounsellor.title,
+          bio: newCounsellor.bio,
+          hourly_rate: newCounsellor.hourly_rate
+        })
+        .eq('id', editingId);
+      error = res.error;
+    } else {
+      const res = await supabase
+        .from('counselor_profiles')
+        .insert([{
+          id: newCounsellor.user_id,
+          title: newCounsellor.title,
+          bio: newCounsellor.bio,
+          hourly_rate: newCounsellor.hourly_rate,
+          is_active: true,
+          created_at: new Date().toISOString()
+        }]);
+      error = res.error;
+    }
 
     setIsSubmitting(false);
     if (error) {
       toast({ title: 'Error', description: error.message, variant: 'destructive' });
     } else {
-      toast({ title: 'Success', description: 'New counselor registered.' });
+      toast({ title: 'Success', description: editingMode ? 'Counselor updated.' : 'New counselor registered.' });
       setIsCounsellorModalOpen(false);
       loadCounselors();
     }
@@ -223,7 +247,12 @@ export const AdminCounselorManager = () => {
                 <CardTitle>Counselor Profiles</CardTitle>
                 <CardDescription>Manage the experts shown in the student directory.</CardDescription>
               </div>
-              <Button size="sm" onClick={() => setIsCounsellorModalOpen(true)}>
+              <Button size="sm" onClick={() => {
+                setEditingMode(false);
+                setEditingId(null);
+                setNewCounsellor({ user_id: '', title: '', bio: '', hourly_rate: 1500, specialties: [] });
+                setIsCounsellorModalOpen(true);
+              }}>
                 <UserCog className="w-4 h-4 mr-2" /> Add Counselor
               </Button>
             </CardHeader>
@@ -258,6 +287,26 @@ export const AdminCounselorManager = () => {
                           <Label htmlFor={`status-${c.id}`} className="text-xs font-semibold uppercase text-muted-foreground cursor-pointer">
                             {c.is_active ? 'Visible in Directory' : 'Hidden'}
                           </Label>
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            className="ml-auto text-primary"
+                            onClick={() => {
+                              setEditingMode(true);
+                              setEditingId(c.id);
+                              setNewCounsellor({
+                                user_id: c.id,
+                                title: c.title || '',
+                                bio: c.bio || '',
+                                hourly_rate: c.hourly_rate || 1500,
+                                specialties: []
+                              });
+                              setIsCounsellorModalOpen(true);
+                            }}
+                          >
+                            <Edit className="w-4 h-4 mr-2" />
+                            Edit
+                          </Button>
                         </div>
                       </div>
                     </div>
@@ -273,18 +322,20 @@ export const AdminCounselorManager = () => {
       <Dialog open={isCounsellorModalOpen} onOpenChange={setIsCounsellorModalOpen}>
         <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
-            <DialogTitle>Register New Counselor</DialogTitle>
-            <DialogDescription>Add a verified career expert to the directory.</DialogDescription>
+            <DialogTitle>{editingMode ? 'Edit Counselor' : 'Register New Counselor'}</DialogTitle>
+            <DialogDescription>{editingMode ? 'Modify career expert details.' : 'Add a verified career expert to the directory.'}</DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4 text-foreground">
-            <div className="space-y-2">
-              <Label className="text-foreground/80">User ID (Supabase Auth ID)</Label>
-              <Input 
-                placeholder="Paste the user's UUID here" 
-                value={newCounsellor.user_id}
-                onChange={e => setNewCounsellor({...newCounsellor, user_id: e.target.value})}
-              />
-            </div>
+            {!editingMode && (
+              <div className="space-y-2">
+                <Label className="text-foreground/80">User ID (Supabase Auth ID)</Label>
+                <Input 
+                  placeholder="Paste the user's UUID here" 
+                  value={newCounsellor.user_id}
+                  onChange={e => setNewCounsellor({...newCounsellor, user_id: e.target.value})}
+                />
+              </div>
+            )}
             <div className="space-y-2">
               <Label>Professional Title</Label>
               <Input 
@@ -312,8 +363,8 @@ export const AdminCounselorManager = () => {
           </div>
           <DialogFooter>
             <Button variant="ghost" onClick={() => setIsCounsellorModalOpen(false)}>Cancel</Button>
-            <Button onClick={handleAddCounselor} disabled={isSubmitting}>
-              {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Register Counselor'}
+            <Button onClick={handleSaveCounselor} disabled={isSubmitting}>
+              {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : (editingMode ? 'Save Changes' : 'Register Counselor')}
             </Button>
           </DialogFooter>
         </DialogContent>
