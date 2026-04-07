@@ -33,14 +33,20 @@ export const CounselorDirectory = ({ limit }: { limit?: number }) => {
  
   const loadCounselors = async () => {
     setIsLoading(true);
+    // Join with profiles to get the full_name if it's missing in counselor_profiles
     const { data: profilesData, error } = await (supabase
       .from('counselor_profiles') as any)
-      .select('*')
+      .select('*, profiles(full_name)')
       .eq('is_active', true);
 
- 
     if (!error && profilesData) {
-      const filtered = limit ? profilesData.slice(0, limit) : profilesData;
+      // Map the data so counselor.full_name is correctly populated from the join if needed
+      const processedData = (profilesData as any[]).map(c => ({
+        ...c,
+        full_name: c.full_name || c.profiles?.full_name || 'Verified Counselor'
+      }));
+      
+      const filtered = limit ? processedData.slice(0, limit) : processedData;
       setCounselors(filtered);
     }
     setIsLoading(false);

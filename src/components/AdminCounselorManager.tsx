@@ -59,11 +59,24 @@ export const AdminCounselorManager = () => {
       .select(`
         *, 
         student:profiles!counselor_sessions_student_id_fkey(full_name, email),
-        counselor:counselor_profiles!counselor_sessions_counselor_id_fkey(full_name, title)
+        counselor:counselor_profiles!counselor_sessions_counselor_id_fkey(
+          full_name, 
+          title,
+          profiles(full_name)
+        )
       `)
       .order('created_at', { ascending: false });
 
-    if (data) setBookings(data);
+    if (data) {
+      const processed = (data as any[]).map(b => ({
+        ...b,
+        counselor: b.counselor ? {
+          ...b.counselor,
+          full_name: b.counselor.full_name || b.counselor.profiles?.full_name || 'Admin'
+        } : null
+      }));
+      setBookings(processed);
+    }
     setIsLoadingBookings(false);
   };
 
@@ -71,10 +84,16 @@ export const AdminCounselorManager = () => {
     setIsLoadingCounselors(true);
     const { data } = await (supabase
       .from('counselor_profiles') as any)
-      .select('*')
+      .select('*, profiles(full_name)')
       .order('created_at', { ascending: false });
 
-    if (data) setCounselors(data);
+    if (data) {
+      const processed = (data as any[]).map(c => ({
+        ...c,
+        full_name: c.full_name || c.profiles?.full_name || 'Verified Counselor'
+      }));
+      setCounselors(processed);
+    }
     setIsLoadingCounselors(false);
   };
 
