@@ -116,20 +116,21 @@ const CareerPaths = () => {
                   alt={career.title}
                   className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-[#020617] via-[#020617]/50 to-transparent"></div>
-                <div className="absolute bottom-4 left-4 right-4 flex justify-between items-end">
-                  <h3 className="text-xl font-bold text-white group-hover:text-primary transition-colors line-clamp-2 drop-shadow-md">
-                    {career.title}
-                  </h3>
-                  <Badge className={`backdrop-blur-md whitespace-nowrap ml-2 ${getDemandColor(career.demand_level)} border-none shadow-sm`}>
-                    {career.demand_level}
-                  </Badge>
-                </div>
+                <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
               </div>
 
               {/* Content Section */}
               <div className="p-6 space-y-4 flex-1 flex flex-col">
-                <p className="text-muted-foreground text-sm line-clamp-3">
+                <div className="flex justify-between items-start gap-4">
+                  <h3 className="text-xl font-bold text-foreground group-hover:text-primary transition-colors line-clamp-2">
+                    {career.title}
+                  </h3>
+                  <Badge className={`whitespace-nowrap ${getDemandColor(career.demand_level)} border-none shadow-sm`}>
+                    {career.demand_level}
+                  </Badge>
+                </div>
+
+                <p className="text-muted-foreground text-sm line-clamp-2">
                   {career.description}
                 </p>
                 
