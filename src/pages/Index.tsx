@@ -1,20 +1,33 @@
 import { useEffect } from "react";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { motion } from "framer-motion";
 import Navigation from "@/components/Navigation";
 import Hero from "@/components/Hero";
 import CareerPaths from "@/components/CareerPaths";
-import GuestAIChat from "@/components/GuestAIChat";
+import QuickAssessmentSection from "@/components/QuickAssessmentSection";
 import Footer from "@/components/Footer";
 import FeatureShowcase from "@/components/FeatureShowcase";
 import Testimonials from "@/components/Testimonials";
 import BackgroundGradient from "@/components/BackgroundGradient";
 import StatsPartnersSection from "@/components/StatsPartnersSection.tsx";
 import CallingCard from "@/components/CallingCard";
+import { useAuth } from "@/contexts/AuthContext";
+import { getDashboardPathForRole } from "@/types/roles";
 
 const Index = () => {
   const location = useLocation();
+  const navigate = useNavigate();
+  const { user, profile, loading } = useAuth();
+
+  // Redirect if already authenticated
+  useEffect(() => {
+    if (!loading && user && profile) {
+      const dashboardPath = getDashboardPathForRole(profile.role as "student" | "admin" | "school" | "teacher");
+      navigate(dashboardPath, { replace: true });
+    }
+  }, [user, profile, loading, navigate]);
+
   useEffect(() => {
     if (location.state && (location.state as any).scrollTo) {
       const sectionId = (location.state as any).scrollTo;
@@ -113,7 +126,7 @@ const Index = () => {
         </motion.div>
 
         <div id="guest-chat" className="guest-chat-section">
-          <GuestAIChat />
+          <QuickAssessmentSection />
         </div>
 
         <motion.div
