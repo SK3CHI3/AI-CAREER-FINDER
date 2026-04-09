@@ -37,62 +37,70 @@ const Hero = () => {
   };
 
   return (
-    <section className="min-h-screen flex items-center pt-16">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 w-full">
+    <section className="min-h-screen flex items-center pt-16 relative overflow-hidden">
+      {/* Background - Pure Gradient (Exact Restoration) */}
+      <div className="absolute inset-0 -z-10 bg-surface">
+        <div className="absolute inset-0 bg-gradient-to-br from-surface via-surface/95 to-primary/5" />
+        {/* Brand color accents */}
+        <div className="absolute top-0 right-0 w-1/2 h-1/2 bg-primary/5 blur-[120px] rounded-full -translate-y-1/2 translate-x-1/3" />
+        <div className="absolute bottom-0 left-0 w-1/2 h-1/2 bg-secondary/5 blur-[120px] rounded-full translate-y-1/2 -translate-x-1/3" />
+      </div>
+
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 w-full relative text-center lg:text-left">
         <div className="grid lg:grid-cols-2 gap-12 items-center">
           {/* LEFT CONTENT */}
-          <div className="space-y-8">
-            <h1 className="text-4xl sm:text-6xl lg:text-7xl font-bold leading-tight tracking-tight">
+          <div className="space-y-6 sm:space-y-8">
+            <h1 className="text-4xl sm:text-6xl lg:text-7xl font-bold font-serif leading-[1.1] tracking-tight text-foreground">
               Help Students Discover{" "}
               <span className="bg-gradient-text bg-clip-text text-transparent">
-                Their Future Careers Earlier.
+                Their Future Earlier.
               </span>
             </h1>
 
-            <p className="text-lg sm:text-xl text-foreground-muted leading-relaxed max-w-2xl">
+            <p className="text-lg text-foreground-muted leading-relaxed max-w-xl font-medium mx-auto lg:mx-0">
               Career Guide AI helps CBE schools turn classroom learning into clear career pathways through simple, affordable AI-powered guidance to their students.
             </p>
 
-            {/* Button area with conditional rendering */}
-            <div className="flex flex-col sm:flex-row gap-4 items-center">
+            {/* Role selection - Exact Labels and Layout */}
+            <div className="flex flex-col gap-4">
               {showRoleOptions ? (
-                // Role selection buttons
-                <>
+                <div className="grid grid-cols-2 sm:flex sm:flex-row gap-3 sm:gap-4 items-center justify-center lg:justify-start">
                   <Button
                     size="lg"
-                    className="w-full sm:w-auto bg-gradient-primary hover:opacity-90 text-primary-foreground shadow-glow px-8 py-6 text-lg"
+                    className="w-full sm:w-auto bg-gradient-primary hover:opacity-90 text-primary-foreground shadow-glow h-14 sm:h-16 text-base sm:text-lg px-4 sm:px-8 font-bold"
                     onClick={() => handleRoleSelect("student")}
                   >
-                    <GraduationCap className="w-5 h-5 mr-2" />
-                    I'm a Student
+                    <GraduationCap className="w-5 h-5 mr-1.5 sm:mr-2 flex-shrink-0" />
+                    <span className="hidden sm:inline">I'm a Student</span>
+                    <span className="sm:hidden">Student</span>
                   </Button>
                   <Button
                     size="lg"
-                    className="w-full sm:w-auto bg-gradient-primary hover:opacity-90 text-primary-foreground shadow-glow px-8 py-6 text-lg"
+                    className="w-full sm:w-auto bg-gradient-primary hover:opacity-90 text-primary-foreground shadow-glow h-14 sm:h-16 text-base sm:text-lg px-4 sm:px-8 font-bold"
                     onClick={() => handleRoleSelect("school")}
                   >
-                    <School className="w-5 h-5 mr-2" />
-                    I'm a School
+                    <School className="w-5 h-5 mr-1.5 sm:mr-2 flex-shrink-0" />
+                    <span className="hidden sm:inline">I'm a School</span>
+                    <span className="sm:hidden">School</span>
                   </Button>
                   <Button
                     variant="outline"
                     size="lg"
-                    className="w-full sm:w-auto border-card-border hover:bg-surface px-8 py-6 text-lg"
+                    className="col-span-2 sm:w-auto border-card-border hover:bg-surface h-14 sm:h-16 text-base sm:text-lg px-8 font-bold"
                     onClick={() =>
                       document
-                        .getElementById("guest-chat")
+                        .getElementById("quick-assessment")
                         ?.scrollIntoView({ behavior: "smooth" })
                     }
                   >
                     Quick Assessment
                   </Button>
-                </>
+                </div>
               ) : (
-                // Single action button after role selection
-                <>
+                <div className="flex flex-col sm:flex-row gap-4 items-center justify-center lg:justify-start text-center lg:text-left">
                   <Button
                     size="lg"
-                    className="bg-gradient-primary hover:opacity-90 text-primary-foreground shadow-glow px-8 py-6 text-lg flex-1"
+                    className="w-full sm:flex-1 bg-gradient-primary hover:opacity-90 text-primary-foreground shadow-glow h-14 sm:h-16 text-base sm:text-lg px-8 font-bold"
                     onClick={handleGetStarted}
                   >
                     {selectedRole === "student" ? "Start your journey" : "Onboard your school"}
@@ -101,34 +109,28 @@ const Hero = () => {
                   <Button
                     variant="outline"
                     size="lg"
-                    className="border-card-border hover:bg-surface px-8 py-6 text-lg"
+                    className="w-full sm:w-auto border-card-border hover:bg-surface h-14 sm:h-16 text-base sm:text-lg px-8 font-bold"
                     onClick={() =>
                       document
-                        .getElementById("guest-chat")
+                        .getElementById("quick-assessment")
                         ?.scrollIntoView({ behavior: "smooth" })
                     }
                   >
                     Try AI Chat
                   </Button>
-                  {/* Optional: Back button to change role */}
-                  <button
-                    onClick={resetRoleSelection}
-                    className="text-sm text-muted-foreground hover:text-foreground underline"
-                  >
-                    Not a {selectedRole}?
-                  </button>
-                </>
+                </div>
+              )}
+
+              {/* Back button to change role */}
+              {selectedRole && !showRoleOptions && (
+                <button
+                  onClick={resetRoleSelection}
+                  className="text-xs text-muted-foreground hover:text-foreground underline text-left sm:text-center w-full"
+                >
+                  Switching from {selectedRole}? Click here to reset.
+                </button>
               )}
             </div>
-
-            {/* Show selected role context when option is chosen */}
-            {selectedRole && !showRoleOptions && (
-              <p className="text-sm text-muted-foreground">
-                {selectedRole === "student"
-                  ? "✨ Continuing as Student"
-                  : "🏫 Continuing as School"}
-              </p>
-            )}
           </div>
 
 
