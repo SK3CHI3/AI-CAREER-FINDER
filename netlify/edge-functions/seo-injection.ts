@@ -5,11 +5,12 @@ export default async (request: Request, context: any) => {
   const url = new URL(request.url);
   const path = url.pathname;
 
-  // Only handle Blog and Careers for now
+  // Paths to handle for SEO injection
+  const isHome = path === "/";
   const isBlog = path.startsWith("/blog/");
-  const isCareer = path.startsWith("/careers");
+  const isCareers = path === "/careers" || path.startsWith("/careers/");
   
-  if (!isBlog && !isCareer) {
+  if (!isHome && !isBlog && !isCareers) {
     return context.next();
   }
 
@@ -24,7 +25,31 @@ export default async (request: Request, context: any) => {
 
     let seoData = null;
 
-    if (isBlog) {
+    if (isHome) {
+      seoData = {
+        title: "CareerGuide AI | AI-Powered Career Guidance for Kenya's CBE System",
+        description: "Empower Kenyan students with CareerGuide AI. We offer RIASEC assessments, career matching, and pathway synchronization for Junior and Senior secondary schools under the CBE curriculum.",
+        image: "https://careerguideai.co.ke/logos/CareerGuide_Logo.png",
+        type: "website",
+        jsonLd: {
+          "@context": "https://schema.org",
+          "@type": "Organization",
+          "name": "CareerGuide AI",
+          "url": "https://careerguideai.co.ke",
+          "logo": "https://careerguideai.co.ke/logos/CareerGuide_Logo.png",
+          "description": "Kenya's leading AI-powered career guidance platform for the Competency-Based Curriculum.",
+          "address": {
+            "@type": "PostalAddress",
+            "addressLocality": "Nairobi",
+            "addressCountry": "Kenya"
+          },
+          "sameAs": [
+            "https://twitter.com/CareerGuideAI",
+            "https://linkedin.com/company/careerguideai"
+          ]
+        }
+      };
+    } else if (isBlog) {
       const slug = path.split("/").pop();
       if (slug && slug !== "blog") {
         const response = await fetch(
@@ -62,6 +87,22 @@ export default async (request: Request, context: any) => {
           };
         }
       }
+    } else if (isCareers) {
+      seoData = {
+        title: "Explore Trending Careers in Kenya | CareerGuide AI",
+        description: "Discover high-demand career paths in Kenya's evolving job market. Get real-time insights on salaries, growth, and required skills for the CBE system.",
+        image: "https://careerguideai.co.ke/logos/CareerGuide_Logo.png",
+        type: "website",
+        jsonLd: {
+          "@context": "https://schema.org",
+          "@type": "SearchResultsPage",
+          "mainEntity": {
+            "@type": "ItemList",
+            "name": "Trending Careers in Kenya",
+            "description": "A list of high-impact career paths for Kenyan students."
+          }
+        }
+      };
     }
 
     // If we have SEO data, inject it into the HTML
@@ -76,13 +117,18 @@ export default async (request: Request, context: any) => {
         })
         .on("head", {
           element(el: any) {
-            // Add Meta Tags
+            // Remove existing meta tags that we are replacing to avoid duplicates
+            // HTMLRewriter doesn't easily support removing by selector while appending, 
+            // but appending at the end of head is usually safe as later tags override earlier ones for some properties.
+            // Better to append most critical ones.
+            
             el.append(`<meta name="description" content="${seoData.description.replace(/"/g, '&quot;')}" />`, { html: true });
             el.append(`<meta property="og:title" content="${seoData.title.replace(/"/g, '&quot;')}" />`, { html: true });
             el.append(`<meta property="og:description" content="${seoData.description.replace(/"/g, '&quot;')}" />`, { html: true });
             el.append(`<meta property="og:image" content="${seoData.image}" />`, { html: true });
             el.append(`<meta property="og:type" content="${seoData.type}" />`, { html: true });
             el.append(`<meta name="twitter:card" content="summary_large_image" />`, { html: true });
+            el.append(`<link rel="canonical" href="${url.origin}${url.pathname}" />`, { html: true });
             
             // Add JSON-LD
             el.append(`<script type="application/ld+json">${JSON.stringify(seoData.jsonLd)}</script>`, { html: true });
@@ -100,5 +146,6 @@ export default async (request: Request, context: any) => {
 
 // Netlify Edge Function config
 export const config = {
-  path: ["/blog/*", "/careers*"]
+  path: ["/", "/blog/*", "/careers*"]
 };
+

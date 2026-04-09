@@ -42,6 +42,8 @@ const Navigation = () => {
               <img
                 src="/logos/CareerGuide_Logo.png"
                 alt="CareerGuide AI"
+                width="160"
+                height="40"
                 className="h-10 w-auto"
               />
             </button>

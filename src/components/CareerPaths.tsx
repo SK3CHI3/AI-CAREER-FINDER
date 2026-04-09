@@ -119,8 +119,11 @@ const CareerPaths = () => {
               {/* Image Section */}
               <div className="relative h-48 w-full overflow-hidden bg-muted">
                 <img 
-                  src={career.image_url || 'https://images.unsplash.com/photo-1522202176988-66273c2fd55f?fit=crop&w=800&q=80'} 
+                  src={career.image_url ? `${career.image_url}${career.image_url.includes('?') ? '&' : '?'}auto=format&fit=crop&w=600&q=80` : 'https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&w=600&q=80'} 
                   alt={career.title}
+                  width="400"
+                  height="192"
+                  loading="lazy"
                   className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>

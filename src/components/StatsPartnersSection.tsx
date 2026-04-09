@@ -29,6 +29,9 @@ const StatsPartnersSection = () => {
                   <img
                     src="/images/students.jpg"
                     alt="Students"
+                    width="400"
+                    height="192"
+                    loading="lazy"
                     className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
                   />
                   {/* Blue gradient overlay */}
@@ -53,6 +56,9 @@ const StatsPartnersSection = () => {
                   <img
                     src="/images/institutions.jpg"
                     alt="Partner Institutions"
+                    width="400"
+                    height="192"
+                    loading="lazy"
                     className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
                   />
                   {/* Blue gradient overlay */}
@@ -77,6 +83,9 @@ const StatsPartnersSection = () => {
                   <img
                     src="/images/counties.png"
                     alt="Kenya Counties"
+                    width="400"
+                    height="192"
+                    loading="lazy"
                     className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
                   />
                   {/* Blue gradient overlay */}

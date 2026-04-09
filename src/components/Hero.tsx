@@ -1,10 +1,12 @@
 import { Button } from "@/components/ui/button";
-import { ArrowRight, GraduationCap, School } from "lucide-react";
+import { ArrowRight, GraduationCap, School, Loader2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { getDashboardPathForRole } from "@/types/roles";
-import { DotLottieReact } from "@lottiefiles/dotlottie-react";
-import { useState } from "react";
+import { useState, lazy, Suspense } from "react";
+
+// Lazy load the heavy Lottie player
+const DotLottieReact = lazy(() => import("@lottiefiles/dotlottie-react").then(module => ({ default: module.DotLottieReact })));
 
 const Hero = () => {
   const { user, profile } = useAuth();
@@ -130,9 +132,9 @@ const Hero = () => {
           </div>
 
 
-          {/* RIGHT CONTENT - Professionally sized */}
-          <div className="relative hidden lg:flex items-center justify-center lg:justify-end select-none">
-            {/* Animation container - just right */}
+          {/* RIGHT CONTENT - Optimized LCP */}
+          <div className="relative hidden lg:flex items-center justify-center lg:justify-end select-none min-h-[400px]">
+            {/* Animation container - Optimized for LCP */}
             <div
               className="relative z-10 w-[110%] lg:w-[600px] xl:w-[700px] pointer-events-none"
               style={{
@@ -140,14 +142,22 @@ const Hero = () => {
               }}
               aria-hidden="true"
             >
-              <div className="aspect-[4/3] w-full">
-                <DotLottieReact
-                  src="https://lottie.host/63e138b4-6a2a-42d0-88d6-ce61ba658d0c/PqnRt9UrJM.lottie"
-                  loop={true}
-                  autoplay={true}
-                  className="w-full h-full"
-                // That's it - keep it simple!
-                />
+              <div className="aspect-[4/3] w-full flex items-center justify-center">
+                <Suspense fallback={
+                  <div className="flex flex-col items-center justify-center space-y-4 animate-pulse">
+                    <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center">
+                      <Loader2 className="w-8 h-8 text-primary/40 animate-spin" />
+                    </div>
+                    <span className="text-xs text-primary/40 font-medium">Loading Experience...</span>
+                  </div>
+                }>
+                  <DotLottieReact
+                    src="https://lottie.host/63e138b4-6a2a-42d0-88d6-ce61ba658d0c/PqnRt9UrJM.lottie"
+                    loop={true}
+                    autoplay={true}
+                    className="w-full h-full"
+                  />
+                </Suspense>
               </div>
             </div>
 
@@ -164,6 +174,7 @@ const Hero = () => {
         </div>
       </div>
     </section>
+
   );
 };
 
