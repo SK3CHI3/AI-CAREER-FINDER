@@ -65,29 +65,30 @@ const Counselors = () => {
         </div>
       </header>
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
         <Button
           variant="ghost"
-          className="mb-6 hover:bg-muted"
+          size="sm"
+          className="mb-4 sm:mb-6 hover:bg-muted font-bold text-xs"
           onClick={() => navigate("/student")}
         >
           <ChevronLeft className="w-4 h-4 mr-2" />
           Back to Dashboard
         </Button>
-
-        <div className="relative mb-12">
+ 
+        <div className="relative mb-8 sm:mb-12">
           {/* Background Watermark Logo */}
-          <div className="absolute -top-16 -right-16 opacity-[0.03] dark:opacity-[0.05] pointer-events-none">
-            <img src="/logos/CareerGuide_Logo.png" alt="" className="w-80 h-auto grayscale" />
+          <div className="absolute -top-10 -right-10 sm:-top-16 sm:-right-16 opacity-[0.03] dark:opacity-[0.05] pointer-events-none">
+            <img src="/logos/CareerGuide_Logo.png" alt="" className="w-48 sm:w-80 h-auto grayscale" />
           </div>
-
+ 
           <div className="relative z-10">
-            <h1 className="text-4xl font-extrabold text-foreground tracking-tight mb-3 flex items-center gap-3">
-              <GraduationCap className="w-10 h-10 text-primary" />
-              Specialized Career Counselors
+            <h1 className="text-2xl sm:text-4xl font-extrabold text-foreground tracking-tight mb-2 sm:mb-3 flex items-center gap-2 sm:gap-3">
+              <GraduationCap className="w-8 h-8 sm:w-10 sm:h-10 text-primary" />
+              Specialized Counselors
             </h1>
-            <p className="text-xl text-muted-foreground max-w-3xl leading-relaxed">
-              Connect with verified Kenyan experts to build your professional roadmap.
+            <p className="text-base sm:text-xl text-muted-foreground max-w-2xl leading-relaxed">
+              Connect with verified experts to build your professional roadmap.
             </p>
           </div>
         </div>

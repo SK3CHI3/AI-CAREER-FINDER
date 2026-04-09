@@ -67,6 +67,7 @@ import CourseRecommendations, { type CourseRecommendation } from '@/components/C
 
 import GradesModal from '@/components/GradesModal'
 import { CounselorDirectory } from '@/components/CounselorDirectory'
+import InstallPrompt from '@/components/InstallPrompt'
 import { supabase } from '@/lib/supabase'
 import { aiCareerService } from '@/lib/ai-service'
 import { aiCacheService } from '@/lib/ai-cache-service'
@@ -1310,6 +1311,8 @@ const StudentDashboard = () => {
         isOpen={isFieldDayModalOpen}
         onClose={() => setIsFieldDayModalOpen(false)}
       />
+      {/* Install Prompt Overlay */}
+      <InstallPrompt />
     </div>
   )
 }

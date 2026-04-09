@@ -9,21 +9,31 @@ const InstallPrompt = () => {
 
   useEffect(() => {
     const handler = (e: any) => {
-      // Prevent Chrome 67 and earlier from automatically showing the prompt
       e.preventDefault();
-      // Stash the event so it can be triggered later.
       setDeferredPrompt(e);
-      // Only show if it's mobile or haven't shown in a while
       const hasShown = localStorage.getItem("pwa_prompt_shown");
       if (!hasShown) {
         setIsVisible(true);
       }
     };
 
-    window.addEventListener("beforeinstallprompt", handler);
+    const triggerHandler = () => {
+      if (deferredPrompt) {
+        setIsVisible(true);
+      } else {
+        // If we don't have the prompt, maybe it's already installed or not supported
+        console.log("PWA install prompt not available");
+      }
+    };
 
-    return () => window.removeEventListener("beforeinstallprompt", handler);
-  }, []);
+    window.addEventListener("beforeinstallprompt", handler);
+    window.addEventListener("trigger-pwa-install", triggerHandler);
+
+    return () => {
+      window.removeEventListener("beforeinstallprompt", handler);
+      window.removeEventListener("trigger-pwa-install", triggerHandler);
+    };
+  }, [deferredPrompt]);
 
   const handleInstallClick = async () => {
     if (!deferredPrompt) return;

@@ -140,10 +140,10 @@ export const CounselorDirectory = ({ limit }: { limit?: number }) => {
       {/* Redundant title and description removed */}
 
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-6">
         {counselors.map((counselor) => (
-          <Card key={counselor.id} className="group relative bg-card border-card-border shadow-sm hover:shadow-xl hover:border-primary/20 transition-all duration-300 overflow-hidden flex flex-col">
-            <div className="h-28 bg-gradient-to-r from-blue-600/10 to-purple-600/10 relative overflow-hidden">
+          <Card key={counselor.id} className="group relative bg-card border-card-border shadow-sm hover:shadow-xl hover:border-primary/20 transition-all duration-300 overflow-hidden flex flex-col rounded-2xl">
+            <div className="h-24 sm:h-28 bg-gradient-to-r from-blue-600/10 to-purple-600/10 relative overflow-hidden">
               {/* Background Logo Watermark */}
               <div className="absolute top-2 right-2 opacity-[0.05] grayscale brightness-0 dark:invert group-hover:scale-110 transition-transform duration-500">
                 <img src="/logos/CareerGuide_Logo.png" alt="" className="h-20 w-auto" />
@@ -153,11 +153,11 @@ export const CounselorDirectory = ({ limit }: { limit?: number }) => {
                 <img src={counselor.image_url} alt="Cover" className="w-full h-full object-cover opacity-30 mt-4" />
               )}
             </div>
-            <div className="px-6 flex justify-between items-end -mt-12 relative z-10">
+            <div className="px-4 sm:px-6 flex justify-between items-end -mt-10 sm:-mt-12 relative z-10">
               <div className="relative group/avatar">
-                <Avatar className="w-24 h-24 border-4 border-card rounded-2xl shadow-xl bg-background">
+                <Avatar className="w-20 h-20 sm:w-24 sm:h-24 border-4 border-card rounded-2xl shadow-xl bg-background">
                   <AvatarImage src={counselor.image_url || ""} className="object-cover" />
-                  <AvatarFallback className="text-3xl font-bold bg-primary/10 text-primary">{counselor.full_name?.substring(0, 2) || 'C'}</AvatarFallback>
+                  <AvatarFallback className="text-2xl sm:text-3xl font-bold bg-primary/10 text-primary">{counselor.full_name?.substring(0, 2) || 'C'}</AvatarFallback>
                 </Avatar>
                 {/* Brand Badge on Avatar */}
                 <div className="absolute -bottom-1 -right-1 w-8 h-8 bg-card border-2 border-background rounded-lg flex items-center justify-center shadow-lg transform group-hover/avatar:scale-110 transition-transform duration-300">
@@ -165,15 +165,15 @@ export const CounselorDirectory = ({ limit }: { limit?: number }) => {
                 </div>
               </div>
 
-              <Badge variant="outline" className="mb-2 bg-background/90 backdrop-blur font-extrabold border-primary/30 text-primary shadow-sm py-1">
+              <Badge variant="outline" className="mb-2 bg-background/90 backdrop-blur font-extrabold border-primary/30 text-primary shadow-sm py-1 text-[10px] sm:text-xs">
                 KSh {Number(counselor.hourly_rate).toLocaleString()}/hr
               </Badge>
             </div>
 
             
-            <CardContent className="pt-5 flex-1 flex flex-col">
-              <h3 className="text-xl font-bold text-foreground leading-tight tracking-tight mb-0.5">{counselor.full_name || 'Verified Counselor'}</h3>
-              <p className="text-sm font-semibold text-primary/80 mb-4">{counselor.title}</p>
+            <CardContent className="pt-4 sm:pt-5 px-4 sm:px-6 flex-1 flex flex-col">
+              <h3 className="text-lg sm:text-xl font-bold text-foreground leading-tight tracking-tight mb-0.5">{counselor.full_name || 'Verified Counselor'}</h3>
+              <p className="text-xs sm:text-sm font-semibold text-primary/80 mb-3 sm:mb-4">{counselor.title}</p>
               
               <p className="text-sm text-foreground-subtle line-clamp-3 mb-6 flex-1 leading-relaxed">
                 {counselor.bio}
