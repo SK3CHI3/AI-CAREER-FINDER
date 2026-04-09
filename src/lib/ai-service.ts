@@ -253,6 +253,16 @@ CRITICAL: Ask only ONE question per response. Be curious, realistic, and empathe
     }
   }
 
+  async getQuickGuidance(message: string): Promise<string> {
+    const quickContext: UserContext = {
+      curriculum: 'cbc' // Default to CBC for Kenyan context
+    };
+    
+    const prompt = `You are providing a QUICK PREVIEW guidance for a student. Keep it under 100 words. Focus on immediate encouragement and one logical next step. Use Kenyan context.`;
+    
+    return this.sendMessage(message, [{ role: 'system', content: prompt } as ChatMessage], quickContext);
+  }
+
   async generateTeacherInsights(userContext: UserContext): Promise<string> {
     try {
       const assessmentInfo = userContext.assessmentResults ? `

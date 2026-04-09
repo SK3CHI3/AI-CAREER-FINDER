@@ -86,11 +86,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         .from('profiles')
         .select('*')
         .eq('id', userId)
-        .single()
+        .maybeSingle() // Use maybeSingle to avoid 0-row errors
 
       if (error) {
+        // Only treat as error if it's not a "not found" error
+        // though maybeSingle should handle "not found" by returning data=null
         const err = new Error(error.message)
         setProfileError(err)
+        setProfile(null)
+      } else if (!data) {
+        // No profile found - common for new users
+        if (isDev) console.log('🔐 AuthContext: No profile yet for user:', userId)
         setProfile(null)
       } else {
         const profileData = data as Profile
