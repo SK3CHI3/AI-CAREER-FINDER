@@ -1,3 +1,4 @@
+// Optimized Mobile/PC Hybrid Assessment Section - Finalized v1.0
 import { useState, useRef, useEffect, Suspense, lazy } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
