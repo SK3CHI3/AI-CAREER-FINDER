@@ -6,6 +6,7 @@ import { useState, useEffect } from "react";
 import { dashboardService, CareerPath } from "@/lib/dashboard-service";
 import CareerDetailModal from "./CareerDetailModal";
 import { useAuth } from "@/contexts/AuthContext";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 const getDemandColor = (demand: string) => {
   switch (demand) {
@@ -18,6 +19,7 @@ const getDemandColor = (demand: string) => {
 };
 
 const CareerPaths = () => {
+  const isMobile = useIsMobile()
   const [dynamicCareerPaths, setDynamicCareerPaths] = useState<CareerPath[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -98,7 +100,7 @@ const CareerPaths = () => {
     <section id="careers" className="py-20">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-16">
-          <h2 className="text-2xl sm:text-4xl font-bold mb-6">
+          <h2 className="text-3xl sm:text-4xl font-bold font-serif mb-6 text-center">
             Trending{" "}
             <span className="bg-gradient-text bg-clip-text text-transparent">
               Careers in Kenya
@@ -111,12 +113,11 @@ const CareerPaths = () => {
         </div>
         
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-8">
-          {dynamicCareerPaths.map((career) => (
+          {(isMobile ? dynamicCareerPaths.slice(0, 3) : dynamicCareerPaths).map((career) => (
             <Card 
               key={career.id}
               className="bg-gradient-surface border-card-border hover:shadow-card transition-all duration-300 group overflow-hidden flex flex-col"
             >
-              {/* Image Section */}
               <div className="relative h-48 w-full overflow-hidden bg-muted">
                 <img 
                   src={career.image_url ? `${career.image_url}${career.image_url.includes('?') ? '&' : '?'}auto=format&fit=crop&w=600&q=80` : 'https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&w=600&q=80'} 
@@ -129,11 +130,10 @@ const CareerPaths = () => {
                 <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
               </div>
 
-              {/* Content Section */}
               <div className="p-6 space-y-4 flex-1 flex flex-col">
                 <div className="flex justify-between items-start gap-4">
                   <h3 
-                    className="text-xl font-bold text-foreground group-hover:text-primary transition-colors line-clamp-2 cursor-pointer"
+                    className="text-xl font-semibold text-foreground group-hover:text-primary transition-colors line-clamp-2 cursor-pointer"
                     onClick={() => {
                       setSelectedCareer({
                         name: career.title,
