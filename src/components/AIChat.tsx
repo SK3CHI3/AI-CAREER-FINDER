@@ -78,7 +78,11 @@ const MessageContent = ({ content, role }: { content: string, role: 'user' | 'as
   );
 };
 
-const AIChat = () => {
+interface AIChatProps {
+  isStandalone?: boolean;
+}
+
+const AIChat = ({ isStandalone = false }: AIChatProps) => {
   const { user, profile } = useAuth();
   const [message, setMessage] = useState("");
   const [conversation, setConversation] = useState<ChatMessage[]>(() => {
@@ -91,8 +95,8 @@ const AIChat = () => {
             ...msg,
             timestamp: new Date(msg.timestamp)
           }));
-        } catch (e) {
-          console.error('Failed to parse saved conversation:', e);
+        } catch (error) {
+          console.error('Failed to parse saved conversation:', error);
         }
       }
     }
@@ -323,24 +327,26 @@ What subjects do you enjoy most in your current studies? 🎯`,
     );
   }
 
-  return (
-    <div className="w-full max-w-5xl px-2 sm:mx-auto sm:p-2 p-1">
-      <div className="text-center mb-6 sm:mb-8">
-        <h2 className="text-xl sm:text-3xl font-bold mb-3 sm:mb-4">
-          Chat with Your{" "}
-          <span className="bg-gradient-text bg-clip-text text-transparent">
-            AI Career Counselor
-          </span>
-        </h2>
-        <p className="text-foreground-muted max-w-2xl mx-auto text-sm sm:text-base">
-          Quick AI assessment – Get personalized career guidance based on Kenya's education system and job market.
-          <span className="text-blue-600 font-medium"> Conversations persist during your session but are not saved to database.</span>
-        </p>
-      </div>
+  const Content = (
+    <div className={`w-full ${isStandalone ? '' : 'max-w-5xl px-2 sm:mx-auto sm:p-2 p-1'}`}>
+      {!isStandalone && (
+        <div className="text-center mb-6 sm:mb-8">
+          <h2 className="text-xl sm:text-3xl font-bold mb-3 sm:mb-4">
+            Chat with Your{" "}
+            <span className="bg-gradient-text bg-clip-text text-transparent">
+              AI Career Counselor
+            </span>
+          </h2>
+          <p className="text-foreground-muted max-w-2xl mx-auto text-sm sm:text-base">
+            Quick AI assessment – Get personalized career guidance based on Kenya's education system and job market.
+            <span className="text-blue-600 font-medium"> Conversations persist during your session but are not saved to database.</span>
+          </p>
+        </div>
+      )}
 
-      <Card className="bg-gradient-surface border-card-border shadow-elevated">
+      <div className={`flex flex-col h-full ${isStandalone ? '' : 'bg-gradient-surface border border-card-border shadow-elevated rounded-3xl overflow-hidden'}`}>
         {/* Chat Header */}
-        <CardHeader className="border-b border-card-border p-4 sm:p-6 bg-card/50">
+        <div className="border-b border-card-border p-4 sm:p-6 bg-card/50">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div className="flex items-center space-x-3">
               <div className="w-10 h-10 bg-white/5 border border-white/10 rounded-xl flex items-center justify-center shadow-lg">
@@ -381,11 +387,11 @@ What subjects do you enjoy most in your current studies? 🎯`,
               )}
             </div>
           </div>
-        </CardHeader>
+        </div>
 
         {/* Chat Messages */}
-        <CardContent className="p-0 sm:p-6 p-3">
-          <ScrollArea className="h-[450px] sm:h-[600px] p-2 sm:p-6">
+        <div className="p-0 sm:p-6 p-3 flex-1 overflow-hidden">
+          <ScrollArea className={`${isStandalone ? 'h-[calc(100vh-280px)]' : 'h-[450px] sm:h-[600px]'} p-2 sm:p-6`}>
             <div className="space-y-4 sm:space-y-6">
               {conversation.map((msg) => (
                 <div key={msg.id} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'} mb-2`}>
@@ -440,7 +446,7 @@ What subjects do you enjoy most in your current studies? 🎯`,
               <div ref={messagesEndRef} />
             </div>
           </ScrollArea>
-        </CardContent>
+        </div>
 
         {/* Chat Input */}
         <div className="border-t border-card-border p-4 sm:p-6 bg-card/30">
@@ -505,9 +511,11 @@ What subjects do you enjoy most in your current studies? 🎯`,
             )}
           </div>
         </div>
-      </Card>
+      </div>
     </div>
   );
+
+  return Content;
 };
 
 export default AIChat;

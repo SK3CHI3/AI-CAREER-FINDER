@@ -62,29 +62,10 @@ const StudentCounselingPage = () => {
 
       {/* Main Focus Area */}
       <main className="flex-1 flex flex-col max-w-5xl w-full mx-auto p-4 sm:p-6 lg:p-8">
-        <div className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div>
-            <h2 className="text-2xl sm:text-3xl font-bold tracking-tight flex items-center gap-3">
-              1-on-1 Guidance
-              <Sparkles className="w-5 h-5 text-primary animate-pulse" />
-            </h2>
-            <p className="text-foreground-muted font-bold text-sm mt-1">
-              Ask about pathways, subjects, or market trends. Your AI counselor is ready.
-            </p>
-          </div>
-          <Button 
-            variant="outline" 
-            size="sm"
-            onClick={() => navigate("/student")}
-            className="border-card-border hover:bg-surface font-bold text-xs h-9 px-4 rounded-xl"
-          >
-            Back to Dashboard
-          </Button>
-        </div>
 
         {/* Full Chat Interface container */}
-        <div className="flex-1 bg-card/40 backdrop-blur-xl border border-card-border rounded-[2rem] overflow-hidden shadow-2xl flex flex-col">
-          <AIChat />
+        <div className="flex-1 flex flex-col h-[calc(100vh-220px)] sm:h-auto">
+          <AIChat isStandalone={true} />
         </div>
       </main>
     </div>
