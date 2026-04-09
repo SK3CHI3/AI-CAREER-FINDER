@@ -88,11 +88,7 @@ const Hero = () => {
                     variant="outline"
                     size="lg"
                     className="col-span-2 sm:w-auto border-card-border hover:bg-surface h-14 sm:h-16 text-base sm:text-lg px-8 font-bold"
-                    onClick={() =>
-                      document
-                        .getElementById("quick-assessment")
-                        ?.scrollIntoView({ behavior: "smooth" })
-                    }
+                    onClick={() => navigate("/quick-assessment")}
                   >
                     Quick Assessment
                   </Button>
@@ -111,13 +107,9 @@ const Hero = () => {
                     variant="outline"
                     size="lg"
                     className="w-full sm:w-auto border-card-border hover:bg-surface h-14 sm:h-16 text-base sm:text-lg px-8 font-bold"
-                    onClick={() =>
-                      document
-                        .getElementById("quick-assessment")
-                        ?.scrollIntoView({ behavior: "smooth" })
-                    }
+                    onClick={() => navigate("/quick-assessment")}
                   >
-                    Try AI Chat
+                    Quick Assessment
                   </Button>
                 </div>
               )}
