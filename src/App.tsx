@@ -18,6 +18,7 @@ import SchoolTeachers from "./pages/SchoolTeachers"
 import SchoolClasses from "./pages/SchoolClasses"
 import SchoolStudents from "./pages/SchoolStudents";
 import TeacherDashboard from "./pages/TeacherDashboard"
+import StudentCounselingPage from "./pages/StudentCounselingPage";
 import ClassDetail from "./pages/ClassDetail";
 import AcceptInvite from "./pages/AcceptInvite";
 import Dashboard from "./pages/Dashboard";
@@ -34,6 +35,7 @@ import BlogIndex from "./pages/BlogIndex";
 import BlogPostPage from "./pages/BlogPost";
 import Terms from "./pages/Terms";
 import Privacy from "./pages/Privacy";
+import InstallPrompt from "./components/InstallPrompt";
 
 const queryClient = new QueryClient();
 
@@ -44,6 +46,7 @@ const App = () => (
         <ThemeProvider defaultTheme="system" storageKey="vite-ui-theme">
           <Toaster />
           <Sonner />
+          <InstallPrompt />
           <BrowserRouter>
           <ScrollToTop />
           <Routes>
@@ -60,6 +63,16 @@ const App = () => (
                 <ProtectedRoute requiredRole="student">
                   <PaymentGate>
                     <StudentDashboard />
+                  </PaymentGate>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/student/counseling"
+              element={
+                <ProtectedRoute requiredRole="student">
+                  <PaymentGate>
+                    <StudentCounselingPage />
                   </PaymentGate>
                 </ProtectedRoute>
               }
