@@ -6,7 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Sparkles, Loader2, Download, ArrowRight, ArrowLeft, CheckCircle, Brain, Target, User, Heart, Compass, ShieldAlert, Rocket } from "lucide-react";
+import { Sparkles, Download, ArrowRight, ArrowLeft, CheckCircle, Brain, Target, User, Heart, Compass, ShieldAlert, Rocket } from "lucide-react";
+import BrandedLoader from "@/components/BrandedLoader";
 import { aiCareerService } from "@/lib/ai-service";
 import { ReportGenerator, type GuestProfile } from "@/lib/report-generator";
 import Navigation from "@/components/Navigation";
@@ -423,7 +424,7 @@ const QuickAssessment = () => {
                                     <div className="pt-8 flex flex-col md:flex-row justify-between gap-4">
                                         <Button variant="outline" onClick={handleBack} className="h-14 px-8 border-2 font-bold order-2 md:order-1 disabled:opacity-50" disabled={isLoading}><ArrowLeft className="mr-2 w-5 h-5" /> Back</Button>
                                         <Button onClick={finishAssessment} disabled={isLoading || !readiness} className="h-14 px-10 text-lg rounded-2xl bg-gradient-to-r from-primary to-blue-600 text-white shadow-xl hover:shadow-primary/20 order-1 md:order-2">
-                                            {isLoading ? <><Loader2 className="mr-2 w-5 h-5 animate-spin" /> Finalizing...</> : <><Sparkles className="mr-2 w-5 h-5" /> Reveal Diagnostic</>}
+                                            {isLoading ? <><BrandedLoader size="xs" showText={false} className="mr-2 inline-flex" /> Finalizing...</> : <><Sparkles className="mr-2 w-5 h-5" /> Reveal Diagnostic</>}
                                         </Button>
                                     </div>
                                 </motion.div>

@@ -1,9 +1,10 @@
 import { Button } from "@/components/ui/button";
-import { ArrowRight, GraduationCap, School, Loader2 } from "lucide-react";
+import { ArrowRight, GraduationCap, School } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { getDashboardPathForRole } from "@/types/roles";
 import { useState, lazy, Suspense } from "react";
+import BrandedLoader from "@/components/BrandedLoader";
 
 // Lazy load the heavy Lottie player
 const DotLottieReact = lazy(() => import("@lottiefiles/dotlottie-react").then(module => ({ default: module.DotLottieReact })));
@@ -145,14 +146,7 @@ const Hero = () => {
               aria-hidden="true"
             >
               <div className="aspect-[4/3] w-full flex items-center justify-center">
-                <Suspense fallback={
-                  <div className="flex flex-col items-center justify-center space-y-4 animate-pulse">
-                    <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center">
-                      <Loader2 className="w-8 h-8 text-primary/40 animate-spin" />
-                    </div>
-                    <span className="text-xs text-primary/40 font-medium">Loading Experience...</span>
-                  </div>
-                }>
+                <Suspense fallback={<BrandedLoader size="lg" />}>
                   <DotLottieReact
                     src="https://lottie.host/63e138b4-6a2a-42d0-88d6-ce61ba658d0c/PqnRt9UrJM.lottie"
                     loop={true}

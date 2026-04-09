@@ -18,9 +18,10 @@ import {
   Building2, GraduationCap, RefreshCw, AlertCircle,
   MessageCircle, CheckCircle2, Bug, Lightbulb, HelpCircle,
   LayoutDashboard, Settings, Bell, Menu, X, ChevronRight,
-  Database, LineChart, PieChart as PieChartIcon, Loader2,
+  Database, LineChart, PieChart as PieChartIcon,
   MessageSquarePlus, FileText, Briefcase, Calendar
 } from 'lucide-react'
+import BrandedLoader from '@/components/BrandedLoader'
 import { supabase } from '@/lib/supabase'
 import { motion, AnimatePresence } from 'framer-motion'
 import { BlogManagement } from '@/components/BlogManagement'
@@ -1030,7 +1031,7 @@ const AdminDashboard = () => {
                                         disabled={!!updatingId}
                                       >
                                         {updatingId === f.id ? (
-                                          <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                                          <BrandedLoader size="xs" showText={false} className="mr-0" />
                                         ) : (
                                           f.status === 'new' ? 'Acknowledge' : 'Mark Resolved'
                                         )}
@@ -1473,7 +1474,7 @@ const AdminDashboard = () => {
                             disabled={isSavingSettings}
                             className="w-full bg-amber-500 hover:bg-amber-600 text-white font-black rounded-xl h-12 shadow-lg shadow-amber-500/20 transition-all active:scale-95 flex items-center justify-center gap-2"
                           >
-                            {isSavingSettings ? <Loader2 className="w-5 h-5 animate-spin" /> : <Database className="w-5 h-5" />}
+                            {isSavingSettings ? <BrandedLoader size="xs" showText={false} className="mr-2 inline-flex" /> : <Database className="w-5 h-5" />}
                             Update Academic Terms
                           </Button>
                           <p className="text-[9px] text-slate-500 mt-3 text-center font-bold italic">

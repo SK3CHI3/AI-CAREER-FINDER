@@ -68,6 +68,8 @@ import CourseRecommendations, { type CourseRecommendation } from '@/components/C
 import GradesModal from '@/components/GradesModal'
 import { CounselorDirectory } from '@/components/CounselorDirectory'
 import InstallPrompt from '@/components/InstallPrompt'
+import BrandedLoader from '@/components/BrandedLoader'
+
 import { supabase } from '@/lib/supabase'
 import { aiCareerService } from '@/lib/ai-service'
 import { aiCacheService } from '@/lib/ai-cache-service'
@@ -600,7 +602,7 @@ const StudentDashboard = () => {
                 disabled={isActivatingTrial}
                 className="bg-primary hover:bg-primary/90 text-primary-foreground font-bold px-8 h-12 rounded-xl shadow-lg shadow-primary/20 transition-all hover:scale-105 active:scale-95"
               >
-                {isActivatingTrial ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
+                {isActivatingTrial ? <BrandedLoader size="xs" showText={false} className="mr-2 inline-flex" /> : null}
                 Activate Free Term
               </Button>
               <Button
@@ -776,10 +778,7 @@ const StudentDashboard = () => {
                 <CardContent>
                   {isLoadingRecommendations ? (
                     <div className="flex items-center justify-center h-64">
-                      <div className="text-center">
-                        <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4 text-primary" />
-                        <p className="text-muted-foreground">Analyzing your career potential...</p>
-                      </div>
+                      <BrandedLoader showText={true} text="Analyzing your career potential..." />
                     </div>
                   ) : (
                     <div className="h-64">
