@@ -14,24 +14,29 @@ const Auth = () => {
   const defaultRole = searchParams.get('role') as 'student' | 'school' | null
 
   const [mode, setMode] = useState<AuthMode>(initialMode)
-  const { user, profile, loading } = useAuth()
+  const { user, profile, loading, profileLoading, profileError } = useAuth()
 
   // Show loading state
-  if (loading) {
+  if (loading || (user && profileLoading && !profileError)) {
     return (
-      <div className="min-h-screen flex items-center justify-center" style={{ background: 'var(--gradient-homepage)' }}>
-        <img 
-          src="/logos/CareerGuide_Logo.png" 
-          alt="CareerGuide AI" 
-          className="h-10 w-auto animate-pulse drop-shadow-md"
-        />
+      <div className="min-h-screen flex items-center justify-center p-4" style={{ background: 'var(--gradient-homepage)' }}>
+        <div className="text-center">
+          <img 
+            src="/logos/CareerGuide_Logo.png" 
+            alt="CareerGuide AI" 
+            className="h-12 w-auto animate-pulse drop-shadow-md mx-auto mb-4"
+          />
+          <p className="text-primary/60 text-xs font-medium uppercase tracking-widest animate-pulse">
+            Authenticating...
+          </p>
+        </div>
       </div>
     )
   }
 
   // Redirect if already authenticated
   if (user && profile) {
-    return <Navigate to={getDashboardPathForRole(profile.role)} replace />
+    return <Navigate to={getDashboardPathForRole(profile.role as any)} replace />
   }
 
   const renderForm = () => {
