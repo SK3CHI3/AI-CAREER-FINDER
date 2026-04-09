@@ -67,6 +67,7 @@ import CourseRecommendations, { type CourseRecommendation } from '@/components/C
 
 import GradesModal from '@/components/GradesModal'
 import { CounselorDirectory } from '@/components/CounselorDirectory'
+import InstallPrompt from '@/components/InstallPrompt'
 import { supabase } from '@/lib/supabase'
 import { aiCareerService } from '@/lib/ai-service'
 import { aiCacheService } from '@/lib/ai-cache-service'
@@ -632,7 +633,7 @@ const StudentDashboard = () => {
         )}
 
         <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-6 mb-8">
-            <div>
+            <div className="hidden sm:block">
               <h2 className="text-2xl sm:text-3xl font-bold text-foreground mb-1 sm:mb-2 flex items-center gap-3">
                 Welcome back, {profile?.full_name?.split(' ')[0] || 'Student'}!
                 <span className="animate-bounce">👋</span>
@@ -641,7 +642,6 @@ const StudentDashboard = () => {
                 Continue your career discovery journey and unlock your potential.
               </p>
             </div>
-
           </div>
         </div>
 
@@ -665,8 +665,8 @@ const StudentDashboard = () => {
 
           {/* Overview Tab */}
           <TabsContent value="overview" className="space-y-4 sm:space-y-6">
-            {/* Quick Stats */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-6 w-full">
+            {/* Quick Stats - 2x2 Grid on Mobile */}
+            <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6 w-full">
               {isLoadingStats ? (
                 // Loading skeleton for stats
                 Array.from({ length: 4 }).map((_, index) => (
@@ -1078,8 +1078,35 @@ const StudentDashboard = () => {
             </div>
           </TabsContent>
 
-          {/* Chat Tab */}
-          <TabsContent value="chat" className="w-full mx-auto px-2 sm:px-0">
+          {/* AI Chat Tab Refined */}
+          <TabsContent value="chat" className="space-y-6">
+            <Card className="border-card-border bg-gradient-to-br from-card to-card/50 overflow-hidden relative group">
+              <div className="absolute inset-0 bg-primary/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+              <CardHeader className="relative z-10 text-center py-12 sm:py-20">
+                <div className="w-20 h-20 bg-primary/10 rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-glow">
+                  <Bot className="w-10 h-10 text-primary" />
+                </div>
+                <CardTitle className="text-3xl sm:text-5xl font-semibold tracking-tight">
+                  Your Personal AI Counselor
+                </CardTitle>
+                <CardDescription className="text-lg sm:text-xl text-foreground-muted max-w-2xl mx-auto mt-4 font-medium">
+                  Experience full 1-on-1 career guidance. Ask about subject choices, University prerequisites, and rising job markets in East Africa.
+                </CardDescription>
+                <div className="mt-10">
+                  <Button 
+                    size="lg" 
+                    className="h-14 sm:h-16 px-10 sm:px-16 text-lg sm:text-xl bg-gradient-primary hover:scale-105 transition-all shadow-glow font-bold rounded-2xl"
+                    onClick={() => navigate('/student/counseling')}
+                  >
+                    Start Full Counseling Session
+                    <Sparkles className="ml-3 w-5 h-5" />
+                  </Button>
+                </div>
+              </CardHeader>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="chat-exp" className="h-[700px]">
             <AIChat />
           </TabsContent>
 
@@ -1284,6 +1311,8 @@ const StudentDashboard = () => {
         isOpen={isFieldDayModalOpen}
         onClose={() => setIsFieldDayModalOpen(false)}
       />
+      {/* Install Prompt Overlay */}
+      <InstallPrompt />
     </div>
   )
 }

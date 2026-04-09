@@ -57,7 +57,13 @@ const PaymentGate: React.FC<PaymentGateProps> = ({ children }) => {
     checkUserStatus()
   }, [user?.id, profile?.id, authLoading]) // Depend on IDs and authLoading state
 
-  const checkProfileCompletion = (profile: any): boolean => {
+  const checkProfileCompletion = (profile: {
+    full_name?: string | null;
+    school_level?: string | null;
+    cbe_subjects?: string[] | null;
+    career_interests?: string[] | null;
+    [key: string]: any;
+  }): boolean => {
     // Required fields (current_grade is optional)
     const requiredFields = [
       'full_name',
@@ -107,8 +113,8 @@ const PaymentGate: React.FC<PaymentGateProps> = ({ children }) => {
         try {
           const hasSub = await schoolService.hasActiveSubscription(profile.school_id)
           setIsSchoolSubscribed(hasSub)
-        } catch (err) {
-          console.error('Error re-checking school subscription:', err)
+        } catch (error) {
+          console.error('Failed to parse saved conversation:', error);
           setIsSchoolSubscribed(false)
         }
       }
@@ -124,11 +130,12 @@ const PaymentGate: React.FC<PaymentGateProps> = ({ children }) => {
   // Show loading while checking user status
   if (authLoading || isChecking) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100">
-        <div className="text-center">
-          <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4 text-blue-600" />
-          <p className="text-gray-600">Loading your account...</p>
-        </div>
+      <div className="min-h-screen flex items-center justify-center" style={{ background: 'var(--gradient-homepage)' }}>
+        <img 
+          src="/logos/CareerGuide_Logo.png" 
+          alt="CareerGuide AI" 
+          className="h-10 w-auto animate-pulse drop-shadow-md"
+        />
       </div>
     )
   }

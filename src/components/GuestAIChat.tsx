@@ -1,160 +1,547 @@
-import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import { motion, AnimatePresence } from "framer-motion";
+import { useState, useEffect, useRef } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Send, Bot, User, Sparkles, Loader2, AlertCircle, Download, ArrowRight, RefreshCw, CheckCircle2 } from "lucide-react";
+import { AlertCircle, Send, Bot, User, Sparkles, Loader2, Download, ArrowRight } from "lucide-react";
 import { aiCareerService, type ChatMessage } from "@/lib/ai-service";
-import { ReportGenerator, type GuestProfile } from "@/lib/report-generator";
+import { ReportGenerator } from "@/lib/report-generator";
+import type { GuestProfile } from "@/lib/report-generator";
 
 // GuestProfile is now imported from report-generator
 
-const MOCK_CHAT_SEQUENCE = [
-  { role: 'bot', text: "Karibu! I'm CareerGuide AI. Let's find your perfect CBE pathway. What subjects do you enjoy most at school?" },
-  { role: 'user', text: "I really enjoy Computer Science and Art & Design." },
-  { role: 'bot', text: "That's a powerful combination! You could explore Software Engineering, Digital Design, or Animation." },
-  { role: 'user', text: "Digital Design sounds interesting! What grades do I need?" },
-  { role: 'bot', text: "For Digital Design, focus on excelling in Mathematics, Art, and Computer Studies. Would you like to see a full pathway map?" }
-];
-
 const GuestAIChat = () => {
-  const navigate = useNavigate();
-  const [mockStep, setMockStep] = useState(0);
+  const [message, setMessage] = useState("");
+  const [conversation, setConversation] = useState<ChatMessage[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [guestProfile, setGuestProfile] = useState<GuestProfile>({});
+  const [assessmentComplete, setAssessmentComplete] = useState(false);
+  const [showReport, setShowReport] = useState(false);
+  const [connectionTest, setConnectionTest] = useState<string>('');
+  const scrollAreaRef = useRef<HTMLDivElement>(null);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  // Auto-play the mock chat
+  // Function to scroll chat area to bottom
+  const scrollToBottom = () => {
+    if (scrollAreaRef.current) {
+      const scrollArea = scrollAreaRef.current;
+      scrollArea.scrollTop = scrollArea.scrollHeight;
+    }
+  };
+
+  // Auto-scroll chat area when new messages arrive
   useEffect(() => {
-    const timer = setInterval(() => {
-      setMockStep((prev) => (prev >= MOCK_CHAT_SEQUENCE.length ? 0 : prev + 1));
-    }, 2800);
-    return () => clearInterval(timer);
+    scrollToBottom();
+  }, [conversation]);
+
+  // Function to clean markdown formatting from AI responses
+  const cleanMarkdownFormatting = (text: string): string => {
+    return text
+      .replace(/\*\*(.*?)\*\*/g, '$1') // Remove ** bold markers
+      .replace(/\*(.*?)\*/g, '$1')     // Remove * italic markers
+      .replace(/#{1,6}\s/g, '')        // Remove # headers
+      .replace(/`{1,3}(.*?)`{1,3}/g, '$1') // Remove code blocks
+      .trim();
+  };
+
+  // Initialize with welcome message
+  useEffect(() => {
+    const welcomeMessage: ChatMessage = {
+      id: crypto.randomUUID(),
+      role: 'assistant',
+      content: `Karibu to CareerPath AI! 🦄
+
+I'm your friendly career counselor, here to help you discover your perfect career path through Kenya's CBE system!
+
+What you'll get:
+✅ Personalized career matches based on your interests
+✅ CBE pathway recommendations for your grade level
+✅ University & technical college suggestions
+✅ Professional career report (downloadable!)
+
+This will be fun and easy - I'll ask you simple questions one by one, and we'll build your career profile together!
+
+Let's start with the basics - what's your name? 😊`,
+      timestamp: new Date()
+    };
+    setConversation([welcomeMessage]);
   }, []);
 
+  const createGuestSystemPrompt = (): string => {
+    return `You are CareerPath AI, Kenya's most engaging career counselor! You're conducting a FREE quick assessment to help students discover their perfect career path through Kenya's CBE system.
+
+CURRENT GUEST PROFILE:
+${Object.entries(guestProfile).map(([key, value]) =>
+  value ? `- ${key}: ${Array.isArray(value) ? value.join(', ') : value}` : ''
+).filter(Boolean).join('\n')}
+
+YOUR MISSION: Guide them through a structured, fun conversation to build their career profile.
+
+CONVERSATION FLOW (ONE QUESTION AT A TIME):
+1. **Welcome & Name** - "Karibu! What's your name?"
+2. **Education Level** - Current grade/level in CBE system
+3. **Interests** - What activities/fields excite them most?
+4. **CBE Subjects** - Which subjects do they enjoy?
+5. **Work Style** - Practical vs Academic vs Creative vs Business?
+6. **Dream Environment** - Office, Outdoor, Tech, Digital?
+7. **Aspirations** - What's their dream job/goal?
+8. **Provide Mini-Report** - Give 2-3 career matches with explanations
+
+FORMATTING STYLE - CRITICAL:
+- Write in clean, natural text - NO markdown symbols like ** or ##
+- Start responses with "Habari yako, [Name]! ≡ƒæï" (clean text, no **)
+- Use emojis naturally: ≡ƒÄ», ≡ƒÆ╝, ≡ƒÜÇ, ≡ƒî▒
+- Use numbered options: 1∩╕ÅΓâú, 2∩╕ÅΓâú, 3∩╕ÅΓâú
+- Include encouraging phrases naturally: "Fantastic!", "That's exciting!"
+- End each response with ONE clear question
+
+EXAMPLE RESPONSE FORMAT:
+Habari yako, Sarah! ≡ƒæï
+
+That's a beautiful name! I'm excited to help you discover your perfect career path through Kenya's CBE system.
+
+Next question:
+What grade are you currently in?
+(Choose one)
+1∩╕ÅΓâú Primary (Grades 1-6)
+2∩╕ÅΓâú Junior Secondary (Grades 7-9)
+3∩╕ÅΓâú Senior Secondary (Grades 10-12)
+4∩╕ÅΓâú Tertiary/University level
+
+This helps me understand which CBE pathway options are available to you! ≡ƒÜÇ
+
+PERSONALITY:
+- Enthusiastic and encouraging
+- Genuinely curious about their responses
+- Use Kenyan context and CBE terminology
+- Make it feel like chatting with a friendly mentor
+- Build excitement about their future possibilities
+
+CRITICAL RULES:
+- Ask ONLY ONE question per response
+- Wait for their answer before moving forward
+- Make each question feel personal and engaging
+- Use proper formatting with emojis and bold text
+- Reference Kenya's CBE system and opportunities
+
+Remember: YOU MUST ALWAYS BE CURIOUS TO KNOW THEM. Make this the most engaging career conversation they've ever had!`;
+  };
+
+  const extractProfileInfo = (userMessage: string, aiResponse: string) => {
+    const message = userMessage.toLowerCase();
+    const newProfile = { ...guestProfile };
+
+    // Extract name - more flexible patterns
+    if (!newProfile.name) {
+      const namePatterns = [
+        /(?:my name is|i'm|i am|call me)\s+([a-zA-Z\s]+)/,
+        /^([a-zA-Z]+)$/,  // Single word responses to "what's your name"
+        /^([a-zA-Z]+\s+[a-zA-Z]+)$/  // Two word names
+      ];
+
+      for (const pattern of namePatterns) {
+        const match = message.match(pattern);
+        if (match && match[1].length > 1 && match[1].length < 30) {
+          newProfile.name = match[1].trim().replace(/\b\w/g, l => l.toUpperCase());
+          break;
+        }
+      }
+    }
+
+    // Extract grade/education level
+    if (!newProfile.grade) {
+      const gradePatterns = [
+        /grade\s*(\d+)/,
+        /form\s*(\d+)/,
+        /year\s*(\d+)/,
+        /class\s*(\d+)/,
+        /(\d+)(?:th|st|nd|rd)?\s*grade/,
+        /junior\s*secondary/,
+        /senior\s*secondary/,
+        /primary/,
+        /university/,
+        /college/
+      ];
+
+      for (const pattern of gradePatterns) {
+        const match = message.match(pattern);
+        if (match) {
+          if (match[1]) {
+            newProfile.grade = `Grade ${match[1]}`;
+          } else if (message.includes('junior')) {
+            newProfile.grade = 'Junior Secondary';
+          } else if (message.includes('senior')) {
+            newProfile.grade = 'Senior Secondary';
+          } else if (message.includes('primary')) {
+            newProfile.grade = 'Primary';
+          } else if (message.includes('university') || message.includes('college')) {
+            newProfile.grade = 'Tertiary';
+          }
+          break;
+        }
+      }
+    }
+
+    // Extract CBE subjects
+    const cbeSubjects = [
+      'mathematics', 'math', 'english', 'kiswahili', 'swahili',
+      'science', 'biology', 'chemistry', 'physics', 'computer science',
+      'geography', 'history', 'business', 'agriculture', 'home science',
+      'art', 'music', 'french', 'german', 'arabic', 'literature',
+      'economics', 'cre', 'ire', 'hre', 'physical education', 'pe'
+    ];
+
+    const mentionedSubjects = cbeSubjects.filter(subject =>
+      message.includes(subject) || message.includes(subject.replace(' ', ''))
+    );
+
+    if (mentionedSubjects.length > 0) {
+      const formattedSubjects = mentionedSubjects.map(subject =>
+        subject.replace(/\b\w/g, l => l.toUpperCase())
+      );
+      newProfile.subjects = [...new Set([...(newProfile.subjects || []), ...formattedSubjects])];
+    }
+
+    // Extract interests and career goals
+    const interestKeywords = {
+      'Technology': ['technology', 'tech', 'coding', 'programming', 'computer', 'software', 'app'],
+      'Healthcare': ['medicine', 'doctor', 'nurse', 'health', 'medical', 'hospital'],
+      'Business': ['business', 'entrepreneur', 'marketing', 'sales', 'finance'],
+      'Engineering': ['engineering', 'building', 'construction', 'mechanical', 'electrical'],
+      'Agriculture': ['farming', 'agriculture', 'crops', 'livestock', 'veterinary'],
+      'Arts': ['art', 'design', 'creative', 'drawing', 'painting', 'music'],
+      'Education': ['teaching', 'teacher', 'education', 'school'],
+      'Sports': ['sports', 'football', 'athletics', 'fitness', 'coaching']
+    };
+
+    Object.entries(interestKeywords).forEach(([interest, keywords]) => {
+      if (keywords.some(keyword => message.includes(keyword))) {
+        if (!newProfile.interests?.includes(interest)) {
+          newProfile.interests = [...(newProfile.interests || []), interest];
+        }
+      }
+    });
+
+    // Extract work preferences
+    if (message.includes('practical') || message.includes('hands-on')) {
+      newProfile.strengths = [...(newProfile.strengths || []), 'Practical Work'];
+    }
+    if (message.includes('creative') || message.includes('artistic')) {
+      newProfile.strengths = [...(newProfile.strengths || []), 'Creative Thinking'];
+    }
+    if (message.includes('research') || message.includes('academic')) {
+      newProfile.strengths = [...(newProfile.strengths || []), 'Academic Research'];
+    }
+
+    setGuestProfile(newProfile);
+  };
+
+  const handleSend = async () => {
+    if (!message.trim() || isLoading) return;
+    
+    const userMessage: ChatMessage = {
+      id: crypto.randomUUID(),
+      role: 'user',
+      content: message.trim(),
+      timestamp: new Date()
+    };
+
+    setConversation(prev => [...prev, userMessage]);
+    setMessage("");
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const guestContext = {
+        name: guestProfile.name,
+        schoolLevel: 'secondary' as const,
+        currentGrade: guestProfile.grade,
+        subjects: guestProfile.subjects,
+        interests: guestProfile.interests,
+        careerGoals: guestProfile.careerGoals
+      };
+
+      console.log('Sending message to AI:', { userMessage: userMessage.content, guestContext });
+
+      // Use the AI service with custom context for guest assessment
+      const response = await aiCareerService.sendMessage(
+        userMessage.content,
+        conversation,
+        guestContext
+      );
+
+      console.log('AI response received:', response);
+
+      const assistantMessage: ChatMessage = {
+        id: crypto.randomUUID(),
+        role: 'assistant',
+        content: cleanMarkdownFormatting(response),
+        timestamp: new Date()
+      };
+
+      const updatedConversation = [...conversation, userMessage, assistantMessage];
+      setConversation(updatedConversation);
+
+      // Extract profile information from the conversation
+      extractProfileInfo(userMessage.content, response);
+
+      // Check if assessment is complete (after 6+ exchanges)
+      if (updatedConversation.length >= 12 && !assessmentComplete) {
+        setAssessmentComplete(true);
+      }
+
+    } catch (error) {
+      console.error('Failed to send message:', error);
+      setError('Failed to connect to AI. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const generateReport = () => {
+    setShowReport(true);
+  };
+
+  const testConnection = async () => {
+    setConnectionTest('Testing...');
+    try {
+      const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${import.meta.env.VITE_OPENROUTER_API_KEY}`,
+          'Content-Type': 'application/json',
+          'HTTP-Referer': window.location.origin,
+          'X-Title': 'CareerPath AI Connection Test'
+        },
+        body: JSON.stringify({
+          model: 'deepseek/deepseek-r1:free',
+          messages: [{ role: 'user', content: 'Hello' }],
+          max_tokens: 10
+        })
+      });
+
+      if (response.ok) {
+        setConnectionTest('Γ£à Connection successful!');
+      } else {
+        const errorText = await response.text();
+        setConnectionTest(`❌ Error: ${response.status} - ${errorText}`);
+      }
+    } catch (error: any) {
+      setConnectionTest(`❌ Connection failed: ${error.message || error}`);
+    }
+  };
+
+  const downloadReport = () => {
+    const reportName = `CareerPath-AI-Assessment-${guestProfile.name || 'Report'}-${new Date().toISOString().split('T')[0]}`;
+
+    // Generate HTML report for better formatting
+    const htmlReport = ReportGenerator.generatePDFReport(guestProfile, conversation);
+    ReportGenerator.downloadHTMLReport(htmlReport, `${reportName}.html`);
+
+    // Also generate text version as backup
+    const textReport = ReportGenerator.generateTextReport(guestProfile, conversation);
+    const blob = new Blob([textReport], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${reportName}.txt`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
   return (
-    <section id="assessment" className="py-24 relative overflow-hidden bg-surface/30">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="grid lg:grid-cols-2 gap-16 items-center">
-          
-          {/* Left Side: Mock Chat Preview (Animation) */}
-          <div className="order-2 lg:order-1 relative">
-            {/* Decorative Background Elements */}
-            <div className="absolute -top-10 -left-10 w-40 h-40 bg-primary/10 rounded-full blur-3xl" />
-            <div className="absolute -bottom-10 -right-10 w-40 h-40 bg-secondary/10 rounded-full blur-3xl" />
-            
-            <div className="relative w-full max-w-md mx-auto h-[500px] bg-background rounded-[2.5rem] p-6 shadow-2xl border border-card-border overflow-hidden flex flex-col">
-              {/* Mock Chat Header */}
-              <div className="flex-shrink-0 flex items-center gap-3 mb-6 pb-4 border-b border-card-border">
-                <div className="w-10 h-10 rounded-full bg-gradient-primary text-white flex items-center justify-center shadow-glow">
-                  <Bot className="w-5 h-5" />
-                </div>
-                <div>
-                  <h4 className="font-bold text-foreground leading-tight">CareerGuide AI</h4>
-                  <div className="flex items-center gap-1.5">
-                    <div className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse" />
-                    <p className="text-[10px] text-foreground-muted font-medium uppercase tracking-wider">Online & Helping</p>
-                  </div>
-                </div>
+    <div className="max-w-4xl mx-auto px-3 sm:px-6 py-4 sm:py-6">
+      <div className="text-center mb-4 sm:mb-8">
+        <h2 className="text-xl sm:text-2xl md:text-3xl font-bold mb-2 sm:mb-4">
+          Quick Career Assessment{" "}
+          <span className="bg-gradient-text bg-clip-text text-transparent">
+            with AI
+          </span>
+        </h2>
+        <p className="text-sm sm:text-base text-foreground-muted max-w-2xl mx-auto">
+          Get instant career guidance based on your interests and goals. No signup required!
+        </p>
+      </div>
+      
+      <Card className="bg-gradient-surface border-card-border shadow-elevated">
+        {/* Chat Header */}
+        <CardHeader className="border-b border-card-border p-3 sm:p-6">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0">
+            <div className="flex items-center space-x-3">
+              <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-primary rounded-full flex items-center justify-center">
+                <Bot className="w-4 h-4 sm:w-5 sm:h-5 text-primary-foreground" />
               </div>
-
-              {/* Looping Messages */}
-              <div className="flex-1 overflow-hidden">
-                <div className="h-full flex flex-col justify-end space-y-4">
-                  <AnimatePresence mode="popLayout" initial={false}>
-                    {MOCK_CHAT_SEQUENCE.slice(0, mockStep === 0 ? 0 : mockStep).map((msg, idx) => (
-                      <motion.div
-                        key={`teaser-${idx}`}
-                        layout
-                        initial={{ opacity: 0, y: 15, scale: 0.95 }}
-                        animate={{ opacity: 1, y: 0, scale: 1 }}
-                        exit={{ opacity: 0, scale: 0.95, transition: { duration: 0.15 } }}
-                        transition={{ duration: 0.5, type: "spring", bounce: 0.2 }}
-                        className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
-                      >
-                        <div 
-                          className={`p-4 text-sm shadow-sm max-w-[85%] leading-relaxed ${
-                            msg.role === 'user' 
-                              ? 'bg-primary text-primary-foreground rounded-2xl rounded-br-none' 
-                              : 'bg-muted/30 border border-card-border rounded-2xl rounded-tl-none text-foreground'
-                          }`}
-                        >
-                          {msg.text}
-                        </div>
-                      </motion.div>
-                    ))}
-                    
-                    {/* Typing Indicator */}
-                    {((mockStep < MOCK_CHAT_SEQUENCE.length && MOCK_CHAT_SEQUENCE[mockStep]?.role === 'bot') || mockStep === 0) && (
-                      <motion.div
-                        key="typing-indicator"
-                        layout
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        className="flex justify-start pt-2"
-                      >
-                        <div className="bg-muted/30 border border-card-border rounded-2xl rounded-tl-none p-4 w-16 h-10 flex items-center justify-center gap-1">
-                          <motion.div animate={{ y: [0, -3, 0] }} transition={{ duration: 0.6, repeat: Infinity }} className="w-1.5 h-1.5 bg-foreground-muted rounded-full" />
-                          <motion.div animate={{ y: [0, -3, 0] }} transition={{ duration: 0.6, repeat: Infinity, delay: 0.2 }} className="w-1.5 h-1.5 bg-foreground-muted rounded-full" />
-                          <motion.div animate={{ y: [0, -3, 0] }} transition={{ duration: 0.6, repeat: Infinity, delay: 0.4 }} className="w-1.5 h-1.5 bg-foreground-muted rounded-full" />
-                        </div>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                </div>
+              <div>
+                <CardTitle className="text-base sm:text-lg">Career Assessment AI</CardTitle>
+                <CardDescription className="text-xs sm:text-sm">Quick assessment ΓÇó No signup required</CardDescription>
               </div>
             </div>
-          </div>
-
-          {/* Right Side: Text & CTA */}
-          <div className="order-1 lg:order-2 space-y-8">
-            <div className="inline-flex items-center space-x-2 bg-primary/10 text-primary px-4 py-1.5 rounded-full text-sm font-semibold tracking-wide">
-              <Sparkles className="w-4 h-4" />
-              <span>AI-POWERED ASSISTANCE</span>
-            </div>
-            
-            <h2 className="text-4xl md:text-5xl lg:text-6xl font-black text-foreground leading-[1.1] tracking-tight">
-              Discover paths your <br />
-              <span className="bg-gradient-text bg-clip-text text-transparent italic pr-2">future self</span> 
-              will thank you for.
-            </h2>
-            
-            <p className="text-xl text-foreground-muted leading-relaxed max-w-xl font-medium">
-              Take a 2-minute chat-based assessment to uncover careers that match your unique personality and CBE learning areas.
-            </p>
-
-            <div className="grid sm:grid-cols-2 gap-4">
-              {[
-                "Clear CBE pathway recommendations",
-                "Downloadable personalized career PDF",
-                "No sign-up required to see matches",
-                "Built for Kenyan curriculum"
-              ].map((benefit, i) => (
-                <div key={i} className="flex items-center gap-3">
-                  <div className="flex-shrink-0 w-6 h-6 rounded-full bg-secondary/20 text-secondary flex items-center justify-center">
-                    <CheckCircle2 className="w-4 h-4" />
-                  </div>
-                  <span className="text-foreground/80 font-semibold text-sm">{benefit}</span>
-                </div>
-              ))}
-            </div>
-            
-            <div className="pt-4">
-              <Button 
-                onClick={() => navigate('/quick-assessment')}
-                size="lg" 
-                className="bg-gradient-primary hover:opacity-95 text-primary-foreground text-lg px-10 py-7 rounded-2xl shadow-glow hover:-translate-y-1 transition-all duration-300 font-bold group"
-              >
-                <span>Start Chatting Now</span>
-                <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
+            <div className="flex items-center space-x-2 w-full sm:w-auto justify-end">
+              <Badge variant="secondary" className="bg-green-100 text-green-700 text-xs">
+                <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-green-500 rounded-full mr-1"></div>
+                Live
+              </Badge>
+              <Button size="sm" variant="outline" onClick={testConnection} className="text-xs sm:text-sm px-2 py-1">
+                Test AI
               </Button>
             </div>
           </div>
+        </CardHeader>
+        
+        {/* Chat Messages */}
+        <CardContent className="p-0">
+          <ScrollArea ref={scrollAreaRef} className="h-[60vh] sm:h-[500px] p-3 sm:p-6 overflow-y-auto">
+            <div className="space-y-4 sm:space-y-6">
+              {conversation.map((msg) => (
+                <div key={msg.id} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                  <div className={`flex max-w-[90%] sm:max-w-[85%] ${msg.role === 'user' ? 'flex-row-reverse' : 'flex-row'} space-x-2 sm:space-x-3`}>
+                    <div className={`w-6 h-6 sm:w-8 sm:h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
+                      msg.role === 'user' 
+                        ? 'bg-primary text-primary-foreground ml-2 sm:ml-3' 
+                        : 'bg-gradient-primary text-primary-foreground mr-2 sm:mr-3'
+                    }`}>
+                      {msg.role === 'user' ? (
+                        <User className="w-3 h-3 sm:w-4 sm:h-4" />
+                      ) : (
+                        <Bot className="w-3 h-3 sm:w-4 sm:h-4" />
+                      )}
+                    </div>
+                    <div className={`p-3 sm:p-4 rounded-2xl ${
+                      msg.role === 'user'
+                        ? 'bg-primary text-primary-foreground'
+                        : 'bg-background border border-card-border'
+                    }`}>
+                      <p className="text-xs sm:text-sm leading-relaxed whitespace-pre-wrap">{msg.content}</p>
+                      <p className="text-[10px] sm:text-xs opacity-70 mt-1 sm:mt-2">
+                        {msg.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              ))}
+              
+              {isLoading && (
+                <div className="flex justify-start">
+                  <div className="flex space-x-2 sm:space-x-3">
+                    <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-gradient-primary text-primary-foreground flex items-center justify-center">
+                      <Bot className="w-3 h-3 sm:w-4 sm:h-4" />
+                    </div>
+                    <div className="bg-background border border-card-border p-2 sm:p-4 rounded-2xl">
+                      <div className="flex items-center space-x-2">
+                        <Loader2 className="w-3 h-3 sm:w-4 sm:h-4 animate-spin" />
+                        <span className="text-xs sm:text-sm text-foreground-muted">AI is analyzing...</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+              
+              <div ref={messagesEndRef} />
+            </div>
+          </ScrollArea>
+        </CardContent>
+        
+        {/* Assessment Complete Actions */}
+        {assessmentComplete && !showReport && (
+          <div className="p-6 border-t border-card-border bg-gradient-surface/50">
+            <div className="text-center space-y-4">
+              <div className="flex items-center justify-center space-x-2 text-green-600">
+                <Sparkles className="w-5 h-5" />
+                <span className="font-medium">Assessment Complete!</span>
+              </div>
+              <p className="text-sm text-foreground-muted">
+                Great job! I've gathered enough information to create your personalized career report.
+              </p>
+              <Button onClick={generateReport} className="bg-gradient-primary hover:opacity-90 text-primary-foreground">
+                <Download className="w-4 h-4 mr-2" />
+                Generate My Career Report
+              </Button>
+            </div>
+          </div>
+        )}
 
-        </div>
-      </div>
-    </section>
+        {/* Report Generated */}
+        {showReport && (
+          <div className="p-6 border-t border-card-border bg-gradient-surface/50">
+            <div className="text-center space-y-4">
+              <div className="flex items-center justify-center space-x-2 text-blue-600">
+                <Download className="w-5 h-5" />
+                <span className="font-medium">Your Report is Ready!</span>
+              </div>
+              <p className="text-sm text-foreground-muted">
+                Download your personalized career assessment report and continue your journey with a full account.
+              </p>
+              <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                <Button onClick={downloadReport} variant="outline">
+                  <Download className="w-4 h-4 mr-2" />
+                  Download Report
+                </Button>
+                <Button className="bg-gradient-primary hover:opacity-90 text-primary-foreground">
+                  <ArrowRight className="w-4 h-4 mr-2" />
+                  Create Full Account
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
+        
+        {/* Chat Input */}
+        {!showReport && (
+          <div className="p-6 border-t border-card-border">
+            {connectionTest && (
+              <Alert className="mb-4">
+                <AlertDescription>{connectionTest}</AlertDescription>
+              </Alert>
+            )}
+            {error && (
+              <Alert variant="destructive" className="mb-4">
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>{error}</AlertDescription>
+              </Alert>
+            )}
+            
+            <div className="flex space-x-4">
+              <Input
+                placeholder="Type your response here..."
+                value={message}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setMessage(e.target.value)}
+                onKeyPress={(e: React.KeyboardEvent<HTMLInputElement>) => e.key === 'Enter' && !e.shiftKey && handleSend()}
+                disabled={isLoading}
+                className="bg-background border-card-border"
+              />
+              <Button 
+                onClick={handleSend}
+                disabled={isLoading || !message.trim()}
+                className="bg-gradient-primary hover:opacity-90 text-primary-foreground px-6"
+              >
+                {isLoading ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <Send className="w-4 h-4" />
+                )}
+              </Button>
+            </div>
+            
+            <div className="flex items-center justify-between mt-3">
+              <p className="text-xs text-foreground-muted flex items-center">
+                <Sparkles className="w-3 h-3 mr-1" />
+                Free quick assessment ΓÇó No signup required
+              </p>
+              {guestProfile.name && (
+                <Badge variant="outline" className="text-xs">
+                  Assessing: {guestProfile.name}
+                </Badge>
+              )}
+            </div>
+          </div>
+        )}
+      </Card>
+    </div>
   );
 };
 

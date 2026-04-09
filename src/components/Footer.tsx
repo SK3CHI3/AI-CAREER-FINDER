@@ -1,5 +1,5 @@
 import { useNavigate, useLocation } from "react-router-dom";
-import { Bot, Mail, Phone, MapPin, Twitter, Linkedin, Github } from "lucide-react";
+import { Bot, Mail, Phone, MapPin, Twitter, Linkedin, Github, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 const Footer = () => {
@@ -102,7 +102,14 @@ const Footer = () => {
             <p className="text-foreground-muted text-sm">
               © {new Date().getFullYear()} CareerGuide AI. All rights reserved.
             </p>
-            <div className="flex space-x-6">
+            <div className="flex flex-wrap justify-center gap-x-6 gap-y-2">
+              <button 
+                onClick={() => window.dispatchEvent(new CustomEvent('trigger-pwa-install'))}
+                className="text-foreground-muted hover:text-primary text-sm transition-colors flex items-center gap-2"
+              >
+                <Download className="w-3 h-3" />
+                Install App
+              </button>
               <button onClick={() => navigate('/privacy')} className="text-foreground-muted hover:text-foreground text-sm transition-colors">
                 Privacy Policy
               </button>
