@@ -17,11 +17,11 @@ import { useIsMobile } from "@/hooks/use-mobile";
 const DotLottieReact = lazy(() => import('@lottiefiles/dotlottie-react').then(mod => ({ default: mod.DotLottieReact })));
 
 const MOCK_CHAT_SEQUENCE = [
-  { role: 'bot', text: "Karibu! I'm CareerGuide AI. Let's find your perfect CBE pathway. What subjects do you enjoy most at school?" },
+  { role: 'bot', text: "Karibu! I'm CareerGuide AI. Let's find your perfect professional synchrony. What subjects do you find most engaging?" },
   { role: 'user', text: "I really enjoy Computer Science and Art & Design." },
   { role: 'bot', text: "That's a powerful combination! You could explore Software Engineering, Digital Design, or Animation." },
-  { role: 'user', text: "Digital Design sounds interesting! What grades do I need?" },
-  { role: 'bot', text: "For Digital Design, focus on excelling in Mathematics, Art, and Computer Studies. Would you like to see a full pathway map?" }
+  { role: 'user', text: "Digital Design sounds interesting! What academic potential do I need to show?" },
+  { role: 'bot', text: "For Digital Design, focus on excelling in Mathematics, Art, and Computer Studies. Would you like to see a full academic mapping?" }
 ];
 
 const QuickAssessmentSection = () => {

@@ -14,19 +14,19 @@ export default function About() {
       id: "mission",
       image: "/images/about_mission.png",
       title: "Our Mission",
-      desc: "To provide accessible, personalized, and data-driven career guidance to every Kenyan student, regardless of their background or location. We believe that clarity in the classroom leads to success in the workforce.",
+      desc: "To synchronize every student's academic potential with their ideal career path, regardless of their background. We believe that clarity in the educational journey leads to success in the workforce.",
     },
     {
       id: "cbc",
       image: "/images/about_cbc.png",
       title: "The CBC Advantage",
-      desc: "We deeply integrate with Kenya's Competency-Based Education (CBE) curriculum, mapping student strengths directly to learning areas to ensure realistic and actionable pathways. No more guessing—just precision guidance.",
+      desc: "Our platform synchronizes student strengths directly to learning outcomes, ensuring realistic and actionable pathways. No more guessing—just precision educational mapping.",
     },
     {
       id: "schools",
       image: "/images/about_schools.png",
       title: "For Schools",
-      desc: "We empower teachers and administrators with powerful insights, making career guidance manageable and scalable for the thousands of students in their care. Our dashboards turn raw data into institutional intelligence.",
+      desc: "We empower schools with powerful insights, making career mapping manageable and scalable. Our dashboards turn academic metrics into institutional intelligence.",
     }
   ];
 
@@ -34,7 +34,19 @@ export default function About() {
     <div className="min-h-screen text-foreground overflow-x-hidden relative flex flex-col bg-background">
       <Helmet>
         <title>About Us | CareerGuide AI Mission</title>
-        <meta name="description" content="Learn about the mission, vision, and team behind CareerGuide AI. We are transforming career guidance in Kenya through AI and CBC integration." />
+        <meta name="description" content="Learn about our mission to synchronize Kenya's academic potential with global success through precision educational mapping and AI intelligence." />
+        <script type="application/ld+json">
+          {JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "AboutPage",
+            "mainEntity": {
+              "@type": "Organization",
+              "name": "CareerGuide AI",
+              "description": "Leading AI-powered educational mapping platform in Kenya.",
+              "mission": "Synchronizing academic potential with professional success."
+            }
+          })}
+        </script>
       </Helmet>
       
       <BackgroundGradient />
@@ -50,8 +62,8 @@ export default function About() {
               transition={{ duration: 0.6 }}
               className="text-5xl md:text-8xl font-black mb-8 leading-[0.95] tracking-tight"
             >
-              Empowering Kenya's <br />
-              <span className="bg-gradient-text bg-clip-text text-transparent italic font-serif">Future Leaders</span>
+              Synchronizing Kenya's <br />
+              <span className="bg-gradient-text bg-clip-text text-transparent italic font-serif">Academic Potential</span>
             </motion.h1>
             
             <motion.p 
@@ -60,7 +72,7 @@ export default function About() {
               transition={{ duration: 0.6, delay: 0.2 }}
               className="text-xl text-foreground-muted font-medium leading-relaxed max-w-2xl mx-auto"
             >
-              CareerGuide AI democratizes career counseling by bridging the gap between the CBC curriculum and the real world.
+              CareerGuide AI is the intelligence layer bridging the gap between national educational curricula and the modern professional world.
             </motion.p>
           </div>
         </div>

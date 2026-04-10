@@ -7,7 +7,7 @@ import { Helmet } from "react-helmet-async";
 const faqs = [
   {
     question: "How does CareerGuide AI figure out the best career for me?",
-    answer: "CareerGuide AI uses a blend of your personality traits (based on the RIASEC model), your academic performance, and your personal interests. By analyzing these factors together, it triangulates the most suitable career pathways for you within the Kenyan CBE context."
+    answer: "CareerGuide AI uses a blend of your personality traits (based on the RIASEC model), your academic potential, and your professional interests. By analyzing these factors together, it synchronizes the most suitable career pathways for you within the Kenyan educational context."
   },
   {
     question: "Is this platform suitable for Junior Secondary students?",

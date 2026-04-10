@@ -52,14 +52,14 @@ const Hero = () => {
           {/* LEFT CONTENT */}
           <div className="space-y-6 sm:space-y-8">
             <h1 className="text-4xl sm:text-6xl lg:text-7xl font-bold font-serif leading-[1.1] tracking-tight text-foreground">
-              Help Students Discover{" "}
+              Helping You Discover Your{" "}
               <span className="bg-gradient-text bg-clip-text text-transparent">
-                Their Future Earlier.
+                Ideal Career Path.
               </span>
             </h1>
 
             <p className="text-lg text-foreground-muted leading-relaxed max-w-xl font-medium mx-auto lg:mx-0">
-              Career Guide AI helps CBE schools turn classroom learning into clear career pathways through simple, affordable AI-powered guidance to their students.
+              Synchronize your academic potential with global career success. We map your educational journey from school pathways to university with absolute precision.
             </p>
 
             {/* Role selection - Exact Labels and Layout */}

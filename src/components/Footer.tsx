@@ -34,7 +34,7 @@ const Footer = () => {
             </button>
 
             <p className="text-foreground-muted text-sm leading-relaxed">
-              Empowering Kenya's next generation with AI-driven career guidance aligned with the CBE framework.
+              Synchronizing Kenya's academic potential with global success through precision educational mapping.
             </p>
 
             <div className="flex space-x-3">
