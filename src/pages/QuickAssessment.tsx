@@ -26,8 +26,9 @@ const QuickAssessment = () => {
     // Phase 1: Academics
     const [name, setName] = useState("");
     const [email, setEmail] = useState("");
-    const [curriculum, setCurriculum] = useState<'cbc' | 'igcse' | null>(null);
+    const [curriculum, setCurriculum] = useState<'cbc' | 'igcse' | 'legacy' | null>(null);
     const [grade, setGrade] = useState("");
+    const [pathway, setPathway] = useState<'stem' | 'arts' | 'social' | null>(null);
     const [selectedSubjects, setSelectedSubjects] = useState<string[]>([]);
 
     // Phase 2: RIASEC
@@ -52,12 +53,21 @@ const QuickAssessment = () => {
     const [finalRecommendations, setFinalRecommendations] = useState<any[]>([]);
     const [guestProfile, setGuestProfile] = useState<GuestProfile>({});
 
-    const commonSubjects = [
-        "Mathematics", "English / Literature", "Sciences (Physics/Chem/Bio)",
-        "Computer Science / IT", "Business / Economics", "Arts & Design",
-        "Humanities (History/Geo)", "Physical Education / Sports",
-        "Technical / Applied Skills"
-    ];
+    const SUBJECT_DATA = {
+        cbc_junior: ["Mathematics", "English", "Kiswahili", "Integrated Science", "Health Education", "Pre-Technical Studies", "Social Studies", "Business Studies", "Agriculture & Nutrition", "Creative Arts", "Physical Education"],
+        cbc_senior_stem: ["Mathematics", "English", "Kiswahili", "Physics", "Chemistry", "Biology", "Computer Science", "Further Mathematics", "Technical Drawing", "Agriculture & Nutrition"],
+        cbc_senior_arts: ["English", "Kiswahili", "Mathematics", "Fine Art & Design", "Music", "Drama & Theatre", "Physical Education & Sports", "Media & Film Studies", "Fashion & Design"],
+        cbc_senior_social: ["English", "Kiswahili", "Mathematics", "History & Citizenship", "Geography", "Business Studies & Economics", "Religious Education", "Law", "Sociology"],
+        igcse: ["English First Language", "Mathematics (Extended)", "Biology", "Chemistry", "Physics", "ICT", "Business Studies", "Economics", "History", "Geography", "Art & Design", "Sociology"],
+        alevel: ["Mathematics", "Physics", "Chemistry", "Biology", "Computer Science", "Economics", "Business", "History", "Geography", "Psychology", "Law", "English Literature"],
+        legacy: ["Mathematics", "English", "Kiswahili", "Biology", "Physics", "Chemistry", "History & Government", "Geography", "Christian Religious Ed (CRE)", "Business Studies", "Agriculture", "Computer Studies", "Home Science"]
+    };
+
+    const GRADES = {
+        cbc: ["Grade 7", "Grade 8", "Grade 9", "Grade 10 (Senior)", "Grade 11 (Senior)", "Grade 12 (Senior)"],
+        igcse: ["Year 10 (IGCSE)", "Year 11 (IGCSE)", "Year 12 (A-Level)", "Year 13 (A-Level)"],
+        legacy: ["Form 1", "Form 2", "Form 3", "Form 4", "University Year 1", "University Year 2", "University Year 3", "University Year 4"]
+    };
 
     const valueOptions = ["High Income / Wealth", "Helping Others / Impact", "Work-Life Balance", "Leadership / Power", "Creativity / Innovation", "Stability / Security"];
     const workStyleOptions = ["Solo / Independent", "Collaborative Team", "Remote / Tech-Focused", "Outdoors / Active", "Corporate Office", "Hands-on / Fieldwork"];
@@ -65,13 +75,34 @@ const QuickAssessment = () => {
     const barrierOptions = ["Financial Constraints", "Unsure of my interests", "Fear of failure", "Lack of mentorship/guidance", "Poor academic grades currently", "No barriers right now"];
     const experienceOptions = ["School Clubs / Leader", "Volunteering / Community Service", "Hobby / Personal Projects", "Part-time Job / Internship", "None yet"];
     const readinessOptions = ["Ready to apply now!", "Exploring my options", "Completely stuck / Need help"];
+    const getAvailableSubjects = () => {
+        if (!curriculum || !grade) return [];
+        
+        if (curriculum === 'cbc') {
+            if (grade.includes('Senior')) {
+                if (!pathway) return [];
+                return SUBJECT_DATA[`cbc_senior_${pathway}` as keyof typeof SUBJECT_DATA];
+            }
+            return SUBJECT_DATA.cbc_junior;
+        }
+        
+        if (curriculum === 'igcse') {
+            if (grade.includes('A-Level')) return SUBJECT_DATA.alevel;
+            return SUBJECT_DATA.igcse;
+        }
+
+        if (curriculum === 'legacy') return SUBJECT_DATA.legacy;
+        
+        return [];
+    };
 
     const handleNext = () => {
         setError(null);
         if (currentStep === 1) {
             if (!name.trim()) return setError("Please enter your name");
             if (!curriculum) return setError("Please select your curriculum");
-            if (!grade.trim()) return setError("Please enter your current grade/year");
+            if (!grade) return setError("Please select your current grade/year");
+            if (curriculum === 'cbc' && grade.includes('Senior') && !pathway) return setError("Please select your Senior Secondary pathway");
             if (selectedSubjects.length === 0) return setError("Please select at least one subject area");
         }
         if (currentStep === 2 && selectedActivities.length === 0) return setError("Please select at least one activity");
@@ -130,6 +161,7 @@ const QuickAssessment = () => {
                 name,
                 curriculum: curriculum || undefined,
                 grade,
+                pathway: pathway || undefined,
                 subjects: selectedSubjects,
                 interests: [`RIASEC Type: ${personalityTypes.join(', ')}`],
                 values: selectedValues,
@@ -145,8 +177,9 @@ const QuickAssessment = () => {
             // Generate customized recommendations
             const payload = {
                 name: profile.name,
-                curriculum: profile.curriculum,
+                curriculum: profile.curriculum === 'cbc' ? 'Kenyan CBC' : profile.curriculum === 'igcse' ? 'British IGCSE/A-Level' : 'Kenyan Legacy (8-4-4)',
                 currentGrade: profile.grade,
+                pathway: profile.pathway,
                 subjects: profile.subjects,
                 interests: profile.interests,
                 values: profile.values,
@@ -158,8 +191,20 @@ const QuickAssessment = () => {
             const recommendations = await aiCareerService.generateCareerRecommendations(payload);
             setFinalRecommendations(recommendations);
 
+            const summaryPrompt = `Generate a 3-paragraph executive summary detailing exactly why the recommended career paths fit the student.
+                Student Context:
+                - Name: ${name}
+                - System: ${payload.curriculum}
+                - Grade: ${grade}
+                ${pathway ? `- Pathway: ${pathway.toUpperCase()}` : ''}
+                - Personality: RIASEC (${topPersonality}), MBTI (${mbtiCode})
+                - Values: ${selectedValues.join(', ')}
+                - Barrier: ${barrier}
+
+                Emphasize how they can use their academic system (${payload.curriculum}) to overcome their barrier. Use professional, encouraging tone. DO NOT ask any questions. Use markdown formatting.`;
+
             const summaryString = await aiCareerService.sendMessage(
-                "Generate a 3-paragraph executive summary detailing exactly why the recommended career paths fit the student based on their selected RIASEC profile (" + topPersonality + "), MBTI (" + mbtiCode + "), and core values (" + selectedValues.join(', ') + "). Emphasize how they can overcome their stated barrier ('" + barrier + "'). Use professional, encouraging tone. DO NOT ask any questions. Use markdown formatting.",
+                summaryPrompt,
                 [],
                 { ...payload, assessmentResults: { riasec_scores: scores, personality_type: personalityTypes } }
             );
@@ -242,31 +287,60 @@ const QuickAssessment = () => {
                                             <Input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="e.g. john@example.com" className="text-base p-5 border-2 bg-background/50 focus:ring-primary" />
                                         </div>
 
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                            <div>
+                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                            <div className="space-y-4">
                                                 <Label className="text-base font-semibold">Curriculum</Label>
-                                                <div className="grid grid-cols-2 gap-2 mt-1">
-                                                    <button type="button" onClick={() => setCurriculum('cbc')} className={`p-3 rounded-xl border-2 transition-all font-bold ${curriculum === 'cbc' ? 'border-primary bg-primary/10 text-primary' : 'border-card-border hover:border-primary/50'}`}>Kenyan CBC</button>
-                                                    <button type="button" onClick={() => setCurriculum('igcse')} className={`p-3 rounded-xl border-2 transition-all font-bold ${curriculum === 'igcse' ? 'border-primary bg-primary/10 text-primary' : 'border-card-border hover:border-primary/50'}`}>British IGCSE</button>
+                                                <div className="grid grid-cols-1 gap-2">
+                                                    <button type="button" onClick={() => { setCurriculum('cbc'); setGrade(""); setSelectedSubjects([]); setPathway(null); }} className={`p-3 rounded-xl border-2 transition-all font-bold text-left px-5 ${curriculum === 'cbc' ? 'border-primary bg-primary/10 text-primary' : 'border-card-border hover:border-primary/50'}`}>Kenyan CBC (New)</button>
+                                                    <button type="button" onClick={() => { setCurriculum('igcse'); setGrade(""); setSelectedSubjects([]); setPathway(null); }} className={`p-3 rounded-xl border-2 transition-all font-bold text-left px-5 ${curriculum === 'igcse' ? 'border-primary bg-primary/10 text-primary' : 'border-card-border hover:border-primary/50'}`}>British IGCSE / A-Level</button>
+                                                    <button type="button" onClick={() => { setCurriculum('legacy'); setGrade(""); setSelectedSubjects([]); setPathway(null); }} className={`p-3 rounded-xl border-2 transition-all font-bold text-left px-5 ${curriculum === 'legacy' ? 'border-primary bg-primary/10 text-primary' : 'border-card-border hover:border-primary/50'}`}>8-4-4 Legacy / University</button>
                                                 </div>
                                             </div>
-                                            <div>
-                                                <Label className="text-base font-semibold">Current Grade</Label>
-                                                <Input value={grade} onChange={e => setGrade(e.target.value)} placeholder="e.g. Grade 9" className="text-base p-5 mt-1 border-2 bg-background/50 focus:ring-primary" />
-                                            </div>
+                                            
+                                            {curriculum && (
+                                                <div className="space-y-4">
+                                                    <Label className="text-base font-semibold">Current Grade / Level</Label>
+                                                    <div className="grid grid-cols-2 gap-2">
+                                                        {GRADES[curriculum].map(g => (
+                                                            <button key={g} type="button" onClick={() => { setGrade(g); setSelectedSubjects([]); }} className={`p-2 text-sm rounded-lg border-2 transition-all font-medium ${grade === g ? 'border-primary bg-primary/10 text-primary' : 'border-card-border hover:border-primary/50'}`}>
+                                                                {g}
+                                                            </button>
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                            )}
                                         </div>
 
-                                        <div>
-                                            <Label className="text-base font-semibold mb-2 block">Strongest Subjects</Label>
-                                            <div className="flex flex-wrap gap-2">
-                                                {commonSubjects.map(sub => (
-                                                    <button key={sub} type="button" onClick={() => setSelectedSubjects(p => p.includes(sub) ? p.filter(x => x !== sub) : [...p, sub])}
-                                                        className={`px-3 py-2 text-sm rounded-lg border-2 transition-all ${selectedSubjects.includes(sub) ? 'border-primary bg-primary text-primary-foreground' : 'border-card-border bg-card hover:border-primary/50 text-foreground'}`}>
-                                                        {sub}
-                                                    </button>
-                                                ))}
+                                        {curriculum === 'cbc' && grade.includes('Senior') && (
+                                             <div className="space-y-3 animate-in fade-in slide-in-from-top-2">
+                                                <Label className="text-base font-bold text-primary">Senior Secondary Pathway</Label>
+                                                <div className="grid grid-cols-3 gap-2">
+                                                    {(['stem', 'arts', 'social'] as const).map(p => (
+                                                        <button key={p} type="button" onClick={() => { setPathway(p); setSelectedSubjects([]); }} className={`p-3 rounded-xl border-2 transition-all font-bold uppercase text-xs tracking-wider ${pathway === p ? 'border-primary bg-primary text-primary-foreground' : 'border-card-border hover:border-primary/50 bg-card'}`}>
+                                                            {p}
+                                                        </button>
+                                                    ))}
+                                                </div>
+                                                <p className="text-[10px] text-muted-foreground italic">Required for specialized CBE career mapping.</p>
                                             </div>
-                                        </div>
+                                        )}
+
+                                        {curriculum && grade && (
+                                            <div className="space-y-4 animate-in fade-in slide-in-from-top-2">
+                                                <Label className="text-base font-semibold mb-2 block">Strongest Subjects</Label>
+                                                <div className="flex flex-wrap gap-2">
+                                                    {getAvailableSubjects().map(sub => (
+                                                        <button key={sub} type="button" onClick={() => setSelectedSubjects(p => p.includes(sub) ? p.filter(x => x !== sub) : [...p, sub])}
+                                                            className={`px-3 py-2 text-sm rounded-lg border-2 transition-all ${selectedSubjects.includes(sub) ? 'border-primary bg-primary text-primary-foreground' : 'border-card-border bg-card hover:border-primary/50 text-foreground'}`}>
+                                                            {sub}
+                                                        </button>
+                                                    ))}
+                                                </div>
+                                                {selectedSubjects.length === 0 && (
+                                                    <p className="text-xs text-muted-foreground">Select at least one subject you excel at.</p>
+                                                )}
+                                            </div>
+                                        )}
                                     </div>
 
                                     <div className="pt-4 flex justify-end">

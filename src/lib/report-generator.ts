@@ -5,6 +5,7 @@ export interface GuestProfile {
   curriculum?: string;
   age?: string;
   grade?: string;
+  pathway?: string;
   subjects?: string[];
   interests?: string[];
   careerGoals?: string;
@@ -320,7 +321,8 @@ export class ReportGenerator {
                 <td class="info-cell">
                     <div class="student-name">${profile.name?.toUpperCase() || 'STUDENT'}</div>
                     <div class="info-label">ID: ${reportId}</div>
-                    <div class="info-label">Curriculum: ${profile.curriculum === 'igcse' ? 'British IGCSE' : 'Kenyan CBE'}</div>
+                    <div class="info-label">Curriculum: ${profile.curriculum === 'igcse' ? 'British IGCSE/A-Level' : profile.curriculum === 'legacy' ? 'Kenyan Legacy (8-4-4)' : 'Kenyan CBC'}</div>
+                    ${profile.pathway ? `<div class="info-label">Pathway: ${profile.pathway.toUpperCase()}</div>` : ''}
                     <div class="info-label">Date: ${currentDate}</div>
                 </td>
                 <td class="info-cell" style="text-align: right;">
@@ -408,7 +410,7 @@ export class ReportGenerator {
         <!-- FOOTER -->
         <div class="report-footer">
             <p class="footer-tagline">Need personalized guidance? Visit careerguideai.netlify.app</p>
-            <p class="footer-brand">CareerGuide AI | Kenya CBE System</p>
+            <p class="footer-brand">CareerGuide AI | Specialized Kenyan Academic Mapping</p>
         </div>
     </div>
 </body>
