@@ -90,7 +90,7 @@ const TeacherDashboard: React.FC = () => {
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center space-x-3">
               <img
-                src="/logos/CareerGuide_Logo.png"
+                src="/logos/CareerGuide_Logo.webp"
                 alt="CareerGuide AI"
                 className="h-10 w-auto"
               />

@@ -119,7 +119,7 @@ const AcceptInvite: React.FC = () => {
                 <div className="text-center mb-8">
                     <div className="flex items-center justify-center mb-4">
                         <img 
-                            src="/logos/CareerGuide_Logo.png" 
+                            src="/logos/CareerGuide_Logo.webp" 
                             alt="CareerGuide AI" 
                             className="h-16 w-auto" 
                         />

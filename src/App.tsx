@@ -1,3 +1,4 @@
+import { lazy, Suspense } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -6,36 +7,39 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import PaymentGate from "@/components/PaymentGate";
-import Index from "./pages/Index";
-import Auth from "./pages/Auth";
 import { ThemeProvider } from "@/components/ThemeProvider";
-import About from "./pages/About";
-import FAQ from "./pages/FAQ";
-import StudentDashboard from "./pages/StudentDashboard";
-import AdminDashboard from "./pages/AdminDashboard";
-import SchoolDashboard from "./pages/SchoolDashboard"
-import SchoolTeachers from "./pages/SchoolTeachers"
-import SchoolClasses from "./pages/SchoolClasses"
-import SchoolStudents from "./pages/SchoolStudents";
-import TeacherDashboard from "./pages/TeacherDashboard"
-import StudentCounselingPage from "./pages/StudentCounselingPage";
-import ClassDetail from "./pages/ClassDetail";
-import AcceptInvite from "./pages/AcceptInvite";
-import Dashboard from "./pages/Dashboard";
-import Counselors from "./pages/Counselors";
-import SchoolInsightsPage from "./pages/SchoolInsightsPage";
-import QuickAssessment from "./pages/QuickAssessment";
-import Careers from "./pages/Careers";
-import HowItWorks from "./pages/HowItWorks";
-import NotFound from "./pages/NotFound";
+import BrandedLoader from "@/components/BrandedLoader";
 import ScrollToTop from "./components/ScrollToTop";
 import FeedbackWidget from "./components/FeedbackWidget";
 import CookieBanner from "./components/CookieBanner";
-import BlogIndex from "./pages/BlogIndex";
-import BlogPostPage from "./pages/BlogPost";
-import Terms from "./pages/Terms";
-import Privacy from "./pages/Privacy";
 import InstallPrompt from "./components/InstallPrompt";
+
+// Lazy load pages for performance
+const Index = lazy(() => import("./pages/Index"));
+const Auth = lazy(() => import("./pages/Auth"));
+const About = lazy(() => import("./pages/About"));
+const FAQ = lazy(() => import("./pages/FAQ"));
+const StudentDashboard = lazy(() => import("./pages/StudentDashboard"));
+const AdminDashboard = lazy(() => import("./pages/AdminDashboard"));
+const SchoolDashboard = lazy(() => import("./pages/SchoolDashboard"));
+const SchoolTeachers = lazy(() => import("./pages/SchoolTeachers"));
+const SchoolClasses = lazy(() => import("./pages/SchoolClasses"));
+const SchoolStudents = lazy(() => import("./pages/SchoolStudents"));
+const TeacherDashboard = lazy(() => import("./pages/TeacherDashboard"));
+const StudentCounselingPage = lazy(() => import("./pages/StudentCounselingPage"));
+const ClassDetail = lazy(() => import("./pages/ClassDetail"));
+const AcceptInvite = lazy(() => import("./pages/AcceptInvite"));
+const Dashboard = lazy(() => import("./pages/Dashboard"));
+const Counselors = lazy(() => import("./pages/Counselors"));
+const SchoolInsightsPage = lazy(() => import("./pages/SchoolInsightsPage"));
+const QuickAssessment = lazy(() => import("./pages/QuickAssessment"));
+const Careers = lazy(() => import("./pages/Careers"));
+const HowItWorks = lazy(() => import("./pages/HowItWorks"));
+const BlogIndex = lazy(() => import("./pages/BlogIndex"));
+const BlogPostPage = lazy(() => import("./pages/BlogPost"));
+const Terms = lazy(() => import("./pages/Terms"));
+const Privacy = lazy(() => import("./pages/Privacy"));
+const NotFound = lazy(() => import("./pages/NotFound"));
 
 const queryClient = new QueryClient();
 
@@ -49,127 +53,129 @@ const App = () => (
           <InstallPrompt />
           <BrowserRouter>
           <ScrollToTop />
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/auth" element={<Auth />} />
-            <Route path="/about" element={<About />} />
-            <Route path="/how-it-works" element={<HowItWorks />} />
-            <Route path="/careers" element={<Careers />} />
-            <Route path="/faq" element={<FAQ />} />
-            <Route path="/quick-assessment" element={<QuickAssessment />} />
-            <Route
-              path="/student"
-              element={
-                <ProtectedRoute requiredRole="student">
-                  <PaymentGate>
-                    <StudentDashboard />
-                  </PaymentGate>
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/student/counseling"
-              element={
-                <ProtectedRoute requiredRole="student">
-                  <PaymentGate>
-                    <StudentCounselingPage />
-                  </PaymentGate>
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/student/counselors"
-              element={
-                <ProtectedRoute requiredRole="student">
-                  <PaymentGate>
-                    <Counselors />
-                  </PaymentGate>
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/admin"
-              element={
-                <ProtectedRoute requiredRole="admin">
-                  <AdminDashboard />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/school"
-              element={
-                <ProtectedRoute requiredRole="school">
-                  <SchoolDashboard />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/school/teachers"
-              element={
-                <ProtectedRoute requiredRole="school">
-                  <SchoolTeachers />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/school/classes"
-              element={
-                <ProtectedRoute requiredRole="school">
-                  <SchoolClasses />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/school/students"
-              element={
-                <ProtectedRoute requiredRole="school">
-                  <SchoolStudents />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/school/insights"
-              element={
-                <ProtectedRoute requiredRole="school">
-                  <SchoolInsightsPage />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/teacher"
-              element={
-                <ProtectedRoute requiredRole="teacher">
-                  <TeacherDashboard />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/teacher/class/:classId"
-              element={
-                <ProtectedRoute requiredRole="teacher">
-                  <ClassDetail />
-                </ProtectedRoute>
-              }
-            />
-            <Route path="/invite" element={<AcceptInvite />} />
-            <Route
-              path="/dashboard"
-              element={
-                <ProtectedRoute>
-                  <Dashboard />
-                </ProtectedRoute>
-              }
-            />
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-            <Route path="/blog" element={<BlogIndex />} />
-            <Route path="/blog/:slug" element={<BlogPostPage />} />
-            <Route path="/terms" element={<Terms />} />
-            <Route path="/privacy" element={<Privacy />} />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
+          <Suspense fallback={<BrandedLoader fullScreen />}>
+            <Routes>
+              <Route path="/" element={<Index />} />
+              <Route path="/auth" element={<Auth />} />
+              <Route path="/about" element={<About />} />
+              <Route path="/how-it-works" element={<HowItWorks />} />
+              <Route path="/careers" element={<Careers />} />
+              <Route path="/faq" element={<FAQ />} />
+              <Route path="/quick-assessment" element={<QuickAssessment />} />
+              <Route
+                path="/student"
+                element={
+                  <ProtectedRoute requiredRole="student">
+                    <PaymentGate>
+                      <StudentDashboard />
+                    </PaymentGate>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/student/counseling"
+                element={
+                  <ProtectedRoute requiredRole="student">
+                    <PaymentGate>
+                      <StudentCounselingPage />
+                    </PaymentGate>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/student/counselors"
+                element={
+                  <ProtectedRoute requiredRole="student">
+                    <PaymentGate>
+                      <Counselors />
+                    </PaymentGate>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/admin"
+                element={
+                  <ProtectedRoute requiredRole="admin">
+                    <AdminDashboard />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/school"
+                element={
+                  <ProtectedRoute requiredRole="school">
+                    <SchoolDashboard />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/school/teachers"
+                element={
+                  <ProtectedRoute requiredRole="school">
+                    <SchoolTeachers />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/school/classes"
+                element={
+                  <ProtectedRoute requiredRole="school">
+                    <SchoolClasses />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/school/students"
+                element={
+                  <ProtectedRoute requiredRole="school">
+                    <SchoolStudents />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/school/insights"
+                element={
+                  <ProtectedRoute requiredRole="school">
+                    <SchoolInsightsPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/teacher"
+                element={
+                  <ProtectedRoute requiredRole="teacher">
+                    <TeacherDashboard />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/teacher/class/:classId"
+                element={
+                  <ProtectedRoute requiredRole="teacher">
+                    <ClassDetail />
+                  </ProtectedRoute>
+                }
+              />
+              <Route path="/invite" element={<AcceptInvite />} />
+              <Route
+                path="/dashboard"
+                element={
+                  <ProtectedRoute>
+                    <Dashboard />
+                  </ProtectedRoute>
+                }
+              />
+              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+              <Route path="/blog" element={<BlogIndex />} />
+              <Route path="/blog/:slug" element={<BlogPostPage />} />
+              <Route path="/terms" element={<Terms />} />
+              <Route path="/privacy" element={<Privacy />} />
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </Suspense>
           <FeedbackWidget />
           <CookieBanner />
-        </BrowserRouter>
+          </BrowserRouter>
         </ThemeProvider>
       </TooltipProvider>
     </AuthProvider>

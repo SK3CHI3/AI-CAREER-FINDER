@@ -458,7 +458,7 @@ const AdminDashboard = () => {
           >
             <div className="absolute inset-0 bg-primary/20 blur-3xl opacity-40 group-hover/header:opacity-60 transition-opacity" />
             <img 
-              src="/logos/CareerGuide_Logo.png" 
+              src="/logos/CareerGuide_Logo.webp" 
               alt="Logo" 
               className="w-32 h-auto object-contain relative z-10"
               onError={(e) => (e.currentTarget.src = "/placeholder-logo.png")}

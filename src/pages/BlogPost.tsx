@@ -92,7 +92,7 @@ export default function BlogPostPage() {
               "name": "CareerGuide AI",
               "logo": {
                 "@type": "ImageObject",
-                "url": `${window.location.origin}/logos/CareerGuide_Logo.png`
+                "url": `${window.location.origin}/logos/CareerGuide_Logo.webp`
               }
             },
             "mainEntityOfPage": {

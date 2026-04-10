@@ -36,7 +36,7 @@ const Counselors = () => {
             <div className="flex items-center space-x-3">
               <button onClick={() => navigate("/student")}>
                 <img
-                  src="/logos/CareerGuide_Logo.png"
+                  src="/logos/CareerGuide_Logo.webp"
                   alt="CareerGuide AI"
                   className="h-10 w-auto"
                 />
@@ -79,7 +79,7 @@ const Counselors = () => {
         <div className="relative mb-8 sm:mb-12">
           {/* Background Watermark Logo */}
           <div className="absolute -top-10 -right-10 sm:-top-16 sm:-right-16 opacity-[0.03] dark:opacity-[0.05] pointer-events-none">
-            <img src="/logos/CareerGuide_Logo.png" alt="" className="w-48 sm:w-80 h-auto grayscale" />
+            <img src="/logos/CareerGuide_Logo.webp" alt="" className="w-48 sm:w-80 h-auto grayscale" />
           </div>
  
           <div className="relative z-10">

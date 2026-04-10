@@ -307,7 +307,7 @@ const Careers = () => {
       <div className="bg-primary/5 py-20 border-y border-primary/10">
         <div className="max-w-4xl mx-auto px-4 text-center">
           <img 
-            src="/logos/CareerGuide_Logo.png" 
+            src="/logos/CareerGuide_Logo.webp" 
             alt="CareerGuide AI" 
             className="h-16 w-auto mx-auto mb-6" 
           />

@@ -40,10 +40,11 @@ const Navigation = () => {
               className="flex-shrink-0 flex items-center space-x-2 hover:opacity-80 transition-opacity"
             >
               <img
-                src="/logos/CareerGuide_Logo.png"
+                src="/logos/CareerGuide_Logo.webp"
                 alt="CareerGuide AI"
                 width="160"
                 height="40"
+                fetchPriority="high"
                 className="h-10 w-auto"
               />
             </button>

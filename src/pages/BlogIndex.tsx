@@ -69,7 +69,7 @@ export default function BlogIndex() {
               "name": "CareerGuide AI",
               "logo": {
                 "@type": "ImageObject",
-                "url": `${window.location.origin}/logos/CareerGuide_Logo.png`
+                "url": `${window.location.origin}/logos/CareerGuide_Logo.webp`
               }
             }
           })}

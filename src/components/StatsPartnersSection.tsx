@@ -27,7 +27,7 @@ const StatsPartnersSection = () => {
                 {/* Image Container with Blue Gradient Overlay */}
                 <div className="relative h-48 overflow-hidden">
                   <img
-                    src="/images/students.jpg"
+                    src="/images/students.webp"
                     alt="Students"
                     width="400"
                     height="192"
@@ -54,7 +54,7 @@ const StatsPartnersSection = () => {
               <div className="group relative rounded-2xl overflow-hidden bg-surface/50 border border-card-border hover:border-primary/30 hover:shadow-glow transition-all duration-500">
                 <div className="relative h-48 overflow-hidden">
                   <img
-                    src="/images/institutions.jpg"
+                    src="/images/institutions.webp"
                     alt="Partner Institutions"
                     width="400"
                     height="192"
@@ -81,7 +81,7 @@ const StatsPartnersSection = () => {
               <div className="group relative rounded-2xl overflow-hidden bg-surface/50 border border-card-border hover:border-primary/30 hover:shadow-glow transition-all duration-500">
                 <div className="relative h-48 overflow-hidden">
                   <img
-                    src="/images/counties.png"
+                    src="/images/counties.webp"
                     alt="Kenya Counties"
                     width="400"
                     height="192"

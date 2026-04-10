@@ -53,7 +53,7 @@ const Index = () => {
         <meta property="og:description" content="AI-powered career guidance aligned with Kenya's Competency-Based Education framework." />
         <meta property="og:type" content="website" />
         <meta property="og:url" content="https://careerguideai.co.ke/" />
-        <meta property="og:image" content="https://careerguideai.co.ke/logos/CareerGuide_Logo.png" />
+        <meta property="og:image" content="https://careerguideai.co.ke/logos/CareerGuide_Logo.webp" />
         
         {/* Organization JSON-LD for AI & Google Brand Recognition */}
         <script type="application/ld+json">
@@ -62,7 +62,7 @@ const Index = () => {
             "@type": "Organization",
             "name": "CareerGuide AI",
             "url": "https://careerguideai.co.ke",
-            "logo": "https://careerguideai.co.ke/logos/CareerGuide_Logo.png",
+            "logo": "https://careerguideai.co.ke/logos/CareerGuide_Logo.webp",
             "description": "Kenya's leading AI-powered career guidance platform for the Competency-Based Curriculum.",
             "address": {
               "@type": "PostalAddress",

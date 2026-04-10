@@ -56,7 +56,7 @@ const Auth = () => {
         <div className="text-center mb-8">
           <div className="flex items-center justify-center space-x-3 mb-4">
             <img
-              src="/logos/CareerGuide_Logo.png"
+              src="/logos/CareerGuide_Logo.webp"
               alt="CareerGuide AI"
               className="h-14 w-auto drop-shadow-sm"
             />

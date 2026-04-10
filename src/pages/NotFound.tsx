@@ -23,7 +23,7 @@ const NotFound = () => {
         {/* Logo */}
         <div className="flex items-center justify-center mb-12">
           <img 
-            src="/logos/CareerGuide_Logo.png" 
+            src="/logos/CareerGuide_Logo.webp" 
             alt="CareerGuide AI" 
             className="h-20 w-auto drop-shadow-2xl animate-float"
           />

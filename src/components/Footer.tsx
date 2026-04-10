@@ -25,8 +25,10 @@ const Footer = () => {
               className="flex items-center h-[40px] overflow-visible hover:opacity-80 transition-opacity"
             >
               <img
-                src="/logos/CareerGuide_Logo.png"
+                src="/logos/CareerGuide_Logo.webp"
                 alt="CareerGuide AI"
+                width="160"
+                height="40"
                 className="h-[60px] w-auto -mt-2 -ml-2"
               />
             </button>
