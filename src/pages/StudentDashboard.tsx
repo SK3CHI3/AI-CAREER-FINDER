@@ -68,6 +68,8 @@ import CourseRecommendations, { type CourseRecommendation } from '@/components/C
 import GradesModal from '@/components/GradesModal'
 import { CounselorDirectory } from '@/components/CounselorDirectory'
 import InstallPrompt from '@/components/InstallPrompt'
+import BrandedLoader from '@/components/BrandedLoader'
+
 import { supabase } from '@/lib/supabase'
 import { aiCareerService } from '@/lib/ai-service'
 import { aiCacheService } from '@/lib/ai-cache-service'
@@ -499,10 +501,33 @@ const StudentDashboard = () => {
     return `${Math.floor(diffInSeconds / 604800)}w ago`
   }
 
-  const handleCareerDetailClick = (career: CareerDataItem) => {
-    setSelectedCareer(career)
-    setIsCareerModalOpen(true)
-    trackButtonClick('View Career Details', 'Career Card')
+  const handleCareerDetailClick = async (career: CareerDataItem) => {
+    try {
+      // Find the full career path in our existing data or fetch it
+      const allPaths = await dashboardService.getCareerPaths();
+      const fullPath = allPaths.find(p => p.title.toLowerCase() === career.name.toLowerCase());
+      
+      if (fullPath) {
+        setSelectedCareer(fullPath as any);
+      } else {
+        // Fallback to basic data if not found
+        setSelectedCareer({
+          title: career.name,
+          description: career.description,
+          salary_range: career.salaryRange,
+          growth_percentage: career.growth,
+          skills_required: [],
+          category: 'Recommended',
+          demand_level: 'High'
+        } as any);
+      }
+      setIsCareerModalOpen(true)
+      trackButtonClick('View Career Details', 'Career Card')
+    } catch (err) {
+      console.error('Failed to load full career details:', err);
+      setSelectedCareer(career as any);
+      setIsCareerModalOpen(true);
+    }
   }
 
   // Function to invalidate cache when grades are updated
@@ -544,7 +569,7 @@ const StudentDashboard = () => {
             {/* Logo */}
             <div className="flex items-center space-x-3">
               <img
-                src="/logos/CareerGuide_Logo.png"
+                src="/logos/CareerGuide_Logo.webp"
                 alt="CareerGuide AI"
                 className="h-10 w-auto"
               />
@@ -600,7 +625,7 @@ const StudentDashboard = () => {
                 disabled={isActivatingTrial}
                 className="bg-primary hover:bg-primary/90 text-primary-foreground font-bold px-8 h-12 rounded-xl shadow-lg shadow-primary/20 transition-all hover:scale-105 active:scale-95"
               >
-                {isActivatingTrial ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
+                {isActivatingTrial ? <BrandedLoader size="xs" showText={false} className="mr-2 inline-flex" /> : null}
                 Activate Free Term
               </Button>
               <Button
@@ -776,10 +801,7 @@ const StudentDashboard = () => {
                 <CardContent>
                   {isLoadingRecommendations ? (
                     <div className="flex items-center justify-center h-64">
-                      <div className="text-center">
-                        <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4 text-primary" />
-                        <p className="text-muted-foreground">Analyzing your career potential...</p>
-                      </div>
+                      <BrandedLoader showText={true} text="Analyzing your career potential..." />
                     </div>
                   ) : (
                     <div className="h-64">
@@ -1287,17 +1309,7 @@ const StudentDashboard = () => {
             setIsCareerModalOpen(false)
             setSelectedCareer(null)
           }}
-          career={selectedCareer}
-          studentProfile={{
-            name: profile?.full_name,
-            schoolLevel: profile?.school_level,
-            currentGrade: profile?.current_grade,
-            cbeSubjects: profile?.cbe_subjects || profile?.subjects,
-            careerInterests: profile?.career_interests || profile?.interests,
-            strongSubjects: [], // This will be populated from grades data
-            weakSubjects: [], // This will be populated from grades data
-            overallAverage: 0 // This will be populated from grades data
-          }}
+          career={selectedCareer as any}
         />
       )}
 

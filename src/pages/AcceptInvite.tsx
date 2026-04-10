@@ -4,7 +4,8 @@ import { useAuth } from '@/contexts/AuthContext'
 import { schoolService } from '@/lib/school-service'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Bot, CheckCircle2, Loader2, AlertCircle, Building2 } from 'lucide-react'
+import { Bot, CheckCircle2, AlertCircle, Building2 } from 'lucide-react'
+import BrandedLoader from '@/components/BrandedLoader'
 import { supabase } from '@/lib/supabase'
 
 type State = 'loading' | 'ready' | 'accepting' | 'done' | 'error'
@@ -104,16 +105,7 @@ const AcceptInvite: React.FC = () => {
     if (authLoading || state === 'loading') {
         return (
             <div className="min-h-screen flex items-center justify-center bg-background">
-                <div className="text-center">
-                    <div className="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center mx-auto mb-4 animate-pulse">
-                        <img 
-                            src="/logos/CareerGuide_Logo.png" 
-                            alt="Loading" 
-                            className="h-10 w-auto opacity-80" 
-                        />
-                    </div>
-                    <p className="text-foreground-muted">Verifying invite...</p>
-                </div>
+                <BrandedLoader size="lg" showText={true} text="Verifying invite..." />
             </div>
         )
     }
@@ -127,7 +119,7 @@ const AcceptInvite: React.FC = () => {
                 <div className="text-center mb-8">
                     <div className="flex items-center justify-center mb-4">
                         <img 
-                            src="/logos/CareerGuide_Logo.png" 
+                            src="/logos/CareerGuide_Logo.webp" 
                             alt="CareerGuide AI" 
                             className="h-16 w-auto" 
                         />
@@ -231,7 +223,7 @@ const AcceptInvite: React.FC = () => {
                                         disabled={state === 'accepting'}
                                     >
                                         {state === 'accepting' ? (
-                                            <><Loader2 className="mr-2 w-4 h-4 animate-spin" /> Processing...</>
+                                            <><BrandedLoader size="xs" showText={false} className="mr-2 inline-flex" /> Processing...</>
                                         ) : (
                                             'Accept Invite & Create Account'
                                         )}
@@ -272,7 +264,7 @@ const AcceptInvite: React.FC = () => {
                                         disabled={state === 'accepting'}
                                     >
                                         {state === 'accepting'
-                                            ? <><Loader2 className="mr-2 w-4 h-4 animate-spin" /> Joining...</>
+                                            ? <><BrandedLoader size="xs" showText={false} className="mr-2 inline-flex" /> Joining...</>
                                             : 'Confirm & Join School'}
                                     </Button>
                                 </div>

@@ -146,7 +146,7 @@ export const CounselorDirectory = ({ limit }: { limit?: number }) => {
             <div className="h-24 sm:h-28 bg-gradient-to-r from-blue-600/10 to-purple-600/10 relative overflow-hidden">
               {/* Background Logo Watermark */}
               <div className="absolute top-2 right-2 opacity-[0.05] grayscale brightness-0 dark:invert group-hover:scale-110 transition-transform duration-500">
-                <img src="/logos/CareerGuide_Logo.png" alt="" className="h-20 w-auto" />
+                <img src="/logos/CareerGuide_Logo.webp" alt="" className="h-20 w-auto" />
               </div>
               
               {counselor.image_url && (
@@ -161,7 +161,7 @@ export const CounselorDirectory = ({ limit }: { limit?: number }) => {
                 </Avatar>
                 {/* Brand Badge on Avatar */}
                 <div className="absolute -bottom-1 -right-1 w-8 h-8 bg-card border-2 border-background rounded-lg flex items-center justify-center shadow-lg transform group-hover/avatar:scale-110 transition-transform duration-300">
-                  <img src="/logos/CareerGuide_Logo.png" alt="Verified" className="w-6 h-auto" />
+                  <img src="/logos/CareerGuide_Logo.webp" alt="Verified" className="w-6 h-auto" />
                 </div>
               </div>
 

@@ -88,21 +88,80 @@ export default async (request: Request, context: any) => {
         }
       }
     } else if (isCareers) {
-      seoData = {
-        title: "Explore Trending Careers in Kenya | CareerGuide AI",
-        description: "Discover high-demand career paths in Kenya's evolving job market. Get real-time insights on salaries, growth, and required skills for the CBE system.",
-        image: "https://careerguideai.co.ke/logos/CareerGuide_Logo.png",
-        type: "website",
-        jsonLd: {
-          "@context": "https://schema.org",
-          "@type": "SearchResultsPage",
-          "mainEntity": {
-            "@type": "ItemList",
-            "name": "Trending Careers in Kenya",
-            "description": "A list of high-impact career paths for Kenyan students."
+      const slug = path.split("/").pop();
+      if (slug && slug !== "careers") {
+        // Fetch specific career
+        const response = await fetch(
+          `${supabaseUrl}/rest/v1/careers?slug=eq.${slug}&select=*`,
+          {
+            headers: {
+              apikey: supabaseKey,
+              Authorization: `Bearer ${supabaseKey}`,
+            },
           }
+        );
+        const data = await response.json();
+        if (data && data.length > 0) {
+          const career = data[0];
+          seoData = {
+            title: `${career.name} Career in Kenya | Salaries, Skills & Universities | CareerGuide AI`,
+            description: career.one_liner || `Learn how to become a ${career.name} in Kenya. Explore skills, education pathways, and salary expectations.`,
+            image: "https://careerguideai.co.ke/logos/CareerGuide_Logo.png",
+            type: "article",
+            jsonLd: {
+              "@context": "https://schema.org",
+              "@type": "Occupation",
+              "name": career.name,
+              "mainEntityOfPage": {
+                "@type": "WebPage",
+                "@id": `https://careerguideai.co.ke/careers/${career.slug}`
+              },
+              "description": career.one_liner,
+              "estimatedSalary": [
+                {
+                  "@type": "MonetaryAmountDistribution",
+                  "name": "base salary",
+                  "currency": "KES",
+                  "duration": "P1M",
+                  "description": career.salary
+                }
+              ],
+              "educationRequirements": career.education,
+              "skills": career.skills,
+              "occupationLocation": {
+                "@type": "Country",
+                "name": "Kenya"
+              }
+            }
+          };
+        } else {
+          // Fallback to general careers metadata
+          seoData = {
+            title: "Explore Trending Careers in Kenya | CareerGuide AI",
+            description: "Discover high-demand career paths in Kenya's evolving job market. Get real-time insights on salaries, growth, and required skills for the CBE system.",
+            image: "https://careerguideai.co.ke/logos/CareerGuide_Logo.png",
+            type: "website",
+            jsonLd: {
+              "@context": "https://schema.org",
+              "@type": "SearchResultsPage",
+              "name": "Trending Careers in Kenya"
+            }
+          };
         }
-      };
+      } else {
+        // General Careers Page
+        seoData = {
+          title: "Career Library | 500+ Kenyan Career Pathways | CareerGuide AI",
+          description: "Browse Kenya's most comprehensive library of 500+ career paths. From STEM to Arts, explore salaries, universities, and localized guidance.",
+          image: "https://careerguideai.co.ke/logos/CareerGuide_Logo.png",
+          type: "website",
+          jsonLd: {
+            "@context": "https://schema.org",
+            "@type": "SearchResultsPage",
+            "name": "Kenya Career Library"
+          }
+        };
+      }
     }
 
     // If we have SEO data, inject it into the HTML

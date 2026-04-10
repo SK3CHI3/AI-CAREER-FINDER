@@ -5,6 +5,7 @@ import { SignupForm } from '@/components/auth/SignupForm'
 import { useAuth } from '@/contexts/AuthContext'
 import { getDashboardPathForRole } from '@/types/roles'
 import { useSearchParams } from 'react-router-dom'
+import BrandedLoader from '@/components/BrandedLoader'
 
 type AuthMode = 'login' | 'signup'
 
@@ -19,17 +20,8 @@ const Auth = () => {
   // Show loading state
   if (loading || (user && profileLoading && !profileError)) {
     return (
-      <div className="min-h-screen flex items-center justify-center p-4" style={{ background: 'var(--gradient-homepage)' }}>
-        <div className="text-center">
-          <img 
-            src="/logos/CareerGuide_Logo.png" 
-            alt="CareerGuide AI" 
-            className="h-12 w-auto animate-pulse drop-shadow-md mx-auto mb-4"
-          />
-          <p className="text-primary/60 text-xs font-medium uppercase tracking-widest animate-pulse">
-            Authenticating...
-          </p>
-        </div>
+      <div className="min-h-screen flex items-center justify-center p-4 bg-background">
+        <BrandedLoader size="lg" showText={true} text="Authenticating..." />
       </div>
     )
   }
@@ -64,7 +56,7 @@ const Auth = () => {
         <div className="text-center mb-8">
           <div className="flex items-center justify-center space-x-3 mb-4">
             <img
-              src="/logos/CareerGuide_Logo.png"
+              src="/logos/CareerGuide_Logo.webp"
               alt="CareerGuide AI"
               className="h-14 w-auto drop-shadow-sm"
             />

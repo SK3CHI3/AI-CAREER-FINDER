@@ -5,6 +5,7 @@ export interface GuestProfile {
   curriculum?: string;
   age?: string;
   grade?: string;
+  pathway?: string;
   subjects?: string[];
   interests?: string[];
   careerGoals?: string;
@@ -19,6 +20,7 @@ export interface GuestProfile {
   challenges?: string[];
   dreamJob?: string;
   location?: string;
+  resultsVerified?: boolean;
 }
 
 export interface CareerRecommendation {
@@ -46,565 +48,374 @@ export class ReportGenerator {
       day: 'numeric'
     });
 
+    const reportId = Date.now().toString().slice(-6);
+
+    // Brand Colors from index.css HSL values
+    const colors = {
+      primary: '#2563eb', // Professional Blue
+      secondary: '#15803d', // Professional Deep Green
+      accent: '#c084fc', // Purple accent
+      warning: '#f59e0b', // Amber/Warning
+      text: '#0f172a',
+      muted: '#475569',
+      light: '#f8fafc',
+      white: '#ffffff',
+      border: '#e2e8f0'
+    };
+
     return `
 <!DOCTYPE html>
 <html>
 <head>
     <meta charset="UTF-8">
-    <title>CareerGuide AI Assessment Report</title>
+    <title>Career Assessment Report - ${profile.name || 'Student'}</title>
     <style>
-        :root { 
-          --brand: #2563eb; 
-          --brand-light: #3b82f6; 
-          --ink: #0f172a; 
-          --muted: #475569; 
-          --light: #f8fafc; 
-          --border: #e2e8f0; 
-          --success: #059669;
-          --warning: #d97706;
-        }
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
         
         * { box-sizing: border-box; margin: 0; padding: 0; }
         
         body { 
-          font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; 
-          color: var(--ink); 
-          background: #ffffff; 
-          line-height: 1.6;
+          font-family: 'Inter', sans-serif; 
+          color: ${colors.text}; 
+          background: ${colors.white}; 
+          line-height: 1.5;
           font-size: 14px;
         }
         
-        .report-container { 
-          max-width: 800px; 
+        .report-page { 
+          width: 800px; 
           margin: 0 auto; 
-          padding: 40px; 
-          background: #fff;
+          padding: 60px 70px; 
+          background: ${colors.white};
         }
         
-        /* Header Styles */
-        .brand-header {
-          display: flex;
-          align-items: center;
-          gap: 20px;
-          border-bottom: 3px solid var(--brand);
-          padding-bottom: 20px;
+        /* HEADER SECTION */
+        .branding {
+          text-align: center;
+          margin-bottom: 50px;
+        }
+        
+        .logo-placeholder {
+          font-size: 20px;
+          font-weight: 800;
+          color: ${colors.primary};
+          margin-bottom: 15px;
+          letter-spacing: 1.5px;
+        }
+        
+        .report-title {
+          font-size: 36px;
+          font-weight: 800;
+          color: ${colors.primary};
+          text-transform: uppercase;
+          letter-spacing: 3px;
           margin-bottom: 30px;
         }
         
-        .logo-container img {
-          width: 80px;
-          height: auto;
-        }
-
-        .header-text {
-          flex: 1;
-          text-align: left;
+        /* STUDENT INFO TABLE */
+        .info-table {
+          width: 100%;
+          border-collapse: collapse;
+          margin-bottom: 50px;
         }
         
-        .brand-title {
-          font-size: 24px;
+        .info-cell {
+          width: 50%;
+          vertical-align: top;
+        }
+        
+        .student-name {
+          font-size: 32px;
           font-weight: 800;
-          color: var(--brand);
-          margin-bottom: 0px;
-        }
-
-        .student-title {
-          font-size: 18px;
-          font-weight: 600;
-          color: var(--ink);
-          margin-top: 5px;
-        }
-        
-        .student-details {
-          color: var(--muted);
-          font-size: 14px;
-          font-weight: 500;
-          margin-top: 2px;
-        }
-        
-        .report-meta {
-          text-align: right;
-          font-size: 12px;
-          color: var(--muted);
-          background: var(--light);
-          padding: 10px;
-          border-radius: 6px;
-        }
-        
-        /* Main Content */
-        .main-title {
-          font-size: 28px;
-          font-weight: 700;
-          color: var(--ink);
+          color: ${colors.primary};
           margin-bottom: 8px;
-          letter-spacing: -0.02em;
+          line-height: 1.1;
         }
         
-        .main-subtitle {
-          font-size: 16px;
-          color: var(--muted);
-          margin-bottom: 40px;
-          font-weight: 400;
-        }
-        
-        /* Section Styles */
-        .section {
-          margin-bottom: 35px;
-          page-break-inside: avoid;
-        }
-        
-        .section-title {
-          font-size: 20px;
-          font-weight: 700;
-          color: var(--brand);
-          margin-bottom: 15px;
-          padding-bottom: 8px;
-          border-bottom: 2px solid var(--border);
-          text-transform: uppercase;
-          letter-spacing: 0.5px;
-        }
-        
-        .section-subtitle {
-          font-size: 16px;
+        .info-label {
+          font-size: 14px;
           font-weight: 600;
-          color: var(--ink);
-          margin-bottom: 12px;
-          margin-top: 20px;
-        }
-        
-        /* Profile Grid */
-        .profile-grid {
-          display: grid;
-          grid-template-columns: 1fr 1fr;
-          gap: 15px;
-          margin-bottom: 20px;
-        }
-        
-        .profile-item {
-          background: var(--light);
-          padding: 15px;
-          border-radius: 8px;
-          border-left: 4px solid var(--brand);
-        }
-        
-        .profile-label {
-          font-size: 12px;
-          font-weight: 600;
-          color: var(--muted);
-          text-transform: uppercase;
-          letter-spacing: 0.5px;
-          margin-bottom: 5px;
-        }
-        
-        .profile-value {
-          font-size: 14px;
-          font-weight: 500;
-          color: var(--ink);
-        }
-        
-        /* Lists */
-        .bullet-list {
-          margin: 15px 0;
-          padding-left: 0;
-        }
-        
-        .bullet-list li {
-          margin: 8px 0;
-          padding-left: 20px;
-          position: relative;
-          font-size: 14px;
-          line-height: 1.5;
-        }
-        
-        .bullet-list li::before {
-          content: "•";
-          color: var(--brand);
-          font-weight: bold;
-          position: absolute;
-          left: 0;
-          top: 0;
-        }
-        
-        .numbered-list {
-          margin: 15px 0;
-          padding-left: 0;
-        }
-        
-        .numbered-list li {
-          margin: 10px 0;
-          padding-left: 25px;
-          position: relative;
-          font-size: 14px;
-          line-height: 1.5;
-        }
-        
-        .numbered-list li::before {
-          content: counter(item) ".";
-          counter-increment: item;
-          color: var(--brand);
-          font-weight: bold;
-          position: absolute;
-          left: 0;
-          top: 0;
-        }
-        
-        .numbered-list {
-          counter-reset: item;
-        }
-        
-        /* Career Recommendations */
-        .career-card {
-          background: #f8fafc;
-          border-left: 5px solid var(--brand);
-          border-radius: 8px;
-          padding: 25px;
-          margin: 20px 0;
-          box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
-        }
-        
-        .career-header {
-          display: flex;
-          justify-content: space-between;
-          align-items: flex-start;
-          margin-bottom: 12px;
-        }
-
-        .career-title {
-          font-size: 22px;
-          font-weight: 800;
-          color: var(--ink);
+          color: ${colors.primary};
+          opacity: 0.7;
           margin-bottom: 4px;
         }
         
-        .match-badge {
-          display: flex;
-          flex-direction: column;
-          align-items: flex-end;
-          background: #dcfce7;
-          color: var(--success);
-          padding: 6px 14px;
-          border-radius: 6px;
-          font-weight: 700;
-        }
-        .match-badge span {
-            font-size: 18px;
-        }
-        .match-badge small {
-            font-size: 10px;
-            text-transform: uppercase;
+        /* SECTION TITLES */
+        .section-header {
+          font-size: 20px;
+          font-weight: 800;
+          color: ${colors.primary};
+          text-transform: uppercase;
+          margin-bottom: 20px;
+          letter-spacing: 1.5px;
         }
         
-        .career-details {
-          margin: 15px 0;
-          padding: 15px;
-          background: #ffffff;
-          border-radius: 6px;
-          border: 1px solid var(--border);
+        /* WHAT WE FOUND SECTION */
+        .diagnostic-block {
+          border-left: 8px solid ${colors.secondary};
+          background: #f0f7f4;
+          padding: 25px 30px;
+          margin-bottom: 30px;
+          border-radius: 0 12px 12px 0;
         }
         
-        .career-details p {
+        .diagnostic-text {
+          font-size: 16px;
+          font-style: italic;
+          color: ${colors.primary};
+          line-height: 1.7;
+        }
+        
+        .strengths-container {
+          margin-bottom: 50px;
+          padding-left: 10px;
+        }
+        
+        .strength-item {
+          font-size: 15px;
+          color: ${colors.primary};
+          margin-bottom: 12px;
+          line-height: 1.4;
+        }
+        
+        .strength-tag {
+          font-weight: 800;
+        }
+        
+        /* PATHWAY CARDS */
+        .pathways-container {
+          margin-bottom: 50px;
+        }
+        
+        .pathway-card {
+          display: table;
+          width: 100%;
+          margin-bottom: 20px;
+          border-collapse: separate;
+          border-spacing: 0;
+        }
+        
+        .pathway-num {
+          display: table-cell;
+          width: 70px;
+          text-align: center;
+          vertical-align: middle;
+          background: ${colors.secondary};
+          color: ${colors.white};
+          font-size: 36px;
+          font-weight: 800;
+          border-radius: 12px 0 0 12px;
+        }
+        
+        .pathway-content {
+          display: table-cell;
+          padding: 25px 30px;
+          background: #f0f8f5;
+          border-radius: 0 12px 12px 0;
+          vertical-align: top;
+        }
+        
+        .pathway-title {
+          font-size: 20px;
+          font-weight: 800;
+          color: ${colors.secondary};
           margin-bottom: 8px;
-          font-size: 13px;
-        }
-
-        .career-details strong {
-          color: var(--brand);
-          font-weight: 600;
-          display: inline-block;
-          width: 140px;
-        }
-
-        .why-recommended {
-            margin-top: 15px;
-            font-size: 14px;
-            line-height: 1.6;
-            color: #334155;
-            padding-left: 15px;
-            border-left: 3px solid var(--success);
         }
         
-        /* AI Summary */
-        .ai-summary {
-          background: var(--light);
-          border-left: 4px solid var(--brand);
-          padding: 20px;
-          border-radius: 8px;
-          margin: 15px 0;
-        }
-        
-        .ai-summary p {
-          margin: 10px 0;
+        .pathway-desc {
           font-size: 14px;
+          color: ${colors.text};
+          margin-bottom: 10px;
           line-height: 1.6;
         }
         
-        /* CBE Context */
-        .cbe-context {
-          background: #fef3c7;
-          border: 1px solid #f59e0b;
-          border-radius: 8px;
-          padding: 20px;
-          margin: 15px 0;
+        .pathway-details {
+          font-size: 13px;
+          font-style: italic;
+          color: ${colors.muted};
         }
         
-        .cbe-context h4 {
-          color: var(--warning);
-          font-size: 16px;
-          font-weight: 600;
-          margin-bottom: 10px;
-        }
+        /* COLOR VARIANTS FOR PATHWAYS */
+        .pathway-2 .pathway-num { background: ${colors.warning}; }
+        .pathway-2 .pathway-content { background: #fffcf0; }
+        .pathway-2 .pathway-title { color: ${colors.warning}; }
         
-        /* Next Steps */
-        .next-steps {
-          background: #f0f9ff;
-          border: 1px solid var(--brand);
-          border-radius: 8px;
-          padding: 20px;
-          margin: 15px 0;
-        }
+        .pathway-3 .pathway-num { background: ${colors.accent}; }
+        .pathway-3 .pathway-content { background: #faf5ff; }
+        .pathway-3 .pathway-title { color: ${colors.accent}; }
         
-        .next-steps h4 {
-          color: var(--brand);
-          font-size: 16px;
-          font-weight: 600;
-          margin-bottom: 15px;
-        }
-        
-        /* Footer */
-        .footer {
+        /* NEXT STEPS SECTION */
+        .next-steps-block {
+          background: ${colors.primary};
+          color: ${colors.white};
+          padding: 40px;
+          border-radius: 16px;
           margin-top: 50px;
-          padding-top: 20px;
-          border-top: 2px solid var(--border);
+        }
+        
+        .next-steps-title {
+          font-size: 20px;
+          font-weight: 800;
+          margin-bottom: 25px;
+          text-transform: uppercase;
+          letter-spacing: 2px;
+        }
+        
+        .steps-list {
+          list-style: none;
+        }
+        
+        .step-item {
+          margin-bottom: 15px;
+          padding-left: 30px;
+          position: relative;
+          font-size: 15px;
+          line-height: 1.4;
+        }
+        
+        .step-item::before {
+          content: "•";
+          position: absolute;
+          left: 0;
+          font-weight: 800;
+          font-size: 20px;
+          top: -2px;
+        }
+        
+        /* FOOTER */
+        .report-footer {
+          margin-top: 60px;
+          padding-top: 30px;
+          border-top: 1px solid ${colors.border};
           text-align: center;
-          color: var(--muted);
+        }
+        
+        .footer-tagline {
+          font-size: 14px;
+          font-style: italic;
+          color: ${colors.muted};
+          margin-bottom: 12px;
+        }
+        
+        .footer-brand {
           font-size: 12px;
+          color: #adb5bd;
+          letter-spacing: 0.5px;
         }
         
-        .footer p {
-          margin: 5px 0;
-        }
-        
-        .footer strong {
-          color: var(--brand);
-        }
-        
-        /* Print Styles */
         @media print {
-          .report-container {
-            margin: 0;
-            padding: 20px;
-            max-width: none;
-          }
-          
-          .section {
-            page-break-inside: avoid;
-          }
+          .report-page { padding: 0; margin: 0; width: 100%; }
         }
     </style>
 </head>
 <body>
-    <div class="report-container">
-        <!-- Header -->
-        <div class="brand-header">
-            <div class="logo-container">
-                <img src="${window.location.origin}/logos/CareerGuide_Logo.png" alt="CareerGuide Logo" onerror="this.style.display='none'"/>
-            </div>
-            <div class="header-text">
-                <div class="brand-title">CareerGuide AI Report</div>
-                <div class="student-title">${profile.name ? profile.name.toUpperCase() : 'STUDENT ASSESSMENT'}</div>
-                <div class="student-details">
-                    Curriculum: ${profile.curriculum === 'igcse' ? 'British IGCSE' : 'Kenyan CBC'} | Grade: ${profile.grade || 'N/A'}
-                </div>
-            </div>
-            <div class="report-meta">
-                <div><strong>Date:</strong> ${currentDate}</div>
-                <div><strong>ID:</strong> ${Date.now().toString().slice(-6)}</div>
+    <div class="report-page">
+        <!-- BRANDING -->
+        <div class="branding">
+            <div class="logo-placeholder">CAREERGUIDE AI</div>
+            <h1 class="report-title">Career Assessment Report</h1>
+        </div>
+        
+        <!-- STUDENT INFO -->
+        <table class="info-table">
+            <tr>
+                <td class="info-cell">
+                    <div class="student-name">${profile.name?.toUpperCase() || 'STUDENT'}</div>
+                    <div class="info-label">ID: ${reportId}</div>
+                    <div class="info-label">Curriculum: ${profile.curriculum === 'igcse' ? 'British IGCSE/A-Level' : profile.curriculum === 'legacy' ? 'Kenyan Legacy (8-4-4)' : 'Kenyan CBC'}</div>
+                    ${profile.pathway ? `<div class="info-label">Pathway: ${profile.pathway.toUpperCase()}</div>` : ''}
+                    <div class="info-label">Date: ${currentDate}</div>
+                </td>
+                <td class="info-cell" style="text-align: right;">
+                    ${profile.resultsVerified ? `
+                    <div style="display: inline-block; padding: 8px 15px; background: ${colors.secondary}; color: white; border-radius: 8px; font-weight: 800; font-size: 12px; letter-spacing: 1px;">
+                        ✓ VERIFIED OFFICIAL RESULTS
+                    </div>
+                    ` : ''}
+                </td>
+            </tr>
+        </table>
+        
+        <!-- WHAT WE FOUND -->
+        <div class="section-header">What we found</div>
+        <div class="diagnostic-block">
+            <div class="diagnostic-text">
+                ${profile.aiSummary ? profile.aiSummary.replace(/<\/?[^>]+(>|$)/g, "").split('.')[0] + '.' : 'You show strong aptitude across practical and analytical subjects. Your interest blend suggests you thrive at intersections where you can apply both creativity and problem-solving.'}
             </div>
         </div>
         
-        <!-- Main Title -->
-        <h1 class="main-title">Career Assessment Report</h1>
-        <p class="main-subtitle">Personalized guidance aligned to Kenya's Competency-Based Education (CBE) pathways</p>
+        <div class="strengths-container">
+            <div class="strength-item">
+                <span class="strength-tag" style="color: ${colors.secondary};">Analytical thinking</span>
+                — strong logical reasoning and problem-solving.
+            </div>
+            <div class="strength-item">
+                <span class="strength-tag" style="color: ${colors.warning};">Curious mind</span>
+                — wide-ranging interests across disciplines.
+            </div>
+            <div class="strength-item">
+                <span class="strength-tag" style="color: ${colors.accent};">Highly adaptable</span>
+                — flexible and can bridge science and humanities.
+            </div>
+        </div>
         
-        <!-- Student Profile Section -->
-        <div class="section">
-            <h2 class="section-title">Student Profile</h2>
-            
-            <div class="profile-grid">
-                ${profile.name ? `
-                <div class="profile-item">
-                    <div class="profile-label">Full Name</div>
-                    <div class="profile-value">${profile.name}</div>
-                </div>
-                ` : ''}
-                
-                ${profile.subjects?.length ? `
-                <div class="profile-item">
-                    <div class="profile-label">CBE Subjects of Interest</div>
-                    <div class="profile-value">${profile.subjects.join(', ')}</div>
-                </div>
-                ` : ''}
-                
-                ${profile.grade ? `
-                <div class="profile-item">
-                    <div class="profile-label">Current Grade</div>
-                    <div class="profile-value">${profile.grade}</div>
-                </div>
-                ` : ''}
-                
-                ${profile.interests?.length ? `
-                <div class="profile-item">
-                    <div class="profile-label">Career Interests</div>
-                    <div class="profile-value">${profile.interests.join(', ')}</div>
-                </div>
-                ` : ''}
-                
-                ${profile.age ? `
-                <div class="profile-item">
-                    <div class="profile-label">Age</div>
-                    <div class="profile-value">${profile.age} years</div>
-                </div>
-                ` : ''}
-                
-                ${profile.location ? `
-                <div class="profile-item">
-                    <div class="profile-label">Location</div>
-                    <div class="profile-value">${profile.location}</div>
-                </div>
-                ` : ''}
-            </div>
-            
-            ${profile.careerGoals ? `
-            <h3 class="section-subtitle">Career Goals</h3>
-            <p style="margin: 10px 0; font-size: 14px; line-height: 1.6;">${profile.careerGoals}</p>
-            ` : ''}
-        </div>
-
-        <!-- Executive AI Summary -->
-        ${profile.aiSummary ? `
-        <div class="section">
-            <h2 class="section-title">Executive Career Analysis</h2>
-            <div class="ai-summary" style="font-size: 15px; background: #fffbdf; border-left-color: #eab308; padding: 25px;">
-                ${profile.aiSummary}
-            </div>
-        </div>
-        ` : ''}
-
-        <!-- Counselor's Diagnostic Profile -->
-        <div class="section">
-            <h2 class="section-title">Counselor's Diagnostic Profile</h2>
-            <div class="profile-grid">
-                ${profile.mbti ? `
-                <div class="profile-item">
-                    <div class="profile-label">Personality Type (MBTI proxy)</div>
-                    <div class="profile-value">${profile.mbti}</div>
-                </div>
-                ` : ''}
-                ${profile.values?.length ? `
-                <div class="profile-item">
-                    <div class="profile-label">Core Values</div>
-                    <div class="profile-value">${profile.values.join(', ')}</div>
-                </div>
-                ` : ''}
-                ${profile.workStyle ? `
-                <div class="profile-item">
-                    <div class="profile-label">Preferred Work Style</div>
-                    <div class="profile-value">${profile.workStyle}</div>
-                </div>
-                ` : ''}
-                ${profile.barriers ? `
-                <div class="profile-item" style="border-left-color: var(--warning);">
-                    <div class="profile-label">Current Barrier / Challenge</div>
-                    <div class="profile-value">${profile.barriers}</div>
-                </div>
-                ` : ''}
-                ${profile.experience ? `
-                <div class="profile-item">
-                    <div class="profile-label">Real Experience Base</div>
-                    <div class="profile-value">${profile.experience}</div>
-                </div>
-                ` : ''}
-            </div>
-        </div>
-
-        <!-- CBE Context Section -->
-        ${profile.curriculum === 'cbc' ? `
-        <div class="section">
-            <h2 class="section-title">CBC Pathway Context</h2>
-            <div class="cbe-context">
-                <h4>Your Current Educational Path</h4>
-                <p>${this.getCBEPathInfo(profile.grade)}</p>
-                <h4>Recommended Next Steps</h4>
-                <p>${this.getNextSteps(profile.grade)}</p>
-            </div>
-        </div>
-        ` : ''}
-
-        <!-- Career Recommendations Section -->
-        ${recommendations.length > 0 ? `
-        <div class="section">
-            <h2 class="section-title">Personalized Career Matches</h2>
-            ${recommendations.map(rec => `
-                <div class="career-card">
-                    <div class="career-header">
-                        <h3 class="career-title">${rec.title}</h3>
-                        <div class="match-badge">
-                            <span>${rec.matchPercentage}%</span>
-                            <small>Match</small>
-                        </div>
-                    </div>
-                    <p style="margin-bottom: 10px; font-size: 14px;">${rec.description}</p>
-                    
-                    <div class="career-details">
-                        <p><strong>CBE Subjects:</strong> ${Array.isArray(rec.requiredSubjects) ? rec.requiredSubjects.join(', ') : rec.requiredSubjects || 'N/A'}</p>
-                        <p><strong>Education:</strong> ${Array.isArray(rec.universities) ? rec.universities.join(', ') : rec.education || 'N/A'}</p>
-                        <p><strong>Salary Range:</strong> ${rec.salaryRange}</p>
-                        <p><strong>Actionability:</strong> ${rec.actionabilityScore || 'High'}/100</p>
-                    </div>
-
-                    <div class="why-recommended">
-                        <strong>Why this fits you:</strong> ${rec.whyRecommended || 'Aligns strongly with your RIASEC profile and subject strengths.'}
+        <!-- YOUR PATH FORWARD -->
+        <div class="section-header">Your path forward</div>
+        <p style="font-size: 15px; color: ${colors.muted}; margin-bottom: 25px;">Based on your profile, here are three compelling pathways. Each leverages your strengths in different ways:</p>
+        
+        <div class="pathways-container">
+            ${recommendations.length > 0 ? recommendations.slice(0, 3).map((rec, idx) => `
+                <div class="pathway-card pathway-${idx + 1}">
+                    <div class="pathway-num">${idx + 1}</div>
+                    <div class="pathway-content">
+                        <div class="pathway-title">${rec.title}</div>
+                        <div class="pathway-desc">${rec.description}</div>
+                        <div class="pathway-details">Required: ${Array.isArray(rec.requiredSubjects) ? rec.requiredSubjects.join(', ') : rec.requiredSubjects || 'N/A'}</div>
                     </div>
                 </div>
-            `).join('')}
-        </div>
-        ` : ''}
-
-        <!-- Student Data Reference (Moved down so it's not the first thing they see) -->
-        <div class="section" style="margin-top: 40px; border-top: 1px dashed var(--border); padding-top: 30px;">
-            <h2 class="section-title" style="font-size: 16px; color: var(--muted);">Data Reference</h2>
-            <div class="profile-grid">
-                ${profile.subjects?.length ? `
-                <div class="profile-item">
-                    <div class="profile-label">Subjects Selected</div>
-                    <div class="profile-value">${profile.subjects.join(', ')}</div>
+            `).join('') : `
+                <div class="pathway-card pathway-1">
+                    <div class="pathway-num">1</div>
+                    <div class="pathway-content">
+                        <div class="pathway-title">Software Engineering & Innovation</div>
+                        <div class="pathway-desc">Leveraging your logical reasoning to build scalable solutions.</div>
+                        <div class="pathway-details">Focus on Mathematics and Computer Science.</div>
+                    </div>
                 </div>
-                ` : ''}
-                ${profile.interests?.length ? `
-                <div class="profile-item">
-                    <div class="profile-label">Interests & RIASEC</div>
-                    <div class="profile-value">${profile.interests.join(', ')}</div>
+                <div class="pathway-card pathway-2">
+                    <div class="pathway-num">2</div>
+                    <div class="pathway-content">
+                        <div class="pathway-title">Data Science & Analytics</div>
+                        <div class="pathway-desc">Applying your curious mind to find patterns in complex data.</div>
+                        <div class="pathway-details">Focus on Statistics and Economics.</div>
+                    </div>
                 </div>
-                ` : ''}
-            </div>
+                <div class="pathway-card pathway-3">
+                    <div class="pathway-num">3</div>
+                    <div class="pathway-content">
+                        <div class="pathway-title">UX/UI Design & Digital Arts</div>
+                        <div class="pathway-desc">Bridging the gap between technology and human psychology.</div>
+                        <div class="pathway-details">Focus on Design and Psychology.</div>
+                    </div>
+                </div>
+            `}
         </div>
-
-        <!-- Next Steps Section -->
-        <div class="section">
-            <h2 class="section-title">Recommended Next Steps</h2>
-            <div class="next-steps">
-                ${ReportGenerator.extractNextSteps(conversation)}
-            </div>
+        
+        <!-- NEXT STEPS -->
+        <div class="next-steps-block">
+            <h2 class="next-steps-title">Immediate Actions</h2>
+            <ul class="steps-list">
+                <li class="step-item">Research universities offering your chosen pathway</li>
+                <li class="step-item">Connect with professionals in these fields (LinkedIn, local networks)</li>
+                <li class="step-item">Plan curriculum choices strategically around your pathway</li>
+                <li class="step-item">Explore internships or projects in your chosen field</li>
+            </ul>
         </div>
-
-        <!-- Footer -->
-        <div class="footer">
-            <p><strong>CareerGuide AI</strong> - Empowering Kenya's Students Through CBE</p>
-            <p>Visit <strong>${typeof window !== 'undefined' ? window.location.origin : 'careerguideai.com'}</strong> to continue your career journey</p>
-            <p><em>This report is generated by AI and should be used as guidance alongside professional career counseling.</em></p>
-            <p style="margin-top: 15px; font-size: 11px; color: #94a3b8;">
-                Report generated on ${currentDate} | CareerGuide AI v1.0 | Kenya CBE System
-            </p>
+        
+        <!-- FOOTER -->
+        <div class="report-footer">
+            <p class="footer-tagline">Need personalized guidance? Visit careerguideai.netlify.app</p>
+            <p class="footer-brand">CareerGuide AI | Specialized Kenyan Academic Mapping</p>
         </div>
     </div>
 </body>

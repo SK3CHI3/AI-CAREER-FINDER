@@ -1,519 +1,169 @@
-import React, { useState, useEffect } from 'react'
+import React from 'react'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { Loader2, ExternalLink, GraduationCap, DollarSign, TrendingUp, Clock, MapPin, Users, BookOpen, Target, Shield } from 'lucide-react'
-import { aiCacheService } from '@/lib/ai-cache-service'
-import { aiCareerService } from '@/lib/ai-service'
+import { 
+  ArrowRight,
+  TrendingUp,
+  DollarSign,
+  GraduationCap,
+  Target,
+  Check,
+  X as XIcon
+} from 'lucide-react'
+import { CareerPath } from '@/lib/dashboard-service'
 
 interface CareerDetailModalProps {
   isOpen: boolean
   onClose: () => void
-  career: {
-    name: string
-    value: number
-    color: string
-    description?: string
-    salaryRange?: string
-    growth?: string
-    education?: string
-  }
-  studentProfile?: {
-    name?: string
-    schoolLevel?: string
-    currentGrade?: string
-    cbeSubjects?: string[]
-    careerInterests?: string[]
-    strongSubjects?: string[]
-    weakSubjects?: string[]
-    overallAverage?: number
-    id?: string
-  }
+  career: CareerPath
 }
 
-interface CareerDetails {
-  title: string
-  description: string
-  marketValue: string
-  salaryRange: string
-  requirements: string[]
-  nextSteps: string[]
-  growthProspect: string
-  educationPath: string
-  skillsNeeded: string[]
-  jobMarket: string
-  whyRecommended: string
-  relatedCareers: string[]
-  timeline: string
-  resources: string[]
-  institutions: string[]
-  regulatoryBodies: string[]
-}
-
-const CareerDetailModal: React.FC<CareerDetailModalProps> = ({ isOpen, onClose, career, studentProfile }) => {
-  const [details, setDetails] = useState<CareerDetails | null>(null)
-  const [isLoading, setIsLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-
-  useEffect(() => {
-    if (isOpen && career) {
-      generateCareerDetails()
-    }
-  }, [isOpen, career])
-
-  const generateCareerDetails = async () => {
-    if (!career?.name) return;
-    
-    console.log('🚀 Starting career details generation for:', career.name)
-    setError(null)
- 
-    try {
-      // First check if we have cached details - do this BEFORE setting isLoading(true) to avoid flicker
-      if (studentProfile?.id) {
-        const cachedDetails = await aiCacheService.getCachedCareerDetails(studentProfile.id, career.name)
-        if (cachedDetails) {
-          console.log('✅ Using cached career details')
-          setDetails(cachedDetails as unknown as CareerDetails)
-          setIsLoading(false)
-          return
-        }
-      }
-
-      // If not in cache, NOW we show the loader
-      setIsLoading(true)
-
-      // Get API key from environment variables
-      const apiKey = import.meta.env.VITE_DEEPSEEK_API_KEY
-      const baseUrl = 'https://api.deepseek.com'
-      const modelName = 'deepseek-chat'
-      
-      if (!apiKey) {
-        console.error('❌ No API key found')
-        throw new Error('API key not configured')
-      }
-
-      // Enhanced prompt with student details
-      const studentInfo = studentProfile ? `
-STUDENT PROFILE:
-- Name: ${studentProfile.name || 'Student'}
-- School Level: ${studentProfile.schoolLevel || 'Not specified'}
-- Current Grade: ${studentProfile.currentGrade || 'Not specified'}
-- CBE Subjects: ${studentProfile.cbeSubjects?.join(', ') || 'Not specified'}
-- Career Interests: ${studentProfile.careerInterests?.join(', ') || 'Not specified'}
-- Strong Subjects: ${studentProfile.strongSubjects?.join(', ') || 'Not identified'}
-- Weak Subjects: ${studentProfile.weakSubjects?.join(', ') || 'Not identified'}
-- Overall Average: ${studentProfile.overallAverage ? `${studentProfile.overallAverage.toFixed(1)}%` : 'Not available'}
-` : ''
-
-      const prompt = `Provide detailed career insights for "${career.name}" in Kenya. Return ONLY a JSON object:
-
-${studentInfo}
-CAREER: ${career.name} (${career.value}% match)
-
-{
-  "title": "${career.name}",
-  "description": "What this career involves in Kenya",
-  "marketValue": "Job market demand in Kenya",
-  "salaryRange": "KSh range for this role",
-  "requirements": ["Key requirements"],
-  "nextSteps": ["Steps to pursue this career"],
-  "growthProspect": "Growth outlook",
-  "educationPath": "Education needed",
-  "skillsNeeded": ["Important skills"],
-  "jobMarket": "Current market status",
-  "whyRecommended": "Why this career fits",
-  "relatedCareers": ["Similar careers"],
-  "timeline": "Time to enter this career",
-  "resources": ["Helpful resources"],
-  "institutions": ["List at least 5 well-known Kenyan universities/colleges offering this"],
-  "regulatoryBodies": ["Kenyan bodies like EBK, LSK, KMPDC, etc. if applicable"]
-}
-
-Keep it concise and Kenya-focused.`
-
-      console.log('📤 Sending API request...')
-      const response = await fetch(`${baseUrl}/chat/completions`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${apiKey}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          model: modelName,
-          messages: [{ role: 'user', content: prompt }],
-          temperature: 0.7,
-          max_tokens: 1000,
-          top_p: 0.9,
-          stream: true
-        })
-      })
-
-      console.log('📥 API Response status:', response.status)
-
-      if (!response.ok) {
-        const errorText = await response.text().catch(() => 'Unknown error')
-        console.error('❌ DeepSeek API Error:', {
-          status: response.status,
-          statusText: response.statusText,
-          error: errorText
-        });
-        throw new Error(`AI service error: ${response.status} - ${response.statusText}`)
-      }
-
-      // Handle streaming response
-      const reader = response.body?.getReader()
-      if (!reader) {
-        throw new Error('Failed to get response reader')
-      }
-
-      const decoder = new TextDecoder()
-      let aiResponse = ''
-
-      try {
-        while (true) {
-          const { done, value } = await reader.read()
-          if (done) break
-
-          const chunk = decoder.decode(value)
-          const lines = chunk.split('\n')
-
-          for (const line of lines) {
-            if (line.startsWith('data: ')) {
-              const data = line.slice(6)
-              if (data === '[DONE]') continue
-
-              try {
-                const parsed = JSON.parse(data)
-                if (parsed.choices?.[0]?.delta?.content) {
-                  aiResponse += parsed.choices[0].delta.content
-                }
-              } catch (e) {
-                // Skip invalid JSON lines
-                continue
-              }
-            }
-          }
-        }
-      } finally {
-        reader.releaseLock()
-      }
-
-      console.log('🤖 AI Response:', aiResponse)
-
-      try {
-        const jsonMatch = aiResponse.match(/\{[\s\S]*\}/)
-        if (jsonMatch) {
-          const parsed = JSON.parse(jsonMatch[0])
-          console.log('✅ Parsed AI response successfully:', parsed)
-          setDetails(parsed)
-          
-          // Save to cache
-          if (studentProfile?.id) {
-            await aiCacheService.saveCareerDetails(studentProfile.id, career.name, parsed)
-          }
-          return
-        } else {
-          console.warn('⚠️ No JSON found in AI response')
-        }
-      } catch (parseError) {
-        console.error('❌ JSON Parse Error:', parseError)
-      }
-
-      // Fallback to static details if AI fails
-      console.log('🔄 Using fallback details')
-      setDetails({
-        title: career.name,
-        description: career.description || `A ${career.name} is a promising career path that aligns with your interests and academic background. This role offers good growth potential in Kenya's evolving job market.`,
-        marketValue: 'Growing demand in Kenya with increasing opportunities in both public and private sectors',
-        salaryRange: career.salaryRange || 'KSh 60,000 - 200,000',
-        requirements: [
-          'Relevant degree or professional certification',
-          'Strong communication and analytical skills',
-          'Practical experience through internships or projects',
-          'Continuous learning and skill development'
-        ],
-        nextSteps: [
-          'Complete your current education with focus on relevant subjects',
-          'Seek internships or volunteer opportunities in related fields',
-          'Build a strong professional network',
-          'Consider additional certifications or short courses',
-          'Create a portfolio showcasing your skills and projects'
-        ],
-        growthProspect: career.growth || 'Strong growth potential with expanding opportunities',
-        educationPath: career.education || 'Bachelor\'s degree in relevant field recommended',
-        skillsNeeded: ['Critical thinking', 'Communication', 'Problem solving', 'Technical skills', 'Teamwork'],
-        jobMarket: 'Competitive but growing market with opportunities in various sectors',
-        whyRecommended: `This career matches your ${career.value}% compatibility score and aligns with your interests and academic strengths.`,
-        relatedCareers: ['Similar roles in related fields', 'Alternative career paths', 'Specialized positions'],
-        timeline: '2-4 years to entry level, with advancement opportunities',
-        resources: [
-          'Professional associations and networks',
-          'Industry conferences and workshops'
-        ],
-        institutions: ['University of Nairobi', 'Kenyatta University', 'JKUAT', 'Strathmore University', 'Moi University'],
-        regulatoryBodies: ['Relevant Kenyan Professional Body']
-      })
-    } catch (error) {
-      console.error('❌ Error generating career details:', error)
-      setError(`Unable to load detailed information: ${error instanceof Error ? error.message : 'Unknown error'}`)
-      
-      // Even if AI fails, show basic details
-      console.log('🔄 Using basic fallback details')
-      setDetails({
-        title: career.name,
-        description: career.description || `A ${career.name} is a career path that matches your profile with a ${career.value}% compatibility score.`,
-        marketValue: 'Growing opportunities in Kenya',
-        salaryRange: career.salaryRange || 'KSh 50,000 - 150,000',
-        requirements: ['Relevant education', 'Practical skills', 'Experience'],
-        nextSteps: ['Complete education', 'Gain experience', 'Build network'],
-        growthProspect: career.growth || 'Good potential',
-        educationPath: career.education || 'Degree recommended',
-        skillsNeeded: ['Communication', 'Problem solving', 'Technical skills'],
-        jobMarket: 'Competitive market',
-        whyRecommended: `Matches your profile with ${career.value}% compatibility`,
-        relatedCareers: ['Similar roles'],
-        timeline: '2-4 years',
-        resources: ['Professional networks'],
-        institutions: ['Major Kenyan Universities'],
-        regulatoryBodies: ['National Regulatory Bodies']
-      })
-    } finally {
-      console.log('✅ Career details generation completed')
-      setIsLoading(false)
-    }
-  }
-
-  if (!isOpen) return null
+const CareerDetailModal: React.FC<CareerDetailModalProps> = ({ isOpen, onClose, career }) => {
+  if (!isOpen || !career) return null
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle className="text-2xl font-bold flex items-center gap-2">
-            <Target className="h-6 w-6" style={{ color: career.color }} />
-            {career.name}
-            <Badge variant="secondary" className="ml-2">
-              {career.value}% Match
-            </Badge>
-          </DialogTitle>
-        </DialogHeader>
-
-        {isLoading ? (
-          <div className="flex items-center justify-center py-8">
-            <Loader2 className="h-8 w-8 animate-spin" />
-            <span className="ml-2">Generating career insights...</span>
-          </div>
-        ) : error ? (
-          <div className="text-center py-8">
-            <p className="text-red-500 mb-4">{error}</p>
-            <Button onClick={generateCareerDetails}>Try Again</Button>
-          </div>
-        ) : details ? (
-          <div className="space-y-6">
-            {/* Overview */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <BookOpen className="h-5 w-5" />
-                  Career Overview
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-foreground mb-4">{details.description}</p>
-                <p className="text-sm text-muted-foreground italic">"{details.whyRecommended}"</p>
-              </CardContent>
-            </Card>
-
-            {/* Market Info */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2 text-lg">
-                    <DollarSign className="h-5 w-5" />
-                    Salary & Market
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-2">
-                    <div>
-                      <span className="font-medium">Salary Range:</span>
-                      <p className="text-green-600 font-semibold">{details.salaryRange}</p>
-                    </div>
-                    <div>
-                      <span className="font-medium">Market Value:</span>
-                      <p className="text-sm text-muted-foreground">{details.marketValue}</p>
-                    </div>
-                    <div>
-                      <span className="font-medium">Growth Prospect:</span>
-                      <p className="text-sm text-muted-foreground">{details.growthProspect}</p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2 text-lg">
-                    <TrendingUp className="h-5 w-5" />
-                    Job Market
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-2">
-                    <div>
-                      <span className="font-medium">Current Market:</span>
-                      <p className="text-sm text-muted-foreground">{details.jobMarket}</p>
-                    </div>
-                    <div>
-                      <span className="font-medium">Timeline:</span>
-                      <p className="text-sm text-muted-foreground">{details.timeline}</p>
-                    </div>
-                    <div>
-                      <span className="font-medium">Education Path:</span>
-                      <p className="text-sm text-muted-foreground">{details.educationPath}</p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+      <DialogContent className="max-w-2xl w-[95vw] sm:w-full p-0 overflow-hidden bg-[#0a0a0c] border-white/10 rounded-xl shadow-2xl">
+        <div className="p-5 sm:p-8 md:p-10 space-y-6 sm:space-y-8 max-h-[85vh] overflow-y-auto custom-scrollbar">
+          
+          {/* Header Section */}
+          <div className="space-y-3 sm:space-y-4">
+            <div className="flex items-center justify-between">
+              <Badge variant="outline" className="text-[10px] uppercase tracking-widest text-primary border-primary/20 bg-primary/5">
+                {career.category}
+              </Badge>
+              <div className="flex items-center gap-3 sm:gap-4 text-[10px] sm:text-xs text-slate-500 font-medium">
+                <span className="flex items-center gap-1">
+                  <TrendingUp className="h-3 w-3 text-emerald-400" />
+                  <span className="hidden xs:inline">{career.demand_level} Demand</span>
+                  <span className="xs:hidden">{career.demand_level}</span>
+                </span>
+              </div>
             </div>
-
-            {/* Requirements & Skills */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg">Requirements</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <ul className="space-y-1">
-                    {details.requirements.map((req, index) => (
-                      <li key={index} className="flex items-start gap-2 text-sm">
-                        <span className="text-blue-500 mt-1">•</span>
-                        {req}
-                      </li>
-                    ))}
-                  </ul>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg">Skills Needed</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="flex flex-wrap gap-2">
-                    {details.skillsNeeded.map((skill, index) => (
-                      <Badge key={index} variant="outline">
-                        {skill}
-                      </Badge>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
+            
+            <div className="space-y-1 sm:space-y-2">
+              <h1 className="text-2xl sm:text-3xl font-bold text-white tracking-tight">
+                {career.title}
+              </h1>
+              <p className="text-base sm:text-lg text-slate-400 font-medium leading-relaxed">
+                {career.one_liner || "Professional career pathway within Kenya's evolving industry."}
+              </p>
             </div>
-
-            {/* Next Steps */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">Your Action Plan</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <ol className="space-y-2">
-                  {details.nextSteps.map((step, index) => (
-                    <li key={index} className="flex items-start gap-3">
-                      <span className="bg-blue-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm font-medium">
-                        {index + 1}
-                      </span>
-                      <span className="text-sm">{step}</span>
-                    </li>
-                  ))}
-                </ol>
-              </CardContent>
-            </Card>
-
-            {/* Related Careers */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">Related Career Paths</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="flex flex-wrap gap-2">
-                  {details.relatedCareers.map((relatedCareer, index) => (
-                    <Badge key={index} variant="secondary">
-                      {relatedCareer}
-                    </Badge>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Institutions & Bodies */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <Card className="border-primary/20 bg-primary/5">
-                <CardHeader>
-                  <CardTitle className="text-lg flex items-center gap-2">
-                    <GraduationCap className="h-5 w-5 text-primary" />
-                    Top Kenyan Institutions
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <ul className="space-y-1">
-                    {details.institutions.map((inst, index) => (
-                      <li key={index} className="flex items-start gap-2 text-sm font-medium">
-                        <span className="text-primary mt-1">•</span>
-                        {inst}
-                      </li>
-                    ))}
-                  </ul>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg flex items-center gap-2">
-                    <Shield className="h-5 w-5 text-muted-foreground" />
-                    Regulatory Bodies
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="flex flex-wrap gap-2">
-                    {details.regulatoryBodies.map((body, index) => (
-                      <Badge key={index} variant="outline" className="bg-muted">
-                        {body}
-                      </Badge>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-
-            {/* Resources */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">Helpful Resources</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <ul className="space-y-1">
-                  {details.resources.map((resource, index) => (
-                    <li key={index} className="flex items-center gap-2 text-sm">
-                      <ExternalLink className="h-4 w-4 text-blue-500" />
-                      {resource}
-                    </li>
-                  ))}
-                </ul>
-              </CardContent>
-            </Card>
           </div>
-        ) : null}
 
-        <div className="flex justify-end gap-2 pt-4 border-t">
-          <Button variant="outline" onClick={onClose}>
-            Close
-          </Button>
-          <Button onClick={generateCareerDetails} disabled={isLoading}>
-            {isLoading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
-            Refresh Details
-          </Button>
+          <div className="h-px bg-white/5" />
+
+          {/* Role Overview */}
+          <section className="space-y-4">
+            <h3 className="text-sm font-bold uppercase tracking-widest text-slate-500">Overview</h3>
+            <p className="text-slate-300 leading-relaxed">
+              {career.description}
+            </p>
+          </section>
+
+          {/* Market Reality */}
+          <section className="space-y-4">
+            <h3 className="text-sm font-bold uppercase tracking-widest text-slate-500">Market Reality</h3>
+            <div className="grid grid-cols-2 gap-6">
+              <div className="space-y-1">
+                <span className="text-xs text-slate-500 font-medium">Salary Range</span>
+                <p className="text-white font-bold flex items-center gap-2">
+                   <DollarSign className="h-4 w-4 text-emerald-400" />
+                   {career.salary_range}
+                </p>
+              </div>
+              <div className="space-y-1">
+                <span className="text-xs text-slate-500 font-medium">Growth Potential</span>
+                <p className="text-white font-bold flex items-center gap-2">
+                   <TrendingUp className="h-4 w-4 text-blue-400" />
+                   {career.growth_percentage}
+                </p>
+              </div>
+            </div>
+          </section>
+
+          {/* Academic Path */}
+          <section className="space-y-4">
+            <h3 className="text-sm font-bold uppercase tracking-widest text-slate-500">Education & Path</h3>
+            <div className="space-y-4">
+              <p className="text-slate-300">
+                {career.education_requirements}
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {career.skills_required.map((skill, i) => (
+                  <span key={i} className="text-xs bg-white/5 text-slate-400 px-2 py-1 rounded border border-white/5">
+                    {skill}
+                  </span>
+                ))}
+              </div>
+            </div>
+          </section>
+
+          {/* Pros & Cons */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-4">
+            <section className="space-y-3">
+              <h3 className="text-xs font-bold uppercase tracking-widest text-emerald-400/80">Key Benefits</h3>
+              <ul className="space-y-2">
+                {(career.pros || ['High career stability', 'Direct societal impact', 'Competitive starting packages']).map((pro, i) => (
+                  <li key={i} className="text-sm text-slate-400 flex items-start gap-2">
+                    <Check className="h-4 w-4 text-emerald-500 shrink-0 mt-0.5" />
+                    {pro}
+                  </li>
+                ))}
+              </ul>
+            </section>
+            <section className="space-y-3">
+              <h3 className="text-xs font-bold uppercase tracking-widest text-rose-400/80">Main Challenges</h3>
+              <ul className="space-y-2">
+                {(career.cons || ['High academic entry bar', 'Non-standard working hours', 'Continuous certification']).map((con, i) => (
+                  <li key={i} className="text-sm text-slate-400 flex items-start gap-2">
+                    <XIcon className="h-4 w-4 text-rose-500 shrink-0 mt-0.5" />
+                    {con}
+                  </li>
+                ))}
+              </ul>
+            </section>
+          </div>
+
+          {/* Where to Study */}
+          <section className="space-y-4 pt-4">
+             <div className="flex items-center gap-2 text-sm font-bold uppercase tracking-widest text-slate-500">
+              <GraduationCap className="h-4 w-4" />
+              Institutions in Kenya
+            </div>
+            <div className="flex flex-wrap gap-x-4 gap-y-2">
+              {(career.universities || ['University of Nairobi', 'Strathmore University', 'Kenyatta University', 'JKUAT']).map((uni, i) => (
+                <span key={i} className="text-sm text-slate-300 font-medium flex items-center gap-2">
+                  <span className="w-1.5 h-1.5 rounded-full bg-primary/40" />
+                  {uni}
+                </span>
+              ))}
+            </div>
+          </section>
+        </div>
+
+        {/* Minimalist Footer */}
+        <div className="p-5 sm:p-6 bg-white/[0.02] border-t border-white/5 flex flex-col sm:flex-row items-center justify-between gap-4">
+          <p className="text-[10px] sm:text-xs text-slate-500 font-medium text-center sm:text-left">
+            Compare this path with your personalized assessment results.
+          </p>
+          <div className="flex flex-col sm:flex-row items-center gap-3 w-full sm:w-auto">
+            <Button 
+              variant="ghost" 
+              onClick={onClose} 
+              className="w-full sm:w-auto text-slate-400 hover:text-white hover:bg-white/5 rounded-lg font-bold order-2 sm:order-1"
+            >
+              Close
+            </Button>
+            <Button 
+              onClick={() => window.location.href = `/quick-assessment?career=${encodeURIComponent(career.title)}`}
+              className="w-full sm:w-auto bg-primary hover:bg-primary/90 text-primary-foreground px-8 rounded-lg font-bold shadow-lg shadow-primary/10 order-1 sm:order-2"
+            >
+              Assess My Fit
+              <ArrowRight className="h-4 w-4 ml-2" />
+            </Button>
+          </div>
         </div>
       </DialogContent>
     </Dialog>

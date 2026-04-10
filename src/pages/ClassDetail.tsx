@@ -17,9 +17,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@/components/ui/textarea'
 import {
     ArrowLeft, Users, Upload, UserPlus, Trash2,
-    Loader2, CheckCircle2, FileSpreadsheet, PencilLine,
+    CheckCircle2, FileSpreadsheet, PencilLine,
     BookOpen, RefreshCw, AlertCircle, Sparkles, Search
 } from 'lucide-react'
+import BrandedLoader from '@/components/BrandedLoader'
 import { useToast } from '@/hooks/use-toast'
 import { ThemeToggle } from '@/components/ThemeToggle'
 
@@ -200,8 +201,8 @@ const ClassDetail: React.FC = () => {
 
     if (loading) {
         return (
-            <div className="min-h-screen flex items-center justify-center" style={{ background: 'var(--gradient-homepage)' }}>
-                <Loader2 className="w-8 h-8 animate-spin text-primary" />
+            <div className="flex flex-col items-center justify-center min-h-[400px]">
+                <BrandedLoader size="lg" />
             </div>
         )
     }
@@ -240,7 +241,7 @@ const ClassDetail: React.FC = () => {
                         </Button>
                         <div className="flex items-center gap-2">
                             <img
-                                src="/logos/CareerGuide_Logo.png"
+                                src="/logos/CareerGuide_Logo.webp"
                                 alt="CareerGuide AI"
                                 className="h-10 w-auto"
                             />
@@ -300,7 +301,7 @@ const ClassDetail: React.FC = () => {
                                         className="flex-1 uppercase"
                                     />
                                     <Button onClick={handleAddStudent} disabled={!addUpi.trim() || addLoading} className="bg-gradient-primary">
-                                        {addLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <UserPlus className="w-4 h-4" />}
+                                        {addLoading ? <BrandedLoader size="xs" showText={false} className="mr-0" /> : <UserPlus className="w-4 h-4" />}
                                     </Button>
                                 </div>
                                 {addError && <p className="text-sm text-destructive mt-2">{addError}</p>}
@@ -550,7 +551,7 @@ const ClassDetail: React.FC = () => {
                                 disabled={!gradeForm.subject_name || !gradeForm.grade_value || gradeLoading}
                                 onClick={handleSaveGrade}
                             >
-                                {gradeLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : editingGradeId ? 'Update Grade' : 'Save Grade'}
+                                {gradeLoading ? <BrandedLoader size="xs" showText={false} className="mr-0" /> : editingGradeId ? 'Update Grade' : 'Save Grade'}
                             </Button>
                         </div>
                     </div>

@@ -237,6 +237,37 @@ export const CareerPathwaysManagement = () => {
                 <label className="text-xs font-bold text-foreground/80 mb-1 block uppercase tracking-wider">Education Requirements</label>
                 <Input value={formData.education_requirements || ''} onChange={e => setFormData({...formData, education_requirements: e.target.value})} className="bg-background border-border" placeholder="e.g. Degree in Computer Science" />
               </div>
+              <div className="md:col-span-2">
+                <label className="text-xs font-bold text-foreground/80 mb-1 block uppercase tracking-wider">One-Liner (Brief Overview)</label>
+                <Input value={formData.one_liner || ''} onChange={e => setFormData({...formData, one_liner: e.target.value})} className="bg-background border-border" placeholder="e.g. Architecting resilient digital infrastructures for the future." />
+              </div>
+              <div className="md:col-span-2">
+                <label className="text-xs font-bold text-foreground/80 mb-1 block uppercase tracking-wider">Kenyan Universities (Comma separated)</label>
+                <Input 
+                  value={Array.isArray(formData.universities) ? formData.universities.join(', ') : formData.universities || ''} 
+                  onChange={e => setFormData({...formData, universities: e.target.value.split(',').map(s => s.trim())})} 
+                  className="bg-background border-border" 
+                  placeholder="e.g. UoN, Strathmore, JKUAT" 
+                />
+              </div>
+              <div>
+                <label className="text-xs font-bold text-foreground/80 mb-1 block uppercase tracking-wider">Pros (Comma separated)</label>
+                <Input 
+                  value={Array.isArray(formData.pros) ? formData.pros.join(', ') : formData.pros || ''} 
+                  onChange={e => setFormData({...formData, pros: e.target.value.split(',').map(s => s.trim())})} 
+                  className="bg-background border-border" 
+                  placeholder="e.g. High Demand, Flexible, Remote" 
+                />
+              </div>
+              <div>
+                <label className="text-xs font-bold text-foreground/80 mb-1 block uppercase tracking-wider">Cons (Comma separated)</label>
+                <Input 
+                  value={Array.isArray(formData.cons) ? formData.cons.join(', ') : formData.cons || ''} 
+                  onChange={e => setFormData({...formData, cons: e.target.value.split(',').map(s => s.trim())})} 
+                  className="bg-background border-border" 
+                  placeholder="e.g. Fast-paced, Continuous Learning" 
+                />
+              </div>
               <div className="flex items-center gap-3 pt-2">
                 <input 
                   type="checkbox" 

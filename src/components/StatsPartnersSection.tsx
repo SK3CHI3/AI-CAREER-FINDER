@@ -3,7 +3,7 @@ import { Mail, ArrowRight } from "lucide-react";
 
 const StatsPartnersSection = () => {
   return (
-    <section className="py-12 bg-gradient-hero">
+    <section className="pt-2 pb-12 lg:py-12 bg-gradient-hero">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
         {/* Main Card Container with theme colors */}
@@ -27,7 +27,7 @@ const StatsPartnersSection = () => {
                 {/* Image Container with Blue Gradient Overlay */}
                 <div className="relative h-48 overflow-hidden">
                   <img
-                    src="/images/students.jpg"
+                    src="/images/students.webp"
                     alt="Students"
                     width="400"
                     height="192"
@@ -54,7 +54,7 @@ const StatsPartnersSection = () => {
               <div className="group relative rounded-2xl overflow-hidden bg-surface/50 border border-card-border hover:border-primary/30 hover:shadow-glow transition-all duration-500">
                 <div className="relative h-48 overflow-hidden">
                   <img
-                    src="/images/institutions.jpg"
+                    src="/images/institutions.webp"
                     alt="Partner Institutions"
                     width="400"
                     height="192"
@@ -81,7 +81,7 @@ const StatsPartnersSection = () => {
               <div className="group relative rounded-2xl overflow-hidden bg-surface/50 border border-card-border hover:border-primary/30 hover:shadow-glow transition-all duration-500">
                 <div className="relative h-48 overflow-hidden">
                   <img
-                    src="/images/counties.png"
+                    src="/images/counties.webp"
                     alt="Kenya Counties"
                     width="400"
                     height="192"

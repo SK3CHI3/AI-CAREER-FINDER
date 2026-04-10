@@ -132,7 +132,7 @@ const PaymentGate: React.FC<PaymentGateProps> = ({ children }) => {
     return (
       <div className="min-h-screen flex items-center justify-center" style={{ background: 'var(--gradient-homepage)' }}>
         <img 
-          src="/logos/CareerGuide_Logo.png" 
+          src="/logos/CareerGuide_Logo.webp" 
           alt="CareerGuide AI" 
           className="h-10 w-auto animate-pulse drop-shadow-md"
         />

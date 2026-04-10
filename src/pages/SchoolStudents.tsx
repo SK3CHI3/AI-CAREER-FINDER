@@ -65,7 +65,7 @@ const SchoolStudents: React.FC = () => {
                 <ChevronLeft className="w-5 h-5" />
               </Button>
               <img
-                src="/logos/CareerGuide_Logo.png"
+                src="/logos/CareerGuide_Logo.webp"
                 alt="CareerGuide AI"
                 className="h-10 w-auto cursor-pointer"
                 onClick={() => navigate('/school')}

@@ -25,14 +25,16 @@ const Footer = () => {
               className="flex items-center h-[40px] overflow-visible hover:opacity-80 transition-opacity"
             >
               <img
-                src="/logos/CareerGuide_Logo.png"
+                src="/logos/CareerGuide_Logo.webp"
                 alt="CareerGuide AI"
+                width="160"
+                height="40"
                 className="h-[60px] w-auto -mt-2 -ml-2"
               />
             </button>
 
             <p className="text-foreground-muted text-sm leading-relaxed">
-              Empowering Kenya's next generation with AI-driven career guidance aligned with the CBE framework.
+              Synchronizing Kenya's academic potential with global success through precision educational mapping.
             </p>
 
             <div className="flex space-x-3">
@@ -54,7 +56,7 @@ const Footer = () => {
             <ul className="space-y-2">
               <li><button onClick={() => scrollToSection('features')} className="text-foreground-muted hover:text-foreground transition-colors text-left">Features</button></li>
               <li><button onClick={() => scrollToSection('careers')} className="text-foreground-muted hover:text-foreground transition-colors text-left">Career Paths</button></li>
-              <li><button onClick={() => scrollToSection('features')} className="text-foreground-muted hover:text-foreground transition-colors text-left">AI Assessment</button></li>
+              <li><button onClick={() => navigate('/quick-assessment')} className="text-foreground-muted hover:text-foreground transition-colors text-left">AI Assessment</button></li>
               <li><button onClick={() => scrollToSection('about')} className="text-foreground-muted hover:text-foreground transition-colors text-left">Learning Roadmaps</button></li>
               <li><button onClick={() => scrollToSection('careers')} className="text-foreground-muted hover:text-foreground transition-colors text-left">Market Insights</button></li>
             </ul>

@@ -2,6 +2,7 @@ import { Navigate } from 'react-router-dom'
 import { useAuth } from '@/contexts/AuthContext'
 import { AlertCircle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import BrandedLoader from '@/components/BrandedLoader'
 
 import { getDashboardPathForRole, type UserRole } from '@/types/roles'
 
@@ -18,12 +19,8 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
 
   if (loading || (user && profileLoading)) {
     return (
-      <div className="min-h-screen flex items-center justify-center" style={{ background: 'var(--gradient-homepage)' }}>
-        <img 
-          src="/logos/CareerGuide_Logo.png" 
-          alt="CareerGuide AI" 
-          className="h-10 w-auto animate-pulse drop-shadow-md"
-        />
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <BrandedLoader size="lg" />
       </div>
     )
   }
@@ -63,12 +60,8 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
       )
     }
     return (
-      <div className="min-h-screen flex items-center justify-center" style={{ background: 'var(--gradient-homepage)' }}>
-        <img 
-          src="/logos/CareerGuide_Logo.png" 
-          alt="CareerGuide AI" 
-          className="h-10 w-auto animate-pulse drop-shadow-md"
-        />
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <BrandedLoader size="lg" />
       </div>
     )
   }

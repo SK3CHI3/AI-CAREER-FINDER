@@ -10,8 +10,8 @@ export default function HowItWorks() {
     {
       id: "01",
       image: "/images/how_it_works_01.png",
-      title: "Digital Onboarding",
-      desc: "Begin by constructing your academic DNA. Our secure portal captures your grades, interests, and extracurricular passions to create a unique baseline for guidance.",
+      title: "Profile Synchronization",
+      desc: "Begin by constructing your academic DNA. Our secure portal captures your unique learner profile and extracurricular passions to create a baseline for guidance.",
       accent: "bg-primary"
     },
     {
@@ -25,7 +25,7 @@ export default function HowItWorks() {
       id: "03",
       image: "/images/how_it_works_03.png",
       title: "AI Analysis Engine",
-      desc: "Our proprietary AI doesn't just guess; it predicts. By cross-referencing your profile with Kenya's market trends, we deliver precision-targeted career matches.",
+      desc: "Our proprietary AI doesn't just guess; it predicts. By cross-referencing your potential with national economic trends, we deliver precision-targeted career matches.",
       accent: "bg-accent"
     },
     {
@@ -48,7 +48,20 @@ export default function HowItWorks() {
     <div className="min-h-screen text-foreground overflow-x-hidden relative flex flex-col bg-background">
       <Helmet>
         <title>How It Works | CareerGuide AI Journey</title>
-        <meta name="description" content="Discover the step-by-step process of CareerGuide AI. From building a profile to matching with your dream career and syncing with your school curriculum." />
+        <meta name="description" content="Discover the step-by-step process of CareerGuide AI. From synchronizing your profile to matching with your dream career and mapping your academic potential." />
+        <script type="application/ld+json">
+          {JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "HowTo",
+            "name": "How to Use CareerGuide AI for Career Guidance",
+            "step": steps.map((step, i) => ({
+              "@type": "HowToStep",
+              "position": i + 1,
+              "name": step.title,
+              "text": step.desc
+            }))
+          })}
+        </script>
       </Helmet>
       
       <BackgroundGradient />

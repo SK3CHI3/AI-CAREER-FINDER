@@ -351,7 +351,7 @@ What subjects do you enjoy most in your current studies? 🎯`,
             <div className="flex items-center space-x-3">
               <div className="w-10 h-10 bg-white/5 border border-white/10 rounded-xl flex items-center justify-center shadow-lg">
                 <img 
-                  src="/logos/CareerGuide_Logo.png" 
+                  src="/logos/CareerGuide_Logo.webp" 
                   alt="AI" 
                   className="w-6 h-auto" 
                 />
@@ -404,7 +404,7 @@ What subjects do you enjoy most in your current studies? 🎯`,
                         <User className="w-4 h-4" />
                       ) : (
                         <img 
-                          src="/logos/CareerGuide_Logo.png" 
+                          src="/logos/CareerGuide_Logo.webp" 
                           alt="AI" 
                           className="w-4 h-auto" 
                         />
@@ -428,7 +428,7 @@ What subjects do you enjoy most in your current studies? 🎯`,
                   <div className="flex gap-2 sm:gap-3">
                     <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-white/5 flex items-center justify-center border border-white/10">
                       <img 
-                        src="/logos/CareerGuide_Logo.png" 
+                        src="/logos/CareerGuide_Logo.webp" 
                         alt="AI" 
                         className="w-4 h-auto" 
                       />

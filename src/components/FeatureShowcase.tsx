@@ -39,8 +39,8 @@ const FeatureShowcase = () => {
                 <UserCircle2 className="w-6 h-6 text-primary-foreground/90" />
               </div>
               <div>
-                <h3 className="font-semibold text-base leading-tight text-white/95">Amina's Pathway</h3>
-                <p className="text-primary-foreground/70 text-sm font-medium mt-0.5">Student Insights</p>
+                <h3 className="font-semibold text-base leading-tight text-white/95">Amina's Progress</h3>
+                <p className="text-primary-foreground/70 text-sm font-medium mt-0.5">Academic Potential</p>
               </div>
             </div>
             
@@ -62,7 +62,7 @@ const FeatureShowcase = () => {
               </div>
 
               <div className="relative z-10">
-                <h4 className="text-[15px] font-bold text-foreground mb-6">Top Career Matches</h4>
+                <h4 className="text-[15px] font-bold text-foreground mb-6">Professional Alignment</h4>
                 <div className="space-y-4 mb-4">
                   <motion.div 
                     initial={{ x: -20, opacity: 0 }}
@@ -97,7 +97,7 @@ const FeatureShowcase = () => {
               </div>
               
               <div className="pt-6 border-t border-border mt-auto relative z-10">
-                <h4 className="text-[15px] font-bold text-foreground mb-4">CBE Subject Selection Guide</h4>
+                <h4 className="text-[15px] font-bold text-foreground mb-4">Academic Mapping Guide</h4>
                 <div className="p-5 bg-primary/5 border border-primary/20 rounded-xl">
                   <div className="flex items-center gap-2 mb-2">
                     <div className="w-2 h-2 rounded-full bg-primary animate-pulse"></div>
@@ -192,8 +192,8 @@ const FeatureShowcase = () => {
                   <Bot className="w-5 h-5" />
                 </div>
                 <div className="pt-0.5">
-                  <h4 className="text-[15px] font-bold text-card-foreground mb-1">AI Student Insights</h4>
-                  <p className="text-sm text-foreground-muted leading-snug font-medium">Use data-driven AI insights to help students make informed decisions about their future paths.</p>
+                  <h4 className="text-[15px] font-bold text-card-foreground mb-1">AI Academic Synchronization</h4>
+                  <p className="text-sm text-foreground-muted leading-snug font-medium">Use precision AI insights to help students synchronize their educational journey with future opportunities.</p>
                 </div>
               </div>
               
@@ -272,7 +272,7 @@ const FeatureShowcase = () => {
               
               <div className="py-6 border-b border-border relative z-20">
                 <div className="flex justify-between items-end mb-4">
-                  <h4 className="text-[13px] font-bold text-foreground">Grade Progress</h4>
+                  <h4 className="text-[13px] font-bold text-foreground">Potential Metrics</h4>
                   <span className="text-[11px] text-foreground-muted font-medium">Active now</span>
                 </div>
                 <div className="space-y-3">
