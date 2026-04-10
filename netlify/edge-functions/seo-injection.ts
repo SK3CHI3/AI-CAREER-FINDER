@@ -92,7 +92,7 @@ export default async (request: Request, context: any) => {
       if (slug && slug !== "careers") {
         // Fetch specific career
         const response = await fetch(
-          `${supabaseUrl}/rest/v1/careers?slug=eq.${slug}&select=*`,
+          `${supabaseUrl}/rest/v1/career_paths?slug=eq.${slug}&select=*`,
           {
             headers: {
               apikey: supabaseKey,
@@ -104,14 +104,14 @@ export default async (request: Request, context: any) => {
         if (data && data.length > 0) {
           const career = data[0];
           seoData = {
-            title: `${career.name} Career in Kenya | Salaries, Skills & Universities | CareerGuide AI`,
-            description: career.one_liner || `Learn how to become a ${career.name} in Kenya. Explore skills, education pathways, and salary expectations.`,
+            title: `${career.title} Career in Kenya | Salaries, Skills & Universities | CareerGuide AI`,
+            description: career.one_liner || `Learn how to become a ${career.title} in Kenya. Explore skills, education pathways, and salary expectations.`,
             image: "https://careerguideai.co.ke/logos/CareerGuide_Logo.png",
             type: "article",
             jsonLd: {
               "@context": "https://schema.org",
               "@type": "Occupation",
-              "name": career.name,
+              "name": career.title,
               "mainEntityOfPage": {
                 "@type": "WebPage",
                 "@id": `https://careerguideai.co.ke/careers/${career.slug}`
@@ -123,11 +123,11 @@ export default async (request: Request, context: any) => {
                   "name": "base salary",
                   "currency": "KES",
                   "duration": "P1M",
-                  "description": career.salary
+                  "description": career.salary_range
                 }
               ],
-              "educationRequirements": career.education,
-              "skills": career.skills,
+              "educationRequirements": career.education_requirements,
+              "skills": career.skills_required,
               "occupationLocation": {
                 "@type": "Country",
                 "name": "Kenya"
