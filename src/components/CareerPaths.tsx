@@ -135,14 +135,7 @@ const CareerPaths = () => {
                   <h3 
                     className="text-xl font-semibold text-foreground group-hover:text-primary transition-colors line-clamp-2 cursor-pointer"
                     onClick={() => {
-                      setSelectedCareer({
-                        name: career.title,
-                        value: 95,
-                        color: '#6366f1',
-                        description: career.description,
-                        salaryRange: career.salary_range,
-                        growth: career.growth_percentage
-                      });
+                      setSelectedCareer(career);
                       setIsModalOpen(true);
                     }}
                   >
@@ -195,14 +188,7 @@ const CareerPaths = () => {
                     variant="ghost" 
                     className="w-full justify-between hover:bg-surface group-hover:text-primary font-bold"
                     onClick={() => {
-                      setSelectedCareer({
-                        name: career.title,
-                        value: 95,
-                        color: '#6366f1',
-                        description: career.description,
-                        salaryRange: career.salary_range,
-                        growth: career.growth_percentage
-                      });
+                      setSelectedCareer(career);
                       setIsModalOpen(true);
                     }}
                   >
@@ -232,17 +218,6 @@ const CareerPaths = () => {
           isOpen={isModalOpen}
           onClose={() => setIsModalOpen(false)}
           career={selectedCareer}
-          studentProfile={profile ? {
-            id: profile.id,
-            name: profile.full_name || '',
-            schoolLevel: profile.school_level,
-            currentGrade: profile.current_grade,
-            cbeSubjects: profile.cbe_subjects || profile.subjects,
-            careerInterests: profile.career_interests || profile.interests,
-            strongSubjects: [],
-            weakSubjects: [],
-            overallAverage: 0
-          } : {}}
         />
       )}
     </section>

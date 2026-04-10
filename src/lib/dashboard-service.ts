@@ -55,6 +55,10 @@ export interface CareerPath {
   is_active: boolean
   is_featured?: boolean
   image_url?: string
+  one_liner?: string
+  universities?: string[]
+  pros?: string[]
+  cons?: string[]
   created_at: string
   updated_at: string
 }

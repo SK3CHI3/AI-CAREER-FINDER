@@ -109,31 +109,23 @@ const Careers = () => {
       <BackgroundGradient />
       <Navigation />
       
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 relative z-10">
-        <div className="text-center mb-16">
-          <motion.div 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="inline-flex items-center space-x-2 bg-primary/10 text-primary px-4 py-2 rounded-full text-sm font-semibold border border-primary/20 mb-6"
-          >
-            <Sparkles className="w-4 h-4" />
-            <span>Kenya's Career Library</span>
-          </motion.div>
-          <h1 className="text-3xl md:text-5xl font-bold mb-6 bg-gradient-text bg-clip-text text-transparent px-4">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12 relative z-10">
+        <div className="text-center mb-8 md:mb-16">
+          <h1 className="text-3xl md:text-5xl font-bold mb-4 md:mb-6 bg-gradient-text bg-clip-text text-transparent px-2">
             Explore Your Future
           </h1>
-          <p className="text-xl text-foreground-muted max-w-3xl mx-auto leading-relaxed">
+          <p className="text-lg md:text-xl text-foreground-muted max-w-3xl mx-auto leading-relaxed px-4">
             Discover a comprehensive library of high-demand career paths in Kenya. 
             From technology to healthcare, find where your skills fit best.
           </p>
         </div>
 
-        <div className="flex flex-col md:flex-row gap-6 mb-12 items-center justify-between bg-card/50 backdrop-blur-sm p-6 rounded-2xl border border-card-border">
+        <div className="flex flex-col md:flex-row gap-4 md:gap-6 mb-8 md:mb-12 items-center justify-between bg-card/50 backdrop-blur-sm p-4 md:p-6 rounded-2xl border border-card-border">
           <div className="relative w-full md:max-w-md">
             <Search className="absolute left-3 top-1/2 -transform -translate-y-1/2 w-4 h-4 text-foreground-muted" />
             <Input 
               placeholder="Search careers, skills, or industries..." 
-              className="pl-10 bg-background border-card-border"
+              className="pl-10 bg-background border-card-border h-11 md:h-10"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
@@ -192,14 +184,7 @@ const Careers = () => {
                       <h3 
                         className="text-xl font-bold text-foreground group-hover:text-primary transition-colors line-clamp-2 cursor-pointer"
                         onClick={() => {
-                          setSelectedCareer({
-                            name: career.title,
-                            value: 95, // Representative match
-                            color: '#6366f1',
-                            description: career.description,
-                            salaryRange: career.salary_range,
-                            growth: career.growth_percentage
-                          });
+                          setSelectedCareer(career);
                           setIsModalOpen(true);
                         }}
                       >
@@ -225,7 +210,7 @@ const Careers = () => {
                       
                       <div className="flex items-center justify-between">
                         <div className="flex items-center space-x-2">
-                          <TrendingUp className="w-4 h-4 text-foreground-muted" />
+                           <TrendingUp className="w-4 h-4 text-foreground-muted" />
                           <span className="text-sm text-foreground-muted">Growth Rate</span>
                         </div>
                         <span className="text-sm font-semibold text-success">{career.growth_percentage}</span>
@@ -236,14 +221,7 @@ const Careers = () => {
                        <Button 
                         variant="outline"
                         onClick={() => {
-                          setSelectedCareer({
-                            name: career.title,
-                            value: 95,
-                            color: '#6366f1',
-                            description: career.description,
-                            salaryRange: career.salary_range,
-                            growth: career.growth_percentage
-                          });
+                          setSelectedCareer(career);
                           setIsModalOpen(true);
                         }}
                         className="bg-muted/50 border-border hover:bg-muted text-foreground transition-all font-bold"
@@ -333,17 +311,6 @@ const Careers = () => {
           isOpen={isModalOpen}
           onClose={() => setIsModalOpen(false)}
           career={selectedCareer}
-          studentProfile={profile ? {
-            id: profile.id,
-            name: profile.full_name || '',
-            schoolLevel: profile.school_level,
-            currentGrade: profile.current_grade,
-            cbeSubjects: profile.cbe_subjects || profile.subjects,
-            careerInterests: profile.career_interests || profile.interests,
-            strongSubjects: [], // To be calculated or fetched
-            weakSubjects: [],
-            overallAverage: 0
-          } : {}}
         />
       )}
     </div>

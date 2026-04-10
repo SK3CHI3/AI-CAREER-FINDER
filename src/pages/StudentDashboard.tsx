@@ -501,10 +501,33 @@ const StudentDashboard = () => {
     return `${Math.floor(diffInSeconds / 604800)}w ago`
   }
 
-  const handleCareerDetailClick = (career: CareerDataItem) => {
-    setSelectedCareer(career)
-    setIsCareerModalOpen(true)
-    trackButtonClick('View Career Details', 'Career Card')
+  const handleCareerDetailClick = async (career: CareerDataItem) => {
+    try {
+      // Find the full career path in our existing data or fetch it
+      const allPaths = await dashboardService.getCareerPaths();
+      const fullPath = allPaths.find(p => p.title.toLowerCase() === career.name.toLowerCase());
+      
+      if (fullPath) {
+        setSelectedCareer(fullPath as any);
+      } else {
+        // Fallback to basic data if not found
+        setSelectedCareer({
+          title: career.name,
+          description: career.description,
+          salary_range: career.salaryRange,
+          growth_percentage: career.growth,
+          skills_required: [],
+          category: 'Recommended',
+          demand_level: 'High'
+        } as any);
+      }
+      setIsCareerModalOpen(true)
+      trackButtonClick('View Career Details', 'Career Card')
+    } catch (err) {
+      console.error('Failed to load full career details:', err);
+      setSelectedCareer(career as any);
+      setIsCareerModalOpen(true);
+    }
   }
 
   // Function to invalidate cache when grades are updated
@@ -1286,17 +1309,7 @@ const StudentDashboard = () => {
             setIsCareerModalOpen(false)
             setSelectedCareer(null)
           }}
-          career={selectedCareer}
-          studentProfile={{
-            name: profile?.full_name,
-            schoolLevel: profile?.school_level,
-            currentGrade: profile?.current_grade,
-            cbeSubjects: profile?.cbe_subjects || profile?.subjects,
-            careerInterests: profile?.career_interests || profile?.interests,
-            strongSubjects: [], // This will be populated from grades data
-            weakSubjects: [], // This will be populated from grades data
-            overallAverage: 0 // This will be populated from grades data
-          }}
+          career={selectedCareer as any}
         />
       )}
 
