@@ -6,8 +6,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Sparkles, Download, ArrowRight, ArrowLeft, CheckCircle, Brain, Target, User, Heart, Compass, ShieldAlert, Rocket } from "lucide-react";
+import { Sparkles, Download, ArrowRight, ArrowLeft, CheckCircle, Brain, Target, User, Heart, Compass, ShieldAlert, Rocket, Lock, Zap } from "lucide-react";
 import BrandedLoader from "@/components/BrandedLoader";
+import ReportPaywall from "@/components/ReportPaywall";
 import { aiCareerService } from "@/lib/ai-service";
 import { ReportGenerator, type GuestProfile } from "@/lib/report-generator";
 import Navigation from "@/components/Navigation";
@@ -24,6 +25,7 @@ const QuickAssessment = () => {
 
     // Phase 1: Academics
     const [name, setName] = useState("");
+    const [email, setEmail] = useState("");
     const [curriculum, setCurriculum] = useState<'cbc' | 'igcse' | null>(null);
     const [grade, setGrade] = useState("");
     const [selectedSubjects, setSelectedSubjects] = useState<string[]>([]);
@@ -113,6 +115,9 @@ const QuickAssessment = () => {
         return { scores, personalityTypes: sortedTypes };
     };
 
+    const [isPaid, setIsPaid] = useState(false);
+    const [reportHtml, setReportHtml] = useState<string | null>(null);
+
     const finishAssessment = async () => {
         setIsLoading(true);
         setError(null);
@@ -137,7 +142,7 @@ const QuickAssessment = () => {
             };
             setGuestProfile(profile);
 
-            // Generate customized recommendations passing ALL the new params
+            // Generate customized recommendations
             const payload = {
                 name: profile.name,
                 curriculum: profile.curriculum,
@@ -159,10 +164,16 @@ const QuickAssessment = () => {
                 { ...payload, assessmentResults: { riasec_scores: scores, personality_type: personalityTypes } }
             );
 
-            setGuestProfile(prev => ({
-                ...prev,
+            const updatedProfile = {
+                ...profile,
                 aiSummary: summaryString
-            }));
+            };
+            
+            setGuestProfile(updatedProfile);
+
+            // Pre-generate the report HTML for the preview
+            const html = ReportGenerator.generatePDFReport(updatedProfile, [], recommendations);
+            setReportHtml(html);
 
             setShowReport(true);
             setCurrentStep(7);
@@ -175,8 +186,13 @@ const QuickAssessment = () => {
     };
 
     const downloadReport = async () => {
-        const html = ReportGenerator.generatePDFReport(guestProfile, [], finalRecommendations);
-        await ReportGenerator.downloadPDF(html, `${guestProfile.name || 'CareerGuide'}-Diagnostic-Report.pdf`);
+        if (!reportHtml) return;
+        await ReportGenerator.downloadPDF(reportHtml, `${guestProfile.name || 'CareerGuide'}-Diagnostic-Report.pdf`);
+    };
+
+    const handlePaymentSuccess = () => {
+        setIsPaid(true);
+        downloadReport(); // Automatically trigger download on success
     };
 
     return (
@@ -219,6 +235,11 @@ const QuickAssessment = () => {
                                         <div>
                                             <Label className="text-base font-semibold">Your Full Name</Label>
                                             <Input value={name} onChange={e => setName(e.target.value)} placeholder="e.g. John Kamau" className="text-base p-5 border-2 bg-background/50 focus:ring-primary" />
+                                        </div>
+
+                                        <div>
+                                            <Label className="text-base font-semibold">Email Address (For Report Receipt)</Label>
+                                            <Input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="e.g. john@example.com" className="text-base p-5 border-2 bg-background/50 focus:ring-primary" />
                                         </div>
 
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -430,36 +451,96 @@ const QuickAssessment = () => {
                                 </motion.div>
                             )}
 
-                            {/* STEP 7: RESULTS */}
+                            {/* STEP 7: RESULTS (PREVIEW & PAYWALL) */}
                             {currentStep === 7 && (
-                                <motion.div key="step7" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="space-y-8 text-center py-10">
-                                    <div className="w-20 h-20 bg-green-500/10 rounded-full flex items-center justify-center mx-auto mb-6">
-                                        <CheckCircle className="w-10 h-10 text-green-500" />
-                                    </div>
-                                    <h2 className="text-3xl md:text-4xl font-extrabold tracking-tight">Your Diagnostic is Ready</h2>
-                                    <p className="text-lg md:text-xl text-muted-foreground max-w-lg mx-auto">
-                                        We evaluated 10 professional metrics including your MBTI, Values, and Barriers.
-                                    </p>
-
-                                    <div className="bg-primary/5 border border-primary/20 rounded-3xl p-6 md:p-8 max-w-2xl mx-auto backdrop-blur-sm">
-                                        <h3 className="text-xl font-bold text-primary mb-3 flex items-center justify-center gap-2">
-                                            <Compass className="w-6 h-6" /> The Next Logical Step
-                                        </h3>
-                                        <p className="text-foreground mb-6 text-sm md:text-base leading-relaxed">
-                                            The AI has identified your potential. Now, validate these results with a
-                                            <strong> Human Career Counselor</strong> to build a realistic roadmap for your
-                                            education and future job market in Kenya.
-                                        </p>
-                                        <Button onClick={() => navigate('/student')} size="lg" className="w-full h-14 text-lg font-bold bg-primary text-primary-foreground rounded-2xl shadow-glow hover:scale-[1.02] transition-all">
-                                            Book a 1-on-1 Counseling Session
-                                        </Button>
+                                <motion.div key="step7" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="space-y-8 py-5">
+                                    <div className="text-center">
+                                        <div className="w-16 h-16 bg-green-500/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                                            <CheckCircle className="w-8 h-8 text-green-500" />
+                                        </div>
+                                        <h2 className="text-2xl md:text-3xl font-extrabold tracking-tight">Diagnostic Analysis Complete</h2>
+                                        <p className="text-muted-foreground">We've identified your ideal career pathways and educational alignment.</p>
                                     </div>
 
-                                    <div className="pt-8 flex flex-col items-center gap-4">
-                                        <Button onClick={downloadReport} variant="outline" className="h-14 px-8 border-2 font-bold flex items-center gap-2">
-                                            <Download className="w-5 h-5" /> Download Diagnostic Report
-                                        </Button>
-                                        <Button variant="ghost" onClick={() => { setCurrentStep(1); setGuestProfile({}); }} className="mt-4">Retake Assessment</Button>
+                                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+                                        {/* PREVIEW PANEL */}
+                                        <div className="relative group">
+                                            <div className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-2 flex items-center gap-2">
+                                                <Compass className="w-3 h-3" /> Report Preview
+                                            </div>
+                                            <div className={`relative rounded-2xl border-2 border-card-border overflow-hidden bg-white aspect-[3/4] transition-all ${!isPaid ? 'max-h-[500px]' : 'max-h-none'}`}>
+                                                {/* Actual Content Rendering */}
+                                                <div 
+                                                    className="p-4 origin-top scale-[0.6] sm:scale-[0.8] w-[160%] sm:w-[125%]"
+                                                    dangerouslySetInnerHTML={{ __html: reportHtml || '' }}
+                                                />
+                                                
+                                                {/* Glassmorphism Blur Overlay */}
+                                                {!isPaid && (
+                                                    <div className="absolute inset-0 z-20 flex flex-col justify-end">
+                                                        <div className="h-full w-full backdrop-blur-[6px] bg-gradient-to-t from-background via-background/80 to-transparent flex items-center justify-center p-6 text-center">
+                                                            <div className="bg-white/90 dark:bg-card/90 p-4 rounded-xl shadow-lg border border-card-border max-w-[200px]">
+                                                                <Lock className="w-6 h-6 mx-auto mb-2 text-primary" />
+                                                                <p className="text-xs font-bold">Unlock Full Results</p>
+                                                                <p className="text-[10px] text-muted-foreground">MBTI breakdown, detailed pathways & action plan are hidden.</p>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                )}
+                                            </div>
+                                            
+                                            {isPaid && (
+                                                <div className="mt-4 flex justify-center">
+                                                    <Button onClick={downloadReport} className="w-full h-14 bg-green-600 hover:bg-green-700 text-white font-bold rounded-xl shadow-lg">
+                                                        <Download className="mr-2 w-5 h-5" /> Download Full PDF Report
+                                                    </Button>
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        {/* ACTION/PAYWALL PANEL */}
+                                        <div className="space-y-6">
+                                            {!isPaid ? (
+                                                <ReportPaywall 
+                                                    onPaymentSuccess={handlePaymentSuccess} 
+                                                    studentName={name}
+                                                    email={email}
+                                                />
+                                            ) : (
+                                                <div className="bg-green-500/5 border-2 border-green-500/20 rounded-3xl p-8 text-center space-y-4">
+                                                    <div className="w-16 h-16 bg-green-500/10 rounded-full flex items-center justify-center mx-auto">
+                                                        <Zap className="w-8 h-8 text-green-500" />
+                                                    </div>
+                                                    <h3 className="text-xl font-bold">Report Unlocked!</h3>
+                                                    <p className="text-sm text-muted-foreground">Your comprehensive diagnostic has been generated and is ready for download.</p>
+                                                    <Button onClick={() => navigate('/student')} className="w-full h-12 rounded-xl border-2 border-primary text-primary hover:bg-primary/5 font-bold">
+                                                        Consult with a Counselor
+                                                    </Button>
+                                                </div>
+                                            )}
+
+                                            <div className="bg-card/50 rounded-2xl p-6 border border-card-border">
+                                                <h4 className="font-bold mb-3 flex items-center gap-2"><Brain className="w-4 h-4 text-primary" /> Why get the full report?</h4>
+                                                <ul className="space-y-2">
+                                                    <li className="text-sm flex items-start gap-2">
+                                                        <div className="w-1.5 h-1.5 rounded-full bg-primary mt-1.5 shrink-0" />
+                                                        <span><strong>Personalized MBTI:</strong> Learn how your character drives career success.</span>
+                                                    </li>
+                                                    <li className="text-sm flex items-start gap-2">
+                                                        <div className="w-1.5 h-1.5 rounded-full bg-primary mt-1.5 shrink-0" />
+                                                        <span><strong>CBE/IGCSE Alignment:</strong> Know exactly which subjects to pick.</span>
+                                                    </li>
+                                                    <li className="text-sm flex items-start gap-2">
+                                                        <div className="w-1.5 h-1.5 rounded-full bg-primary mt-1.5 shrink-0" />
+                                                        <span><strong>Success Roadmap:</strong> Immediate steps to take for your top 3 careers.</span>
+                                                    </li>
+                                                </ul>
+                                            </div>
+                                            
+                                            <Button variant="ghost" onClick={() => { setCurrentStep(1); setGuestProfile({}); setIsPaid(false); }} className="w-full text-muted-foreground text-xs">
+                                                Retake Assessment
+                                            </Button>
+                                        </div>
                                     </div>
                                 </motion.div>
                             )}
