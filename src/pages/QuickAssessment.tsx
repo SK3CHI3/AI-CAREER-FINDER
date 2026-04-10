@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Sparkles, Download, ArrowRight, ArrowLeft, CheckCircle, Brain, Target, User, Heart, Compass, ShieldAlert, Rocket, Lock, Zap } from "lucide-react";
+import { Sparkles, Download, ArrowRight, ArrowLeft, CheckCircle, Brain, Target, User, Heart, Compass, ShieldAlert, Rocket, Lock, Zap, Camera, Image as ImageIcon, Trash2 } from "lucide-react";
 import BrandedLoader from "@/components/BrandedLoader";
 import ReportPaywall from "@/components/ReportPaywall";
 import { aiCareerService } from "@/lib/ai-service";
@@ -19,6 +19,7 @@ import { RIASEC_ACTIVITIES, RIASEC_LABELS } from "@/data/riasec-assessment";
 const QuickAssessment = () => {
     const navigate = useNavigate();
     const [currentStep, setCurrentStep] = useState(1);
+    const [subStep, setSubStep] = useState(1); // For Phase 1 sub-steps
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [showReport, setShowReport] = useState(false);
@@ -30,6 +31,7 @@ const QuickAssessment = () => {
     const [grade, setGrade] = useState("");
     const [pathway, setPathway] = useState<'stem' | 'arts' | 'social' | null>(null);
     const [selectedSubjects, setSelectedSubjects] = useState<string[]>([]);
+    const [resultsImage, setResultsImage] = useState<string | null>(null);
 
     // Phase 2: RIASEC
     const [selectedActivities, setSelectedActivities] = useState<string[]>([]);
@@ -66,7 +68,7 @@ const QuickAssessment = () => {
     const GRADES = {
         cbc: ["Grade 7", "Grade 8", "Grade 9", "Grade 10 (Senior)", "Grade 11 (Senior)", "Grade 12 (Senior)"],
         igcse: ["Year 10 (IGCSE)", "Year 11 (IGCSE)", "Year 12 (A-Level)", "Year 13 (A-Level)"],
-        legacy: ["Form 1", "Form 2", "Form 3", "Form 4", "University Year 1", "University Year 2", "University Year 3", "University Year 4"]
+        legacy: ["Form 1", "Form 2", "Form 3", "Form 4", "Form 4 Leaver", "University Year 1", "University Year 2", "University Year 3", "University Year 4"]
     };
 
     const valueOptions = ["High Income / Wealth", "Helping Others / Impact", "Work-Life Balance", "Leadership / Power", "Creativity / Innovation", "Stability / Security"];
@@ -99,12 +101,38 @@ const QuickAssessment = () => {
     const handleNext = () => {
         setError(null);
         if (currentStep === 1) {
-            if (!name.trim()) return setError("Please enter your name");
-            if (!curriculum) return setError("Please select your curriculum");
-            if (!grade) return setError("Please select your current grade/year");
-            if (curriculum === 'cbc' && grade.includes('Senior') && !pathway) return setError("Please select your Senior Secondary pathway");
-            if (selectedSubjects.length === 0) return setError("Please select at least one subject area");
+            // Mobile sub-stepping logic
+            if (subStep === 1) {
+                if (!name.trim()) return setError("Please enter your name");
+                setSubStep(2);
+                return;
+            }
+            if (subStep === 2) {
+                if (!curriculum) return setError("Please select your curriculum");
+                if (!grade) return setError("Please select your current grade/year");
+                if (curriculum === 'cbc' && grade.includes('Senior') && !pathway) return setError("Please select your Senior Secondary pathway");
+                
+                // If Form 4 Leaver, go to upload sub-step
+                if (grade === "Form 4 Leaver") {
+                    setSubStep(3); // 3 is now Upload
+                } else {
+                    setSubStep(4); // 4 is now Subjects
+                }
+                return;
+            }
+            if (subStep === 3) {
+                // Results Upload validation
+                if (grade === "Form 4 Leaver" && !resultsImage) return setError("Please upload your national results to proceed.");
+                setSubStep(4);
+                return;
+            }
+            if (subStep === 4) {
+                if (selectedSubjects.length === 0) return setError("Please select at least one subject area");
+                setCurrentStep(2);
+                return;
+            }
         }
+        
         if (currentStep === 2 && selectedActivities.length === 0) return setError("Please select at least one activity");
         if (currentStep === 3) {
             if (selectedValues.length === 0) return setError("Please select your core values");
@@ -123,6 +151,15 @@ const QuickAssessment = () => {
 
     const handleBack = () => {
         setError(null);
+        if (currentStep === 1 && subStep > 1) {
+            // Special routing for skip sub-step 3 (upload) if not Form 4 Leaver
+            if (subStep === 4 && grade !== "Form 4 Leaver") {
+                setSubStep(2);
+            } else {
+                setSubStep(prev => prev - 1);
+            }
+            return;
+        }
         setCurrentStep(prev => prev - 1);
     };
 
@@ -170,7 +207,8 @@ const QuickAssessment = () => {
                 barriers: barrier,
                 experience,
                 readiness,
-                careerGoals: "Seeking career alignment via AI Counselor Assessment."
+                careerGoals: "Seeking career alignment via AI Counselor Assessment.",
+                resultsVerified: !!resultsImage
             };
             setGuestProfile(profile);
 
@@ -241,22 +279,35 @@ const QuickAssessment = () => {
     };
 
     return (
-        <div className="min-h-screen text-foreground relative overflow-x-hidden pt-20">
+        <div className="min-h-screen text-foreground relative overflow-x-hidden md:pt-20">
             <BackgroundGradient />
-            <Navigation />
+            <div className="hidden md:block">
+                <Navigation />
+            </div>
 
-            <main className="max-w-4xl mx-auto px-4 py-8 relative z-10">
-                <div className="text-center mb-6">
+            <main className="max-w-4xl mx-auto px-4 py-4 md:py-8 relative z-10 min-h-[100dvh] flex flex-col">
+                <div className="text-center mb-6 hidden md:block">
                     <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight bg-gradient-to-r from-primary to-blue-600 bg-clip-text text-transparent pb-1">Professional Counselor Assessment</h1>
                     <p className="text-base text-muted-foreground mt-2">Comprehensive 10-point analysis covering Values, MBTI Personality, Works Styles, and Real Challenges.</p>
                 </div>
 
                 <div className="mb-6">
-                    <div className="flex justify-center gap-1.5 md:gap-2 mb-2">
+                    <div className="flex justify-center gap-1 md:gap-2 mb-2">
                         {[1, 2, 3, 4, 5, 6, 7].map(s => (
-                            <div key={s} className={`h-1.5 md:h-2 flex-1 max-w-[40px] md:max-w-[60px] rounded-full transition-all ${currentStep >= s ? 'bg-primary shadow-[0_0_10px_rgba(var(--primary),0.5)]' : 'bg-muted'}`} />
+                            <div key={s} className={`h-1 md:h-2 flex-1 max-w-[30px] md:max-w-[60px] rounded-full transition-all ${currentStep >= s ? 'bg-primary shadow-[0_0_10px_rgba(var(--primary),0.5)]' : 'bg-muted'}`} />
                         ))}
                     </div>
+                    {currentStep === 1 && (
+                        <div className="flex justify-center gap-1 mt-1 md:hidden">
+                            {[1, 2, 3, 4].map(s => {
+                                // Skip showing dot 3 if not Form 4 Leaver
+                                if (s === 3 && grade !== "Form 4 Leaver") return null;
+                                return (
+                                    <div key={s} className={`h-0.5 w-4 rounded-full transition-all ${subStep >= s ? 'bg-primary/60' : 'bg-muted'}`} />
+                                );
+                            })}
+                        </div>
+                    )}
                 </div>
 
                 {error && (
@@ -271,62 +322,123 @@ const QuickAssessment = () => {
 
                             {/* STEP 1: FOUNDATION */}
                             {currentStep === 1 && (
-                                <motion.div key="step1" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-6">
+                                <motion.div key="step1" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-6 flex-1 flex flex-col">
                                     <div className="text-center">
                                         <h2 className="text-2xl md:text-3xl font-bold flex items-center justify-center gap-2"><User className="w-6 h-6 md:w-8 md:h-8 text-primary" /> Phase 1: Academics</h2>
                                     </div>
 
-                                    <div className="space-y-5">
-                                        <div>
-                                            <Label className="text-base font-semibold">Your Full Name</Label>
-                                            <Input value={name} onChange={e => setName(e.target.value)} placeholder="e.g. John Kamau" className="text-base p-5 border-2 bg-background/50 focus:ring-primary" />
-                                        </div>
-
-                                        <div>
-                                            <Label className="text-base font-semibold">Email Address (For Report Receipt)</Label>
-                                            <Input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="e.g. john@example.com" className="text-base p-5 border-2 bg-background/50 focus:ring-primary" />
-                                        </div>
-
-                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                            <div className="space-y-4">
-                                                <Label className="text-base font-semibold">Curriculum</Label>
-                                                <div className="grid grid-cols-1 gap-2">
-                                                    <button type="button" onClick={() => { setCurriculum('cbc'); setGrade(""); setSelectedSubjects([]); setPathway(null); }} className={`p-3 rounded-xl border-2 transition-all font-bold text-left px-5 ${curriculum === 'cbc' ? 'border-primary bg-primary/10 text-primary' : 'border-card-border hover:border-primary/50'}`}>Kenyan CBC (New)</button>
-                                                    <button type="button" onClick={() => { setCurriculum('igcse'); setGrade(""); setSelectedSubjects([]); setPathway(null); }} className={`p-3 rounded-xl border-2 transition-all font-bold text-left px-5 ${curriculum === 'igcse' ? 'border-primary bg-primary/10 text-primary' : 'border-card-border hover:border-primary/50'}`}>British IGCSE / A-Level</button>
-                                                    <button type="button" onClick={() => { setCurriculum('legacy'); setGrade(""); setSelectedSubjects([]); setPathway(null); }} className={`p-3 rounded-xl border-2 transition-all font-bold text-left px-5 ${curriculum === 'legacy' ? 'border-primary bg-primary/10 text-primary' : 'border-card-border hover:border-primary/50'}`}>8-4-4 Legacy / University</button>
+                                    <div className="space-y-5 flex-1">
+                                        {/* Sub-step 1.1: Identity */}
+                                        {subStep === 1 && (
+                                            <div className="space-y-5 animate-in fade-in slide-in-from-right-4 duration-300">
+                                                <div>
+                                                    <Label className="text-base font-semibold">Your Full Name</Label>
+                                                    <Input value={name} onChange={e => setName(e.target.value)} placeholder="e.g. John Kamau" className="text-base p-5 border-2 bg-background/50 focus:ring-primary" />
                                                 </div>
-                                            </div>
-                                            
-                                            {curriculum && (
-                                                <div className="space-y-4">
-                                                    <Label className="text-base font-semibold">Current Grade / Level</Label>
-                                                    <div className="grid grid-cols-2 gap-2">
-                                                        {GRADES[curriculum].map(g => (
-                                                            <button key={g} type="button" onClick={() => { setGrade(g); setSelectedSubjects([]); }} className={`p-2 text-sm rounded-lg border-2 transition-all font-medium ${grade === g ? 'border-primary bg-primary/10 text-primary' : 'border-card-border hover:border-primary/50'}`}>
-                                                                {g}
-                                                            </button>
-                                                        ))}
-                                                    </div>
-                                                </div>
-                                            )}
-                                        </div>
 
-                                        {curriculum === 'cbc' && grade.includes('Senior') && (
-                                             <div className="space-y-3 animate-in fade-in slide-in-from-top-2">
-                                                <Label className="text-base font-bold text-primary">Senior Secondary Pathway</Label>
-                                                <div className="grid grid-cols-3 gap-2">
-                                                    {(['stem', 'arts', 'social'] as const).map(p => (
-                                                        <button key={p} type="button" onClick={() => { setPathway(p); setSelectedSubjects([]); }} className={`p-3 rounded-xl border-2 transition-all font-bold uppercase text-xs tracking-wider ${pathway === p ? 'border-primary bg-primary text-primary-foreground' : 'border-card-border hover:border-primary/50 bg-card'}`}>
-                                                            {p}
-                                                        </button>
-                                                    ))}
+                                                <div>
+                                                    <Label className="text-base font-semibold">Email Address (For Report Receipt)</Label>
+                                                    <Input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="e.g. john@example.com" className="text-base p-5 border-2 bg-background/50 focus:ring-primary" />
                                                 </div>
-                                                <p className="text-[10px] text-muted-foreground italic">Required for specialized CBE career mapping.</p>
                                             </div>
                                         )}
 
-                                        {curriculum && grade && (
-                                            <div className="space-y-4 animate-in fade-in slide-in-from-top-2">
+                                        {/* Sub-step 1.2: System & Level */}
+                                        {subStep === 2 && (
+                                            <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
+                                                <div className="space-y-4">
+                                                    <Label className="text-base font-semibold">Curriculum</Label>
+                                                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                                                        <button type="button" onClick={() => { setCurriculum('cbc'); setGrade(""); setSelectedSubjects([]); setPathway(null); }} className={`p-3 rounded-xl border-2 transition-all font-bold text-left px-5 ${curriculum === 'cbc' ? 'border-primary bg-primary/10 text-primary' : 'border-card-border hover:border-primary/50'}`}>Kenyan CBC (New)</button>
+                                                        <button type="button" onClick={() => { setCurriculum('igcse'); setGrade(""); setSelectedSubjects([]); setPathway(null); }} className={`p-3 rounded-xl border-2 transition-all font-bold text-left px-5 ${curriculum === 'igcse' ? 'border-primary bg-primary/10 text-primary' : 'border-card-border hover:border-primary/50'}`}>British IGCSE / A-Level</button>
+                                                        <button type="button" onClick={() => { setCurriculum('legacy'); setGrade(""); setSelectedSubjects([]); setPathway(null); }} className={`p-3 rounded-xl border-2 transition-all font-bold text-left px-5 ${curriculum === 'legacy' ? 'border-primary bg-primary/10 text-primary' : 'border-card-border hover:border-primary/50'}`}>8-4-4 Legacy / University</button>
+                                                    </div>
+                                                </div>
+                                                
+                                                {curriculum && (
+                                                    <div className="space-y-4">
+                                                        <Label className="text-base font-semibold">Current Grade / Level</Label>
+                                                        <div className="grid grid-cols-2 gap-2">
+                                                            {GRADES[curriculum].map(g => (
+                                                                <button key={g} type="button" onClick={() => { setGrade(g); setSelectedSubjects([]); }} className={`p-2 text-sm rounded-lg border-2 transition-all font-medium ${grade === g ? 'border-primary bg-primary/10 text-primary' : 'border-card-border hover:border-primary/50'}`}>
+                                                                    {g}
+                                                                </button>
+                                                            ))}
+                                                        </div>
+                                                    </div>
+                                                )}
+
+                                                {curriculum === 'cbc' && grade.includes('Senior') && (
+                                                    <div className="space-y-3 animate-in fade-in slide-in-from-top-2">
+                                                        <Label className="text-base font-bold text-primary">Senior Secondary Pathway</Label>
+                                                        <div className="grid grid-cols-3 gap-2">
+                                                            {(['stem', 'arts', 'social'] as const).map(p => (
+                                                                <button key={p} type="button" onClick={() => { setPathway(p); setSelectedSubjects([]); }} className={`p-3 rounded-xl border-2 transition-all font-bold uppercase text-xs tracking-wider ${pathway === p ? 'border-primary bg-primary text-primary-foreground' : 'border-card-border hover:border-primary/50 bg-card'}`}>
+                                                                    {p}
+                                                                </button>
+                                                            ))}
+                                                        </div>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        )}
+
+                                        {/* Sub-step 1.3: National Results Upload (Conditional) */}
+                                        {subStep === 3 && grade === "Form 4 Leaver" && (
+                                            <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
+                                                <div className="text-center space-y-2">
+                                                    <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-2 text-primary">
+                                                        <Camera className="w-8 h-8" />
+                                                    </div>
+                                                    <Label className="text-xl font-bold block text-primary">Verify Your Results</Label>
+                                                    <p className="text-sm text-muted-foreground px-4">Please upload a clear picture of your KCSE results or certificate for official mapping.</p>
+                                                </div>
+
+                                                <div className="relative group max-w-sm mx-auto">
+                                                    {!resultsImage ? (
+                                                        <label className="flex flex-col items-center justify-center w-full h-56 border-2 border-dashed border-card-border rounded-3xl cursor-pointer bg-card/50 hover:bg-primary/5 hover:border-primary/50 transition-all p-6 text-center group">
+                                                            <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                                                                <ImageIcon className="w-10 h-10 mb-3 text-muted-foreground group-hover:text-primary transition-colors" />
+                                                                <p className="mb-2 text-sm font-semibold tracking-tight">Tap to upload result photo</p>
+                                                                <p className="text-xs text-muted-foreground">PNG, JPG or PDF (Max 5MB)</p>
+                                                            </div>
+                                                            <input type="file" className="hidden" accept="image/*,application/pdf" onChange={(e) => {
+                                                                const file = e.target.files?.[0];
+                                                                if (file) {
+                                                                    const reader = new FileReader();
+                                                                    reader.onloadend = () => setResultsImage(reader.result as string);
+                                                                    reader.readAsDataURL(file);
+                                                                }
+                                                            }} />
+                                                        </label>
+                                                    ) : (
+                                                        <div className="relative rounded-3xl overflow-hidden border-2 border-primary shadow-xl animate-in zoom-in-95 duration-300 group">
+                                                            <img src={resultsImage} alt="Results Preview" className="w-full h-56 object-cover" />
+                                                            <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                                                                <button onClick={() => setResultsImage(null)} className="bg-destructive text-white p-3 rounded-full hover:scale-110 transition-transform shadow-lg">
+                                                                    <Trash2 className="w-6 h-6" />
+                                                                </button>
+                                                            </div>
+                                                            <div className="absolute top-2 right-2 bg-green-500 text-white p-1 rounded-full">
+                                                                <CheckCircle className="w-4 h-4" />
+                                                            </div>
+                                                        </div>
+                                                    )}
+                                                </div>
+
+                                                {resultsImage && (
+                                                    <div className="text-center p-3 bg-green-500/10 border border-green-500/20 rounded-xl animate-in fade-in slide-in-from-top-2">
+                                                        <p className="text-xs font-bold text-green-600 flex items-center justify-center gap-1">
+                                                             <Sparkles className="w-3 h-3" /> Results Captured Successfully
+                                                        </p>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        )}
+
+                                        {/* Sub-step 1.4: Subjects */}
+                                        {subStep === 4 && (
+                                            <div className="space-y-4 animate-in fade-in slide-in-from-right-4 duration-300">
                                                 <Label className="text-base font-semibold mb-2 block">Strongest Subjects</Label>
                                                 <div className="flex flex-wrap gap-2">
                                                     {getAvailableSubjects().map(sub => (
@@ -337,15 +449,21 @@ const QuickAssessment = () => {
                                                     ))}
                                                 </div>
                                                 {selectedSubjects.length === 0 && (
-                                                    <p className="text-xs text-muted-foreground">Select at least one subject you excel at.</p>
+                                                    <p className="text-xs text-muted-foreground">Select at least one subject area you excel at.</p>
                                                 )}
                                             </div>
                                         )}
                                     </div>
 
-                                    <div className="pt-4 flex justify-end">
+                                    <div className="pt-4 flex justify-between gap-4">
+                                        {subStep > 1 && (
+                                            <Button variant="outline" onClick={handleBack} className="h-12 md:h-14 px-6 md:px-8 border-2 font-bold">
+                                                <ArrowLeft className="mr-2 w-5 h-5" /> Back
+                                            </Button>
+                                        )}
+                                        <div className="flex-1" />
                                         <Button onClick={handleNext} className="h-12 md:h-14 px-8 text-base md:text-lg rounded-2xl bg-primary shadow-lg hover:translate-x-1 transition-transform">
-                                            Continue <ArrowRight className="ml-2 w-5 h-5" />
+                                            {subStep < 4 ? 'Continue' : 'Next Phase'} <ArrowRight className="ml-2 w-5 h-5" />
                                         </Button>
                                     </div>
                                 </motion.div>
@@ -622,7 +740,9 @@ const QuickAssessment = () => {
                     </CardContent>
                 </Card>
             </main>
-            <Footer />
+            <div className="hidden md:block">
+                <Footer />
+            </div>
         </div>
     );
 };

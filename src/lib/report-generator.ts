@@ -20,6 +20,7 @@ export interface GuestProfile {
   challenges?: string[];
   dreamJob?: string;
   location?: string;
+  resultsVerified?: boolean;
 }
 
 export interface CareerRecommendation {
@@ -326,7 +327,11 @@ export class ReportGenerator {
                     <div class="info-label">Date: ${currentDate}</div>
                 </td>
                 <td class="info-cell" style="text-align: right;">
-                    <!-- Placeholder for potential logo or additional meta -->
+                    ${profile.resultsVerified ? `
+                    <div style="display: inline-block; padding: 8px 15px; background: ${colors.secondary}; color: white; border-radius: 8px; font-weight: 800; font-size: 12px; letter-spacing: 1px;">
+                        ✓ VERIFIED OFFICIAL RESULTS
+                    </div>
+                    ` : ''}
                 </td>
             </tr>
         </table>
