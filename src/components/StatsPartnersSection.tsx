@@ -3,7 +3,7 @@ import { Mail, ArrowRight } from "lucide-react";
 
 const StatsPartnersSection = () => {
   return (
-    <section className="py-12 bg-gradient-hero">
+    <section className="pt-2 pb-12 lg:py-12 bg-gradient-hero">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
         {/* Main Card Container with theme colors */}

@@ -42,16 +42,28 @@ const Hero = () => {
       {/* Background - Pure Gradient (Exact Restoration) */}
       <div className="absolute inset-0 -z-10 bg-surface">
         <div className="absolute inset-0 bg-gradient-to-br from-surface via-surface/95 to-primary/5" />
+        
+        {/* Mobile-only background image with brand-color shade */}
+        <div className="absolute inset-0 lg:hidden opacity-[0.35] pointer-events-none">
+          <img 
+            src="/images/kenyan-student-graduating.png" 
+            alt="Kenyan student graduation background" 
+            className="w-full h-full object-cover"
+          />
+          {/* Brand-color "Shade" overlay from below */}
+          <div className="absolute inset-0 bg-gradient-to-t from-primary/60 via-surface/40 to-surface/20" />
+        </div>
+
         {/* Brand color accents */}
         <div className="absolute top-0 right-0 w-1/2 h-1/2 bg-primary/5 blur-[120px] rounded-full -translate-y-1/2 translate-x-1/3" />
         <div className="absolute bottom-0 left-0 w-1/2 h-1/2 bg-secondary/5 blur-[120px] rounded-full translate-y-1/2 -translate-x-1/3" />
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 w-full relative text-center lg:text-left">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 pb-16 lg:py-20 w-full relative text-center lg:text-left">
         <div className="grid lg:grid-cols-2 gap-12 items-center">
           {/* LEFT CONTENT */}
           <div className="space-y-6 sm:space-y-8">
-            <h1 className="text-4xl sm:text-6xl lg:text-7xl font-bold font-serif leading-[1.1] tracking-tight text-foreground">
+            <h1 className="text-[2.85rem] sm:text-6xl lg:text-7xl font-bold font-serif leading-[1.05] tracking-tight text-foreground">
               Helping You Discover Your{" "}
               <span className="bg-gradient-text bg-clip-text text-transparent">
                 Ideal Career Path.
