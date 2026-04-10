@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useParams, useNavigate } from "react-router-dom";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -22,16 +23,27 @@ const Careers = () => {
   const [selectedCareer, setSelectedCareer] = useState<any>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [itemsToShow, setItemsToShow] = useState(12);
-  const [isLoadingMore, setIsLoadingMore] = useState(false);
+   const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const { slug } = useParams();
+  const navigate = useNavigate();
   const { profile } = useAuth();
 
   useEffect(() => {
-    const loadCareers = async () => {
+     const loadCareers = async () => {
       try {
         setIsLoading(true);
         const paths = await dashboardService.getCareerPaths();
         setCareers(paths);
         setFilteredCareers(paths);
+        
+        // Handle direct linking via slug
+        if (slug) {
+          const matchedCareer = paths.find(c => c.slug === slug || c.id === slug);
+          if (matchedCareer) {
+            setSelectedCareer(matchedCareer);
+            setIsModalOpen(true);
+          }
+        }
       } catch (err) {
         console.error("Failed to load career paths:", err);
       } finally {
@@ -39,7 +51,7 @@ const Careers = () => {
       }
     };
     loadCareers();
-  }, []);
+  }, [slug]);
 
   useEffect(() => {
     const filtered = careers.filter(career => {
@@ -309,7 +321,10 @@ const Careers = () => {
       {selectedCareer && (
         <CareerDetailModal
           isOpen={isModalOpen}
-          onClose={() => setIsModalOpen(false)}
+          onClose={() => {
+            setIsModalOpen(false);
+            if (slug) navigate("/careers", { replace: true });
+          }}
           career={selectedCareer}
         />
       )}

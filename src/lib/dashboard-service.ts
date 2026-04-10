@@ -42,25 +42,26 @@ export interface CareerRecommendation {
 }
 
 export interface CareerPath {
-  id: string
-  title: string
-  category: string
-  demand_level: string
-  salary_range: string
-  growth_percentage: string
-  skills_required: string[]
-  description: string
-  education_requirements: string
-  career_level: string
-  is_active: boolean
-  is_featured?: boolean
-  image_url?: string
-  one_liner?: string
-  universities?: string[]
-  pros?: string[]
-  cons?: string[]
-  created_at: string
-  updated_at: string
+  id: string;
+  title: string;
+  slug: string;
+  category: string;
+  demand_level: string;
+  salary_range: string;
+  growth_percentage: string;
+  skills_required: string[];
+  description: string;
+  education_requirements: string;
+  career_level: string;
+  is_active: boolean;
+  is_featured?: boolean;
+  image_url?: string;
+  one_liner?: string;
+  universities?: string[];
+  pros?: string[];
+  cons?: string[];
+  created_at: string;
+  updated_at: string;
 }
 
 export interface CbeSubject {
