@@ -28,30 +28,20 @@ const profileSchema = z.object({
 
 type ProfileFormData = z.infer<typeof profileSchema>
 
-// Updated CBE Curriculum Subjects (2024)
+// Updated CBE Curriculum Subjects (2025-2026)
 const cbeSubjects = [
-  // Core Learning Areas (All levels)
+  // Core & Junior Secondary Learning Areas
   'Mathematics', 'English', 'Kiswahili', 'Integrated Science',
-
-  // Junior Secondary Learning Areas
-  'Social Studies', 'Computer Science', 'Visual Arts', 'Performing Arts',
-  'Music', 'Physical Education', 'Health Education', 'Life Skills',
-  'Agriculture', 'Home Science', 'Business Studies',
-
-  // Languages
-  'French', 'German', 'Arabic', 'Mandarin Chinese',
-
-  // Religious Education
+  'Health Education', 'Pre-Technical Studies', 'Social Studies',
   'Christian Religious Education (CRE)', 'Islamic Religious Education (IRE)',
-  'Hindu Religious Education (HRE)',
+  'Hindu Religious Education (HRE)', 'Business Studies', 'Agriculture & Nutrition',
+  'Creative Arts', 'Physical Education & Sports',
 
-  // Senior Secondary Specialized Subjects
-  'Physics', 'Chemistry', 'Biology', 'Geography', 'History',
-  'Economics', 'Literature', 'Film Studies', 'Engineering Studies',
-
-  // Technical & Applied Sciences
-  'Technical Drawing', 'Woodwork', 'Metalwork', 'Building Construction',
-  'Electrical Studies', 'Mechanical Studies', 'ICT'
+  // Senior Secondary Specialized & Elective Subjects
+  'Physics', 'Chemistry', 'Biology', 'Computer Science', 'Further Mathematics',
+  'Technical Drawing', 'Fine Art & Design', 'Music', 'Drama & Theatre',
+  'Media & Film Studies', 'Fashion & Design', 'Economics', 'Geography',
+  'History & Citizenship', 'Law', 'Sociology', 'French', 'German', 'Arabic', 'Mandarin'
 ]
 
 // Career Interests aligned with Kenya's Vision 2030 and CBE pathways
@@ -323,9 +313,11 @@ export const ProfileSetup: React.FC<ProfileSetupProps> = ({ onComplete }) => {
                     // Quick curriculum-based filter hack using naming conventions
                     // A proper DB setup would rely on s.category === curriculumType
                     if (curriculumType === 'cbc') {
-                      return ['Core', 'Junior Secondary', 'Senior Secondary', 'CBC'].includes(s.category || 'Core') || s.subject_name.includes('Integrated') || s.subject_name.includes('Education')
+                      // Show all CBC-relevant categories or any subject not explicitly IGCSE
+                      const cbcCategories = ['STEM', 'Languages', 'Social Sciences', 'Applied Sciences', 'Technical', 'Creative Arts', 'Physical Sciences', 'Business', 'Core', 'CBC'];
+                      return cbcCategories.includes(s.category || 'Core') || s.subject_name.includes('Integrated') || s.subject_name.includes('Education');
                     } else {
-                      return ['IGCSE', 'A-Level', 'British', 'General'].includes(s.category || 'General') || !s.subject_name.includes('Integrated')
+                      return ['IGCSE', 'A-Level', 'British', 'General'].includes(s.category || 'General') || !s.subject_name.includes('Integrated');
                     }
                   })
                   .map(s => (
