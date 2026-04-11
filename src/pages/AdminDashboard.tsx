@@ -173,7 +173,10 @@ const AdminDashboard = () => {
         supabase.from('schools').select('id', { count: 'exact', head: true }),
         supabase.from('profiles').select('id', { count: 'exact', head: true }).eq('role', 'teacher'),
         supabase.from('user_activities').select('id', { count: 'exact', head: true }).in('activity_type', ['assessment', 'riasec_assessment']),
+        supabase.from('payments').select('amount').eq('status', 'completed')
       ])
+
+      const totalRevenue = (paymentsData ?? []).reduce((sum: number, p: any) => sum + Number(p.amount), 0)
 
       const { data: allProfiles } = await supabase
         .from('profiles')
@@ -261,7 +264,7 @@ const AdminDashboard = () => {
         { name: 'Premium', value: subCounts['premium'], color: '#f59e0b' }
       ]
 
-      const totalRevenue = (totalAssessments ?? 0) * 5 
+      // Placeholder logic removed - now using real sum from paymentsData
 
       const { data: globalActivities } = await supabase
         .from('user_activities')
@@ -313,6 +316,12 @@ const AdminDashboard = () => {
         .select('created_at, activity_type')
         .gte('created_at', startDate)
       
+      const { data: realPayments } = await supabase
+        .from('payments')
+        .select('created_at, amount')
+        .eq('status', 'completed')
+        .gte('created_at', startDate)
+      
       const dailyMap: Record<string, { assessments: number; logins: number; revenue: number }> = {}
       
       // Generate continuous dates for the range
@@ -328,9 +337,15 @@ const AdminDashboard = () => {
         if (dailyMap[date]) {
           if (a.activity_type.includes('assessment')) {
             dailyMap[date].assessments++
-            dailyMap[date].revenue += 5 
           }
           if (a.activity_type === 'login') dailyMap[date].logins++
+        }
+      })
+
+      ;(realPayments ?? []).forEach(p => {
+        const date = new Date(p.created_at).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })
+        if (dailyMap[date]) {
+          dailyMap[date].revenue += Number(p.amount)
         }
       })
       

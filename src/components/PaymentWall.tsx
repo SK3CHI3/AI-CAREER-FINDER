@@ -3,7 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
-import { Loader2, CheckCircle, XCircle, CreditCard, Smartphone, Shield, Lock, MessageCircle } from 'lucide-react'
+import { Loader2, CheckCircle, XCircle, CreditCard, Smartphone, Shield, Lock, MessageCircle, RefreshCw } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
 import { supabase } from '@/lib/supabase'
 import { subscriptionService } from '@/lib/subscription-service'
@@ -22,7 +22,7 @@ interface PaymentWallProps {
 const PaymentWall: React.FC<PaymentWallProps> = ({ onPaymentSuccess }) => {
   const { user, profile } = useAuth()
   const [isLoading, setIsLoading] = useState(false)
-  const [paymentStatus, setPaymentStatus] = useState<'idle' | 'processing' | 'success' | 'failed'>('idle')
+  const [paymentStatus, setPaymentStatus] = useState<'idle' | 'processing' | 'verifying' | 'success' | 'failed'>('idle')
   const [error, setError] = useState<string | null>(null)
   const [isIntaSendLoaded, setIsIntaSendLoaded] = useState(false)
   const [intaSendInstance, setIntaSendInstance] = useState<any>(null)
@@ -168,29 +168,58 @@ const PaymentWall: React.FC<PaymentWallProps> = ({ onPaymentSuccess }) => {
     }
   }
 
-  const handlePaymentSuccess = async (results: any) => {
-    try {
-      setIsLoading(true)
-      setPaymentStatus('success')
-      
-      // The secure background webhook (intasend-webhook) will update the Supabase profile.
-      // We will just wait a moment and then trigger a context refresh here so the UI updates.
-      
-      console.log('Payment marked success in IntaSend popup. Waiting for back-end webhook sync...')
+  const pollForStatusCompletion = async (attempts = 0) => {
+    if (attempts >= 15) { // 30 seconds max
+      setError('Payment verification is taking longer than expected. Please refresh the page in a moment to check your status.')
+      setIsLoading(false)
+      return
+    }
 
-      setTimeout(async () => {
-        // Refresh the profile to get the updated payment_status from the server
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('payment_status')
+        .eq('id', user?.id)
+        .single()
+
+      if (error) throw error
+
+      if (data?.payment_status === 'completed') {
+        setPaymentStatus('success')
+        setIsLoading(false)
+        
+        // Refresh session if needed
         if (typeof (window as any).refreshProfile === 'function') {
            await (window as any).refreshProfile()
         }
-        onPaymentSuccess()
-      }, 3000)
+        
+        setTimeout(() => {
+          onPaymentSuccess()
+        }, 1500)
+      } else {
+        // Poll again in 2 seconds
+        setTimeout(() => pollForStatusCompletion(attempts + 1), 2000)
+      }
+    } catch (err) {
+      console.error('Error polling status:', err)
+      setTimeout(() => pollForStatusCompletion(attempts + 1), 2000)
+    }
+  }
+
+  const handlePaymentSuccess = async (results: any) => {
+    try {
+      setIsLoading(true)
+      setPaymentStatus('verifying')
+      
+      console.log('Payment marked success in IntaSend popup. Verifying background sync...')
+      
+      // Start polling for the webhook completion
+      await pollForStatusCompletion()
 
     } catch (err) {
       console.error('Error handling payment success:', err)
       setError('Payment successful but failed to update local profile. Please refresh the page.')
-    } finally {
-      // Keep loading true while waiting for the redirect
+      setIsLoading(false)
     }
   }
 
@@ -305,6 +334,15 @@ const PaymentWall: React.FC<PaymentWallProps> = ({ onPaymentSuccess }) => {
             </Alert>
           )}
 
+          {paymentStatus === 'verifying' && (
+            <Alert className="border-amber-500/20 bg-amber-500/10">
+              <RefreshCw className="h-4 w-4 text-amber-600 animate-spin" />
+              <AlertDescription className="text-amber-700 font-medium">
+                Verifying payment authenticity... This usually takes 5-10 seconds.
+              </AlertDescription>
+            </Alert>
+          )}
+
           {/* Payment Details */}
           <div className="bg-muted/30 border border-card-border rounded-xl p-5 sm:p-6 shadow-sm">
             <div className="flex items-center justify-between mb-4">
@@ -382,10 +420,10 @@ const PaymentWall: React.FC<PaymentWallProps> = ({ onPaymentSuccess }) => {
                 disabled={isLoading || paymentStatus === 'processing' || !intaSendInstance}
                 onClick={handlePaymentClick}
               >
-                {isLoading || paymentStatus === 'processing' ? (
+                {isLoading || paymentStatus === 'processing' || paymentStatus === 'verifying' ? (
                   <>
                     <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                    Processing Payment...
+                    {paymentStatus === 'verifying' ? 'Verifying...' : 'Processing...'}
                   </>
                 ) : !intaSendInstance ? (
                   <>

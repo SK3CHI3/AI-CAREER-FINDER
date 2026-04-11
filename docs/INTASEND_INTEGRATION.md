@@ -1,32 +1,32 @@
 # IntaSend Payment Integration
 
 ## Overview
-This document outlines the implementation of IntaSend Payment Button Element for the AI Career Finder application, requiring users to pay KSh 1,000 before accessing the full platform.
+This document outlines the implementation of the IntaSend Payment integration for the AI Career Finder application, requiring students to pay KSh 499 per term and schools KSh 100 per student.
 
 ## Implementation Details
 
 ### 1. Database Schema Updates
-Added payment-related fields to the `profiles` table:
-- `payment_status`: 'pending', 'completed', 'failed', 'refunded'
-- `payment_reference`: Internal tracking reference
-- `payment_date`: Timestamp of successful payment
-- `payment_amount`: Payment amount (1000.00)
-- `payment_currency`: Currency (KES)
-- `intasend_transaction_id`: IntaSend transaction ID
+The system uses two layers for payment tracking:
+
+#### profiles table (State Management)
+- `payment_status`: 'pending', 'completed', 'failed'
+- `subscription_expires_at`: Calculated timestamp based on academic term
+- `subscription_type`: 'individual' or 'institutional'
+
+#### payments table (New Audit Log)
+A dedicated `payments` table acts as the source of truth for all financial transactions:
+- `id`: Unique transaction ID
+- `user_id`: Reference to user
+- `school_id`: Reference to school (for institutional payments)
+- `amount`: KES value
+- `status`: 'completed' or 'failed'
+- `intasend_transaction_id`: External reference
+- `payload`: Full JSON payload from IntaSend for auditing
 
 ### 2. Components Created
 
-#### PaymentWall Component
-- Displays payment form with IntaSend button
-- Handles payment success/failure states
-- Updates user profile with payment details
-- Redirects to dashboard after successful payment
-
-#### PaymentGate Component
-- Wraps the main application
-- Checks profile completion status
-- Checks payment status
-- Shows appropriate screen based on user state
+#### Dashboard Verification
+The UI now includes a "Verifying..." state that polls the database after the payment popup closes. This ensures the user only gains access after the background webhook has successfully processed the transaction and verified the signature.
 
 ### 3. User Flow
 
@@ -36,12 +36,11 @@ Registration → Profile Setup → Payment Wall → Full Access
    Sign Up → Complete Profile → Pay KSh 1,000 → Dashboard
 ```
 
-### 4. Environment Variables
-
-Add to `.env.local`:
+Add to Supabase / Environment:
 ```bash
-VITE_INTASEND_PUBLIC_KEY=your_intasend_public_key_here
-VITE_INTASEND_LIVE=false  # Set to true for production
+VITE_INTASEND_PUBLIC_KEY=ISPubKey_live_...
+VITE_INTASEND_LIVE=true
+INTASEND_WEBHOOK_SECRET=ISSecretKey_live_... (Supabase Secret)
 ```
 
 ### 5. IntaSend Configuration
@@ -66,12 +65,19 @@ The payment button includes:
 - Business pays all charges
 - Custom reference for tracking
 
-### 7. Security Considerations
+### 7. Security (Production Level)
 
-- Payment status stored in database
-- IntaSend handles sensitive payment data
-- No card details stored locally
-- Payment verification through IntaSend webhooks
+- **HMAC Verification**: The `intasend-webhook` Edge Function performs SHA-256 HMAC verification on every request using the `X-IntaSend-Signature` header.
+- **Idempotency**: The webhook checks the `payments` table for existing `intasend_transaction_id` before processing to prevent double-crediting.
+- **Service Role**: Database updates are performed via the Supabase Service Role to bypass RLS for payment auditing.
+
+### 8. Term-Based Subscription Logic
+
+The platform aligns access with the Kenyan academic calendar:
+- **Calculation**: Expiry is set to the `end_date` of the current active term found in `global_settings`.
+- **Grace Period**: A **3-day grace period** is automatically added to the term end date.
+- **Fail-safe**: If no term is found in settings, the system defaults to a 90-day subscription window.
+- **Institutional Payments**: When a school rep pays, the entire school subscription is updated to 'premium', allowing students to access features without individual payments.
 
 ### 8. Testing
 

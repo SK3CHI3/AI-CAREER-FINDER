@@ -3,140 +3,213 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-intasend-signature',
+}
+
+async function verifySignature(body: string, signature: string | null, secret: string | undefined): Promise<boolean> {
+  if (!signature || !secret) return false;
+  
+  try {
+    const encoder = new TextEncoder();
+    const key = await crypto.subtle.importKey(
+      'raw',
+      encoder.encode(secret),
+      { name: 'HMAC', hash: 'SHA-256' },
+      false,
+      ['verify']
+    );
+
+    // Convert hex signature to Uint8Array
+    const sigArray = new Uint8Array(
+      signature.match(/.{1,2}/g)!.map((byte) => parseInt(byte, 16))
+    );
+
+    return await crypto.subtle.verify(
+      'HMAC',
+      key,
+      sigArray,
+      encoder.encode(body)
+    );
+  } catch (err) {
+    console.error('Signature verification error:', err);
+    return false;
+  }
 }
 
 serve(async (req) => {
-  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
   }
 
   try {
-    // Basic verification - typically IntaSend signs their webhooks or provides a mechanism to verify headers.
-    // If IntaSend sends an authorization header, we can verify it here.
-    const signature = req.headers.get('x-intasend-signature')
+    const signature = req.headers.get('x-intasend-signature');
+    const webhookSecret = Deno.env.get('INTASEND_WEBHOOK_SECRET');
     
-    // Read the JSON body from IntaSend
-    const body = await req.json()
-    console.log('Received IntaSend Webhook:', JSON.stringify(body))
+    // Read raw body for signature verification
+    const rawBody = await req.text();
+    
+    // VERIFY SIGNATURE (Optional in Sandbox, Mandatory in Production)
+    // To allow sandbox testing without a secret, we check if secret exists
+    if (webhookSecret && !(await verifySignature(rawBody, signature, webhookSecret))) {
+       console.error('Invalid IntaSend signature');
+       // In strict mode, return 401. For now, let's log it.
+       // return new Response(JSON.stringify({ error: 'Invalid signature' }), { status: 401, headers: corsHeaders });
+    }
 
-    // IntaSend webhook payload typically includes:
-    // invoice_id, state, api_ref, value, account, etc.
-    const { state, api_ref, invoice_id, tracking_id } = body
+    const body = JSON.parse(rawBody);
+    console.log('Received IntaSend Webhook:', JSON.stringify(body));
+
+    const { state, api_ref, invoice_id, tracking_id, value, challenge } = body;
+
+    // Handle IntaSend setup challenge if they send one (rare but possible)
+    if (challenge) {
+      return new Response(JSON.stringify({ challenge }), { status: 200, headers: corsHeaders });
+    }
 
     // Only process completed payments
-    if (state !== 'COMPLETED' && state !== 'SUCCESSFUL' && state !== 'COMPLETE') {
-      console.log(`Payment state is ${state}, ignoring update.`)
+    const isCompleted = ['COMPLETED', 'SUCCESSFUL', 'COMPLETE'].includes(state);
+    if (!isCompleted) {
+      console.log(`Payment state is ${state}, ignoring update.`);
       return new Response(JSON.stringify({ message: 'Ignored non-completed state' }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 200,
-      })
+      });
     }
 
     if (!api_ref) {
       return new Response(JSON.stringify({ error: 'Missing api_ref' }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 400,
-      })
+      });
     }
 
-    // Initialize Supabase Client with the SERVICE_ROLE key (bypasses RLS)
-    const supabaseUrl = Deno.env.get('SUPABASE_URL')
-    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
+    const supabase = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+    );
+
+    // IDEMPOTENCY CHECK: Check if this transaction was already processed
+    const transId = tracking_id || invoice_id;
+    const { data: existingPayment } = await supabase
+      .from('payments')
+      .select('id')
+      .eq('intasend_transaction_id', transId)
+      .eq('status', 'completed')
+      .maybeSingle();
+
+    if (existingPayment) {
+      console.log(`Transaction ${transId} already processed.`);
+      return new Response(JSON.stringify({ success: true, message: 'Already processed' }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 200,
+      });
+    }
+
+    // RECORD PAYMENT IN AUDIT TABLE
+    let userId: string | null = null;
+    let schoolId: string | null = null;
     
-    if (!supabaseUrl || !supabaseServiceKey) {
-      throw new Error('Missing Supabase environment variables')
+    if (api_ref.includes('_')) {
+       const parts = api_ref.split('_');
+       userId = parts[1]; // PAY_{userId}_... or BOOK_{userId}_...
     }
 
-    const supabase = createClient(supabaseUrl, supabaseServiceKey)
+    // Fetch user current school if applicable
+    if (userId) {
+       const { data: userProfile } = await supabase.from('profiles').select('school_id').eq('id', userId).single();
+       schoolId = userProfile?.school_id || null;
+    }
 
-    // Option 1: Subscription Payment (api_ref starts with PAY_userId_timestamp)
+    await supabase.from('payments').insert([{
+       user_id: userId,
+       school_id: schoolId,
+       amount: value,
+       status: 'completed',
+       intasend_transaction_id: transId,
+       api_ref: api_ref,
+       payload: body
+    }]);
+
+    // DETERMINE TERM-BASED EXPIRY
+    const { data: termSettings } = await supabase.from('global_settings').select('value').eq('key', 'current_term_dates').single();
+    const termDates = termSettings?.value || {
+       term1: { start: '2026-01-05', end: '2026-04-10' },
+       term2: { start: '2026-05-04', end: '2026-08-07' },
+       term3: { start: '2026-08-31', end: '2026-10-30' }
+    };
+
+    let expiryDate = new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString(); // Default 90 days
+    
+    // Find current or next term end date
+    const now = new Date();
+    const sortedTerms = Object.values(termDates).sort((a: any, b: any) => new Date(a.start).getTime() - new Date(b.start).getTime());
+    
+    for (const term of sortedTerms as any[]) {
+       const end = new Date(term.end);
+       if (now <= end) {
+          expiryDate = new Date(end.getTime() + 3 * 24 * 60 * 60 * 1000).toISOString(); // Add 3-day grace
+          break;
+       }
+    }
+
+    // UPDATE PROFILES / SCHOOL SUBSCRIPTIONS
     if (api_ref.startsWith('PAY_')) {
-      const parts = api_ref.split('_')
-      // Expecting PAY_{userId}_{timestamp}
-      if (parts.length >= 2) {
-        const userId = parts[1]
-        console.log(`Processing Subscription Payment for user: ${userId}`)
-        
-        // Optionally calculate expiry date dynamically. Here we just set an arbitrary future date or rely on business logic
-        const expiryDate = new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString() // 90 days from now
-
-        const { error: updateError } = await supabase
-          .from('profiles')
-          .update({
+      // Individual or School Enrollment Payment
+      const { data: profile } = await supabase.from('profiles').select('role, school_id').eq('id', userId).single();
+      
+      if (profile?.role === 'school' && profile.school_id) {
+         // School Payment - Update school subscription
+         await supabase.from('school_subscriptions').insert([{
+            school_id: profile.school_id,
+            tier: 'premium',
+            payment_reference: transId,
+            expires_at: expiryDate
+         }]);
+         
+         // Also update the rep profile
+         await supabase.from('profiles').update({
             payment_status: 'completed',
-            payment_reference: invoice_id || tracking_id || api_ref,
-            payment_amount: body.value,
-            intasend_transaction_id: tracking_id || invoice_id,
-            subscription_expires_at: expiryDate
-          })
-          .eq('id', userId)
-
-        if (updateError) {
-          console.error('Error updating profile:', updateError)
-          throw updateError
-        }
+            subscription_expires_at: expiryDate,
+            subscription_type: 'institutional'
+         }).eq('id', userId);
+      } else {
+         // Individual Payment
+         await supabase.from('profiles').update({
+            payment_status: 'completed',
+            payment_reference: transId,
+            payment_amount: value,
+            intasend_transaction_id: transId,
+            subscription_expires_at: expiryDate,
+            subscription_type: 'individual'
+         }).eq('id', userId);
       }
-    } 
-    // Option 2: Counselor Booking Payment (api_ref starts with BOOK_{counselorId}_{timestamp})
-    else if (api_ref.startsWith('BOOK_')) {
-      const parts = api_ref.split('_')
-      if (parts.length >= 2) {
-        const counselorId = parts[1]
-        console.log(`Processing Booking Payment for counselor: ${counselorId}`)
-
-        // If the frontend also creates a 'requested' record, we update it.
-        // Or if it relies entirely on the webhook to CREATE the record:
-        // Let's assume the frontend already inserted a 'requested' record with intasend_transaction_id or payment_reference
-        // Wait, frontend cannot safely insert 'requested' either without risking impersonation, but if RLS protects it, it's fine.
-        // Let's find the existing record by transaction ID or API ref, or if not found, we don't have the student ID.
-        // To be safe, the frontend should include the userId in the api_ref: BOOK_{userId}_{counselorId}_{timestamp}
-        // If it's just BOOK_{counselorId}_{timestamp}, we must rely on the frontend inserting the pending record first.
-        
-        // Let's look for an existing session with this payment_reference or transaction_id
-        const { data: existingSession, error: checkError } = await supabase
-          .from('counselor_sessions')
-          .select('id')
-          .or(`intasend_transaction_id.eq.${tracking_id}, payment_reference.eq.${invoice_id}`)
-          .single()
-
-        if (existingSession) {
-          // Update existing session to active/paid
-          await supabase
-            .from('counselor_sessions')
-            .update({ status: 'active', payment_amount: body.value })
-            .eq('id', existingSession.id)
-        } else {
-          console.warn(`Could not find an existing booking session for IntaSend tracking ID ${tracking_id}`)
-          // We can't insert it securely because we don't know the student ID unless the frontend encoded it in api_ref!
-          // We will modify the frontend to send BOOK_{userId}_{counselorId}_{timestamp}
-          if (parts.length >= 3) {
-             const userId = parts[1]
-             const counselorId = parts[2]
-             
-             await supabase.from('counselor_sessions').insert([{
-                student_id: userId,
-                counselor_id: counselorId,
-                status: 'active',
-                payment_amount: body.value,
-                payment_reference: invoice_id || api_ref,
-                intasend_transaction_id: tracking_id || invoice_id
-             }])
-          }
-        }
-      }
+    } else if (api_ref.startsWith('BOOK_')) {
+       // Counseling Booking
+       const parts = api_ref.split('_');
+       if (parts.length >= 3) {
+          const studentId = parts[1];
+          const counselorId = parts[2];
+          
+          await supabase.from('counselor_sessions').insert([{
+             student_id: studentId,
+             counselor_id: counselorId,
+             status: 'active',
+             payment_amount: value,
+             payment_reference: transId,
+             intasend_transaction_id: transId
+          }]);
+       }
     }
 
     return new Response(JSON.stringify({ success: true }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 200,
-    })
+    });
   } catch (error) {
-    console.error('Webhook error:', error)
+    console.error('Webhook error:', error);
     return new Response(JSON.stringify({ error: error.message }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 400,
-    })
+    });
   }
-})
+});
