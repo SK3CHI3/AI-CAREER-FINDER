@@ -71,6 +71,7 @@ export interface CbeSubject {
   category: string
   description: string
   is_active: boolean
+  levels?: string[]
   created_at: string
 }
 

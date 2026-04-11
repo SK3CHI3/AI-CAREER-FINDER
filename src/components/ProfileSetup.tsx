@@ -28,20 +28,49 @@ const profileSchema = z.object({
 
 type ProfileFormData = z.infer<typeof profileSchema>
 
-// Updated CBE Curriculum Subjects (2025-2026)
+// Updated CBC/CBE Learning Areas (2025-2026) with Grade-Level Mapping
 const cbeSubjects = [
-  // Core & Junior Secondary Learning Areas
-  'Mathematics', 'English', 'Kiswahili', 'Integrated Science',
-  'Health Education', 'Pre-Technical Studies', 'Social Studies',
-  'Christian Religious Education (CRE)', 'Islamic Religious Education (IRE)',
-  'Hindu Religious Education (HRE)', 'Business Studies', 'Agriculture & Nutrition',
-  'Creative Arts', 'Physical Education & Sports',
+  // Core (Both Junior & Senior)
+  { name: 'Mathematics', levels: ['secondary', 'tertiary'] },
+  { name: 'English', levels: ['secondary', 'tertiary'] },
+  { name: 'Kiswahili', levels: ['secondary', 'tertiary'] },
+  { name: 'Business Studies', levels: ['secondary', 'tertiary'] },
+  
+  // Junior Secondary Only (Grade 7-9)
+  { name: 'Integrated Science', levels: ['secondary'] },
+  { name: 'Health Education', levels: ['secondary'] },
+  { name: 'Pre-Technical & Pre-Career Education', levels: ['secondary'] },
+  { name: 'Social Studies', levels: ['secondary'] },
+  { name: 'Agriculture & Nutrition', levels: ['secondary', 'tertiary'] },
+  { name: 'Creative Arts', levels: ['secondary'] },
+  { name: 'Physical Education & Sports', levels: ['secondary', 'tertiary'] },
+  { name: 'Christian Religious Education (CRE)', levels: ['secondary'] },
+  { name: 'Islamic Religious Education (IRE)', levels: ['secondary'] },
+  { name: 'Hindu Religious Education (HRE)', levels: ['secondary'] },
 
-  // Senior Secondary Specialized & Elective Subjects
-  'Physics', 'Chemistry', 'Biology', 'Computer Science', 'Further Mathematics',
-  'Technical Drawing', 'Fine Art & Design', 'Music', 'Drama & Theatre',
-  'Media & Film Studies', 'Fashion & Design', 'Economics', 'Geography',
-  'History & Citizenship', 'Law', 'Sociology', 'French', 'German', 'Arabic', 'Mandarin'
+  // Senior Secondary Specialized (Grade 10-12)
+  { name: 'Physics', levels: ['tertiary'] },
+  { name: 'Chemistry', levels: ['tertiary'] },
+  { name: 'Biology', levels: ['tertiary'] },
+  { name: 'Computer Science / ICT', levels: ['tertiary'] },
+  { name: 'Further Mathematics', levels: ['tertiary'] },
+  { name: 'Technical Drawing', levels: ['tertiary'] },
+  { name: 'Fine Art & Design', levels: ['tertiary'] },
+  { name: 'Music', levels: ['tertiary'] },
+  { name: 'Drama & Theatre', levels: ['tertiary'] },
+  { name: 'Media & Film Studies', levels: ['tertiary'] },
+  { name: 'Fashion & Design', levels: ['tertiary'] },
+  { name: 'Economics', levels: ['tertiary'] },
+  { name: 'Geography', levels: ['tertiary'] },
+  { name: 'History & Citizenship', levels: ['tertiary'] },
+  { name: 'Law', levels: ['tertiary'] },
+  { name: 'Sociology', levels: ['tertiary'] },
+  
+  // Languages (Usually Senior or JS Electives)
+  { name: 'French', levels: ['secondary', 'tertiary'] },
+  { name: 'German', levels: ['secondary', 'tertiary'] },
+  { name: 'Arabic', levels: ['secondary', 'tertiary'] },
+  { name: 'Mandarin', levels: ['secondary', 'tertiary'] }
 ]
 
 // Career Interests aligned with Kenya's Vision 2030 and CBE pathways
@@ -120,7 +149,16 @@ export const ProfileSetup: React.FC<ProfileSetupProps> = ({ onComplete }) => {
         setDynamicSubjects(s)
         setDynamicInterests(i)
       } catch (e) {
-        setDynamicSubjects(cbeSubjects.map(n => ({ id: n, subject_name: n, subject_code: '', category: 'Core', description: '', is_active: true, created_at: '' })))
+        setDynamicSubjects(cbeSubjects.map(n => ({ 
+          id: n.name, 
+          subject_name: n.name, 
+          subject_code: '', 
+          category: 'Core', 
+          description: '', 
+          is_active: true, 
+          levels: n.levels,
+          created_at: '' 
+        })))
         setDynamicInterests(careerInterests.map(n => ({ id: n, interest_name: n, category: 'General', description: '', related_subjects: [], is_active: true, created_at: '' })))
       } finally {
         setIsLoadingData(false)
@@ -313,9 +351,9 @@ export const ProfileSetup: React.FC<ProfileSetupProps> = ({ onComplete }) => {
                     // Quick curriculum-based filter hack using naming conventions
                     // A proper DB setup would rely on s.category === curriculumType
                     if (curriculumType === 'cbc') {
-                      // Show all CBC-relevant categories or any subject not explicitly IGCSE
-                      const cbcCategories = ['STEM', 'Languages', 'Social Sciences', 'Applied Sciences', 'Technical', 'Creative Arts', 'Physical Sciences', 'Business', 'Core', 'CBC'];
-                      return cbcCategories.includes(s.category || 'Core') || s.subject_name.includes('Integrated') || s.subject_name.includes('Education');
+                      // Level-aware filtering: Only show subjects mapped to the user's current level
+                      if (!s.levels || s.levels.length === 0) return true;
+                      return s.levels.includes(schoolLevel);
                     } else {
                       return ['IGCSE', 'A-Level', 'British', 'General'].includes(s.category || 'General') || !s.subject_name.includes('Integrated');
                     }
