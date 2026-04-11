@@ -177,19 +177,21 @@ export const SignupForm: React.FC<SignupFormProps> = ({ onToggleMode, defaultRol
             )}
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="email">Email {selectedRole === 'student' && <span className="text-muted-foreground font-normal">(Optional)</span>}</Label>
-            <Input
-              id="email"
-              type="email"
-              placeholder={selectedRole === 'student' ? 'Enter your email (optional)' : 'Enter your email'}
-              {...register('email')}
-              disabled={isLoading}
-            />
-            {errors.email && (
-              <p className="text-sm text-destructive">{errors.email.message}</p>
-            )}
-          </div>
+          {selectedRole === 'school' && (
+            <div className="space-y-2">
+              <Label htmlFor="email">Email</Label>
+              <Input
+                id="email"
+                type="email"
+                placeholder="Enter your email"
+                {...register('email')}
+                disabled={isLoading}
+              />
+              {errors.email && (
+                <p className="text-sm text-destructive">{errors.email.message}</p>
+              )}
+            </div>
+          )}
 
           {/* UPI (students) or Phone (schools) */}
           <div className="space-y-2">

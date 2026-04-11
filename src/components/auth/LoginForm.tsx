@@ -69,11 +69,11 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onToggleMode }) => {
           )}
 
           <div className="space-y-2">
-            <Label htmlFor="identifier">Email or UPI Number</Label>
+            <Label htmlFor="identifier">UPI Number or Email</Label>
             <Input
               id="identifier"
               type="text"
-              placeholder="Enter your email or NEMIS UPI"
+              placeholder="Enter your NEMIS UPI or email"
               {...register('identifier')}
               disabled={isLoading}
             />

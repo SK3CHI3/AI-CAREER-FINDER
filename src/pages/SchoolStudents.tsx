@@ -159,7 +159,7 @@ const SchoolStudents: React.FC = () => {
                         </div>
                         <div className="flex items-center gap-3 text-sm text-foreground-muted">
                           <span className="font-mono text-xs">{student.upi_number || 'No UPI'}</span>
-                          {student.email && student.email !== 'N/A' && (
+                          {student.email && student.email !== 'N/A' && !student.email.endsWith('@student.careerguideai.co.ke') && (
                             <>
                               <span className="w-1 h-1 rounded-full bg-border" />
                               <span className="text-xs">{student.email}</span>
