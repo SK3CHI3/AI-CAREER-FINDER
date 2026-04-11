@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -7,10 +7,9 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertCircle, Send, Bot, User, Sparkles, Loader2, Download, ArrowRight } from "lucide-react";
 import { aiCareerService, type ChatMessage } from "@/lib/ai-service";
-import { ReportGenerator } from "@/lib/report-generator";
-import type { GuestProfile } from "@/lib/report-generator";
-
-// GuestProfile is now imported from report-generator
+import { ReportGenerator, type GuestProfile } from "@/lib/report-generator";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 const GuestAIChat = () => {
   const [message, setMessage] = useState("");
@@ -20,11 +19,16 @@ const GuestAIChat = () => {
   const [guestProfile, setGuestProfile] = useState<GuestProfile>({});
   const [assessmentComplete, setAssessmentComplete] = useState(false);
   const [showReport, setShowReport] = useState(false);
-  const [connectionTest, setConnectionTest] = useState<string>('');
+  const [showGradeForm, setShowGradeForm] = useState(false);
+  const [subjectGrades, setSubjectGrades] = useState<Record<string, string>>({
+    'Mathematics': '',
+    'English': '',
+    'Kiswahili': ''
+  });
+  const [connectionTest, setConnectionTest] = useState<string | null>(null);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  // Function to scroll chat area to bottom
   const scrollToBottom = () => {
     if (scrollAreaRef.current) {
       const scrollArea = scrollAreaRef.current;
@@ -32,118 +36,73 @@ const GuestAIChat = () => {
     }
   };
 
-  // Auto-scroll chat area when new messages arrive
   useEffect(() => {
     scrollToBottom();
   }, [conversation]);
 
-  // Function to clean markdown formatting from AI responses
   const cleanMarkdownFormatting = (text: string): string => {
     return text
-      .replace(/\*\*(.*?)\*\*/g, '$1') // Remove ** bold markers
-      .replace(/\*(.*?)\*/g, '$1')     // Remove * italic markers
-      .replace(/#{1,6}\s/g, '')        // Remove # headers
-      .replace(/`{1,3}(.*?)`{1,3}/g, '$1') // Remove code blocks
+      .replace(/\*\*(.*?)\*\*/g, '$1')
+      .replace(/\*(.*?)\*/g, '$1')
+      .replace(/#{1,6}\s/g, '')
+      .replace(/`{1,3}(.*?)`{1,3}/g, '$1')
       .trim();
   };
 
-  // Initialize with welcome message
   useEffect(() => {
     const welcomeMessage: ChatMessage = {
       id: crypto.randomUUID(),
       role: 'assistant',
       content: `Karibu to CareerPath AI! 🦄
-
-I'm your friendly career counselor, here to help you discover your perfect career path through Kenya's CBE system!
+      
+I'm your friendly career counselor, here to help you discover your perfect career path through Kenya's CBE (CBC) or 8-4-4 systems!
 
 What you'll get:
-✅ Personalized career matches based on your interests
-✅ CBE pathway recommendations for your grade level
-✅ University & technical college suggestions
+✅ Targeted career matches based on your interests
+✅ Placement guidance for your specific curriculum
+✅ University & technical college suggestions (KUCCPS aligned)
 ✅ Professional career report (downloadable!)
 
-This will be fun and easy - I'll ask you simple questions one by one, and we'll build your career profile together!
-
-Let's start with the basics - what's your name? 😊`,
+What is your name? 😊`,
       timestamp: new Date()
     };
     setConversation([welcomeMessage]);
   }, []);
 
-  const createGuestSystemPrompt = (): string => {
-    return `You are CareerPath AI, Kenya's most engaging career counselor! You're conducting a FREE quick assessment to help students discover their perfect career path through Kenya's CBE system.
+  const createGuestSystemPrompt = (profile: GuestProfile): string => {
+    return `You are CareerPath AI, Kenya's most engaging career counselor! You're conducting a FREE quick assessment to help students discover their perfect career path through Kenya's CBE or 8-4-4 (Form 4) systems.
 
 CURRENT GUEST PROFILE:
-${Object.entries(guestProfile).map(([key, value]) =>
+${Object.entries(profile).map(([key, value]) =>
   value ? `- ${key}: ${Array.isArray(value) ? value.join(', ') : value}` : ''
 ).filter(Boolean).join('\n')}
 
-YOUR MISSION: Guide them through a structured, fun conversation to build their career profile.
+KUCCPS & 8-4-4 KNOWLEDGE:
+- Degree Minimum: C+ (Competitive: 40+ points)
+- Diploma: C- | Certificate: D
+- Calculate based on the grades provided.
 
-CONVERSATION FLOW (ONE QUESTION AT A TIME):
-1. **Welcome & Name** - "Karibu! What's your name?"
-2. **Education Level** - Current grade/level in CBE system
-3. **Interests** - What activities/fields excite them most?
-4. **CBE Subjects** - Which subjects do they enjoy?
-5. **Work Style** - Practical vs Academic vs Creative vs Business?
-6. **Dream Environment** - Office, Outdoor, Tech, Digital?
-7. **Aspirations** - What's their dream job/goal?
-8. **Provide Mini-Report** - Give 2-3 career matches with explanations
-
-FORMATTING STYLE - CRITICAL:
-- Write in clean, natural text - NO markdown symbols like ** or ##
-- Start responses with "Habari yako, [Name]! ≡ƒæï" (clean text, no **)
-- Use emojis naturally: ≡ƒÄ», ≡ƒÆ╝, ≡ƒÜÇ, ≡ƒî▒
-- Use numbered options: 1∩╕ÅΓâú, 2∩╕ÅΓâú, 3∩╕ÅΓâú
-- Include encouraging phrases naturally: "Fantastic!", "That's exciting!"
-- End each response with ONE clear question
-
-EXAMPLE RESPONSE FORMAT:
-Habari yako, Sarah! ≡ƒæï
-
-That's a beautiful name! I'm excited to help you discover your perfect career path through Kenya's CBE system.
-
-Next question:
-What grade are you currently in?
-(Choose one)
-1∩╕ÅΓâú Primary (Grades 1-6)
-2∩╕ÅΓâú Junior Secondary (Grades 7-9)
-3∩╕ÅΓâú Senior Secondary (Grades 10-12)
-4∩╕ÅΓâú Tertiary/University level
-
-This helps me understand which CBE pathway options are available to you! ≡ƒÜÇ
-
-PERSONALITY:
-- Enthusiastic and encouraging
-- Genuinely curious about their responses
-- Use Kenyan context and CBE terminology
-- Make it feel like chatting with a friendly mentor
-- Build excitement about their future possibilities
+CONVERSATION FLOW:
+1. Welcome & Name
+2. System Selection (CBC vs 8-4-4)
+3. If 8-4-4: Review their manual grade entry once submitted.
+4. Interests & Aspirations.
+5. Provide 2-3 specific career recommendations.
 
 CRITICAL RULES:
-- Ask ONLY ONE question per response
-- Wait for their answer before moving forward
-- Make each question feel personal and engaging
-- Use proper formatting with emojis and bold text
-- Reference Kenya's CBE system and opportunities
-
-Remember: YOU MUST ALWAYS BE CURIOUS TO KNOW THEM. Make this the most engaging career conversation they've ever had!`;
+- Natural text, NO markdown bold/headers unless necessary.
+- Start responses with "Habari yako, [Name]! 👋"
+- Ask ONLY ONE question at a time.`;
   };
 
   const extractProfileInfo = (userMessage: string, aiResponse: string) => {
-    const message = userMessage.toLowerCase();
+    const text = userMessage.toLowerCase();
     const newProfile = { ...guestProfile };
 
-    // Extract name - more flexible patterns
     if (!newProfile.name) {
-      const namePatterns = [
-        /(?:my name is|i'm|i am|call me)\s+([a-zA-Z\s]+)/,
-        /^([a-zA-Z]+)$/,  // Single word responses to "what's your name"
-        /^([a-zA-Z]+\s+[a-zA-Z]+)$/  // Two word names
-      ];
-
+      const namePatterns = [/(?:my name is|i'm|i am|call me)\s+([a-zA-Z\s]+)/, /^([a-zA-Z]+)$/, /^([a-zA-Z]+\s+[a-zA-Z]+)$/];
       for (const pattern of namePatterns) {
-        const match = message.match(pattern);
+        const match = text.match(pattern);
         if (match && match[1].length > 1 && match[1].length < 30) {
           newProfile.name = match[1].trim().replace(/\b\w/g, l => l.toUpperCase());
           break;
@@ -151,392 +110,258 @@ Remember: YOU MUST ALWAYS BE CURIOUS TO KNOW THEM. Make this the most engaging c
       }
     }
 
-    // Extract grade/education level
     if (!newProfile.grade) {
-      const gradePatterns = [
-        /grade\s*(\d+)/,
-        /form\s*(\d+)/,
-        /year\s*(\d+)/,
-        /class\s*(\d+)/,
-        /(\d+)(?:th|st|nd|rd)?\s*grade/,
-        /junior\s*secondary/,
-        /senior\s*secondary/,
-        /primary/,
-        /university/,
-        /college/
-      ];
-
-      for (const pattern of gradePatterns) {
-        const match = message.match(pattern);
-        if (match) {
-          if (match[1]) {
-            newProfile.grade = `Grade ${match[1]}`;
-          } else if (message.includes('junior')) {
-            newProfile.grade = 'Junior Secondary';
-          } else if (message.includes('senior')) {
-            newProfile.grade = 'Senior Secondary';
-          } else if (message.includes('primary')) {
-            newProfile.grade = 'Primary';
-          } else if (message.includes('university') || message.includes('college')) {
-            newProfile.grade = 'Tertiary';
-          }
-          break;
-        }
+      if (text.includes('8-4-4') || text.includes('844') || text.includes('form 4') || text.includes('kcse')) {
+        newProfile.curriculum = 'legacy';
+        newProfile.grade = 'Form 4 / Leaver';
+      } else if (text.includes('cbc') || text.includes('cbe')) {
+        newProfile.curriculum = 'cbc';
       }
-    }
-
-    // Extract CBE subjects
-    const cbeSubjects = [
-      'mathematics', 'math', 'english', 'kiswahili', 'swahili',
-      'science', 'biology', 'chemistry', 'physics', 'computer science',
-      'geography', 'history', 'business', 'agriculture', 'home science',
-      'art', 'music', 'french', 'german', 'arabic', 'literature',
-      'economics', 'cre', 'ire', 'hre', 'physical education', 'pe'
-    ];
-
-    const mentionedSubjects = cbeSubjects.filter(subject =>
-      message.includes(subject) || message.includes(subject.replace(' ', ''))
-    );
-
-    if (mentionedSubjects.length > 0) {
-      const formattedSubjects = mentionedSubjects.map(subject =>
-        subject.replace(/\b\w/g, l => l.toUpperCase())
-      );
-      newProfile.subjects = [...new Set([...(newProfile.subjects || []), ...formattedSubjects])];
-    }
-
-    // Extract interests and career goals
-    const interestKeywords = {
-      'Technology': ['technology', 'tech', 'coding', 'programming', 'computer', 'software', 'app'],
-      'Healthcare': ['medicine', 'doctor', 'nurse', 'health', 'medical', 'hospital'],
-      'Business': ['business', 'entrepreneur', 'marketing', 'sales', 'finance'],
-      'Engineering': ['engineering', 'building', 'construction', 'mechanical', 'electrical'],
-      'Agriculture': ['farming', 'agriculture', 'crops', 'livestock', 'veterinary'],
-      'Arts': ['art', 'design', 'creative', 'drawing', 'painting', 'music'],
-      'Education': ['teaching', 'teacher', 'education', 'school'],
-      'Sports': ['sports', 'football', 'athletics', 'fitness', 'coaching']
-    };
-
-    Object.entries(interestKeywords).forEach(([interest, keywords]) => {
-      if (keywords.some(keyword => message.includes(keyword))) {
-        if (!newProfile.interests?.includes(interest)) {
-          newProfile.interests = [...(newProfile.interests || []), interest];
-        }
-      }
-    });
-
-    // Extract work preferences
-    if (message.includes('practical') || message.includes('hands-on')) {
-      newProfile.strengths = [...(newProfile.strengths || []), 'Practical Work'];
-    }
-    if (message.includes('creative') || message.includes('artistic')) {
-      newProfile.strengths = [...(newProfile.strengths || []), 'Creative Thinking'];
-    }
-    if (message.includes('research') || message.includes('academic')) {
-      newProfile.strengths = [...(newProfile.strengths || []), 'Academic Research'];
     }
 
     setGuestProfile(newProfile);
+
+    if (newProfile.curriculum === 'legacy' && !newProfile.kcseGrade && !showGradeForm) {
+      setShowGradeForm(true);
+    }
   };
 
-  const handleSend = async () => {
-    if (!message.trim() || isLoading) return;
-    
+  const handleSendMessage = async (msg: string) => {
     const userMessage: ChatMessage = {
       id: crypto.randomUUID(),
       role: 'user',
-      content: message.trim(),
+      content: msg,
       timestamp: new Date()
     };
 
     setConversation(prev => [...prev, userMessage]);
-    setMessage("");
     setIsLoading(true);
     setError(null);
 
     try {
-      const guestContext = {
-        name: guestProfile.name,
-        schoolLevel: 'secondary' as const,
-        currentGrade: guestProfile.grade,
-        subjects: guestProfile.subjects,
-        interests: guestProfile.interests,
-        careerGoals: guestProfile.careerGoals
-      };
-
-      console.log('Sending message to AI:', { userMessage: userMessage.content, guestContext });
-
-      // Use the AI service with custom context for guest assessment
       const response = await aiCareerService.sendMessage(
-        userMessage.content,
-        conversation,
-        guestContext
+        msg, 
+        conversation, 
+        { ...guestProfile, systemPrompt: createGuestSystemPrompt(guestProfile) }
       );
-
-      console.log('AI response received:', response);
-
+      
       const assistantMessage: ChatMessage = {
         id: crypto.randomUUID(),
         role: 'assistant',
         content: cleanMarkdownFormatting(response),
         timestamp: new Date()
       };
-
+      
       const updatedConversation = [...conversation, userMessage, assistantMessage];
       setConversation(updatedConversation);
+      extractProfileInfo(msg, response);
 
-      // Extract profile information from the conversation
-      extractProfileInfo(userMessage.content, response);
-
-      // Check if assessment is complete (after 6+ exchanges)
-      if (updatedConversation.length >= 12 && !assessmentComplete) {
+      if (updatedConversation.length >= 10 && !assessmentComplete && guestProfile.kcseGrade) {
         setAssessmentComplete(true);
       }
-
-    } catch (error) {
-      console.error('Failed to send message:', error);
+    } catch (err) {
       setError('Failed to connect to AI. Please try again.');
     } finally {
       setIsLoading(false);
     }
   };
 
-  const generateReport = () => {
-    setShowReport(true);
+  const handleSend = async () => {
+    if (!message.trim() || isLoading) return;
+    const currentMsg = message;
+    setMessage("");
+    await handleSendMessage(currentMsg);
   };
 
-  const testConnection = async () => {
-    setConnectionTest('Testing...');
-    try {
-      const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${import.meta.env.VITE_OPENROUTER_API_KEY}`,
-          'Content-Type': 'application/json',
-          'HTTP-Referer': window.location.origin,
-          'X-Title': 'CareerPath AI Connection Test'
-        },
-        body: JSON.stringify({
-          model: 'deepseek/deepseek-r1:free',
-          messages: [{ role: 'user', content: 'Hello' }],
-          max_tokens: 10
-        })
-      });
-
-      if (response.ok) {
-        setConnectionTest('Γ£à Connection successful!');
-      } else {
-        const errorText = await response.text();
-        setConnectionTest(`❌ Error: ${response.status} - ${errorText}`);
-      }
-    } catch (error: any) {
-      setConnectionTest(`❌ Connection failed: ${error.message || error}`);
+  const handleGradeSubmit = () => {
+    const selectedGrades = Object.entries(subjectGrades).filter(([_, grade]) => grade !== '');
+    
+    if (selectedGrades.length < 5) {
+      setError("Please select grades for at least 5 subjects to calculate an accurate Mean Grade.");
+      return;
     }
+
+    const gradePoints: Record<string, number> = {
+      'A': 12, 'A-': 11, 'B+': 10, 'B': 9, 'B-': 8, 'C+': 7, 'C': 6, 'C-': 5, 'D+': 4, 'D': 3, 'D-': 2, 'E': 1
+    };
+
+    const totalPoints = selectedGrades.reduce((sum, [_, grade]) => sum + (gradePoints[grade] || 0), 0);
+    const meanPoints = totalPoints / selectedGrades.length;
+    
+    const getGradeFromPoints = (points: number) => {
+      if (points >= 11.5) return 'A';
+      if (points >= 10.5) return 'A-';
+      if (points >= 9.5) return 'B+';
+      if (points >= 8.5) return 'B';
+      if (points >= 7.5) return 'B-';
+      if (points >= 6.5) return 'C+';
+      if (points >= 5.5) return 'C';
+      if (points >= 4.5) return 'C-';
+      if (points >= 3.5) return 'D+';
+      if (points >= 2.5) return 'D';
+      if (points >= 1.5) return 'D-';
+      return 'E';
+    };
+
+    const meanGrade = getGradeFromPoints(meanPoints);
+    
+    setGuestProfile(prev => ({
+      ...prev,
+      kcseGrade: meanGrade,
+      kcsePoints: Math.round(meanPoints),
+      subjectGrades: Object.fromEntries(selectedGrades)
+    }));
+    
+    setShowGradeForm(false);
+    setError(null);
+
+    const gradeSummary = selectedGrades.map(([s, g]) => `${s}: ${g}`).join(', ');
+    handleSendMessage(`I've entered my grades. My Mean Grade is ${meanGrade}. Subjects: ${gradeSummary}`);
+  };
+
+  const renderGradeForm = () => {
+    const grades = ['A', 'A-', 'B+', 'B', 'B-', 'C+', 'C', 'C-', 'D+', 'D', 'D-', 'E'];
+    const otherSubjects = ['Biology', 'Chemistry', 'Physics', 'History', 'Geography', 'CRE', 'Business Studies', 'Agriculture', 'Computer Studies'];
+
+    return (
+      <Card className="p-4 mt-2 border-primary/20 bg-primary/5 shadow-sm">
+        <h3 className="text-sm font-bold mb-3 flex items-center gap-2">🎓 KCSE Scorecard</h3>
+        <ScrollArea className="h-[250px] pr-4">
+          <div className="space-y-3">
+            <Label className="text-[10px] uppercase tracking-wider font-bold text-primary">Mandatory</Label>
+            {['Mathematics', 'English', 'Kiswahili'].map(subject => (
+              <div key={subject} className="flex items-center justify-between gap-2">
+                <span className="text-xs font-medium">{subject}</span>
+                <Select value={subjectGrades[subject]} onValueChange={(v) => setSubjectGrades(p => ({ ...p, [subject]: v }))}>
+                  <SelectTrigger className="w-[70px] h-7 text-xs"><SelectValue placeholder="-" /></SelectTrigger>
+                  <SelectContent>
+                    {grades.map(g => <SelectItem key={g} value={g}>{g}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+            ))}
+            <Label className="text-[10px] uppercase tracking-wider font-bold text-muted-foreground pt-2 inline-block">Others</Label>
+            {otherSubjects.map(subject => (
+              <div key={subject} className="flex items-center justify-between gap-2">
+                <span className="text-xs">{subject}</span>
+                <Select value={subjectGrades[subject] || ''} onValueChange={(v) => setSubjectGrades(p => ({ ...p, [subject]: v }))}>
+                  <SelectTrigger className="w-[70px] h-7 text-xs"><SelectValue placeholder="-" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="">None</SelectItem>
+                    {grades.map(g => <SelectItem key={g} value={g}>{g}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+            ))}
+          </div>
+        </ScrollArea>
+        <div className="mt-4 pt-3 border-t border-primary/10">
+          <Button size="sm" className="w-full h-8 text-xs font-bold" onClick={handleGradeSubmit}>Submit Academic Profile 🚀</Button>
+        </div>
+      </Card>
+    );
   };
 
   const downloadReport = () => {
-    const reportName = `CareerPath-AI-Assessment-${guestProfile.name || 'Report'}-${new Date().toISOString().split('T')[0]}`;
-
-    // Generate HTML report for better formatting
+    const reportName = `CareerPath-AI-Report-${guestProfile.name || 'Student'}`;
     const htmlReport = ReportGenerator.generatePDFReport(guestProfile, conversation);
     ReportGenerator.downloadHTMLReport(htmlReport, `${reportName}.html`);
-
-    // Also generate text version as backup
-    const textReport = ReportGenerator.generateTextReport(guestProfile, conversation);
-    const blob = new Blob([textReport], { type: 'text/plain' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `${reportName}.txt`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
   };
 
   return (
-    <div className="max-w-4xl mx-auto px-3 sm:px-6 py-4 sm:py-6">
-      <div className="text-center mb-4 sm:mb-8">
-        <h2 className="text-xl sm:text-2xl md:text-3xl font-bold mb-2 sm:mb-4">
-          Quick Career Assessment{" "}
-          <span className="bg-gradient-text bg-clip-text text-transparent">
-            with AI
-          </span>
+    <div className="max-w-4xl mx-auto px-3 sm:px-6 py-6">
+      <div className="text-center mb-8">
+        <h2 className="text-2xl sm:text-3xl font-bold mb-2">
+          Quick Career Assessment <span className="text-primary">with AI</span>
         </h2>
-        <p className="text-sm sm:text-base text-foreground-muted max-w-2xl mx-auto">
-          Get instant career guidance based on your interests and goals. No signup required!
-        </p>
+        <p className="text-sm text-foreground-muted">Discover your ideal career path in minutes. No signup required.</p>
       </div>
-      
-      <Card className="bg-gradient-surface border-card-border shadow-elevated">
-        {/* Chat Header */}
-        <CardHeader className="border-b border-card-border p-3 sm:p-6">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0">
-            <div className="flex items-center space-x-3">
-              <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-primary rounded-full flex items-center justify-center">
-                <Bot className="w-4 h-4 sm:w-5 sm:h-5 text-primary-foreground" />
-              </div>
-              <div>
-                <CardTitle className="text-base sm:text-lg">Career Assessment AI</CardTitle>
-                <CardDescription className="text-xs sm:text-sm">Quick assessment ΓÇó No signup required</CardDescription>
-              </div>
+
+      <Card className="bg-white border-card-border shadow-lg overflow-hidden">
+        <CardHeader className="border-b bg-muted/30 p-4">
+          <div className="flex items-center space-x-3">
+            <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+              <Bot className="w-5 h-5 text-primary" />
             </div>
-            <div className="flex items-center space-x-2 w-full sm:w-auto justify-end">
-              <Badge variant="secondary" className="bg-green-100 text-green-700 text-xs">
-                <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-green-500 rounded-full mr-1"></div>
-                Live
-              </Badge>
-              <Button size="sm" variant="outline" onClick={testConnection} className="text-xs sm:text-sm px-2 py-1">
-                Test AI
-              </Button>
+            <div>
+              <CardTitle className="text-lg">Career Counselor AI</CardTitle>
+              <p className="text-xs text-muted-foreground">Always active ΓÇó Precise Guidance</p>
             </div>
           </div>
         </CardHeader>
-        
-        {/* Chat Messages */}
+
         <CardContent className="p-0">
-          <ScrollArea ref={scrollAreaRef} className="h-[60vh] sm:h-[500px] p-3 sm:p-6 overflow-y-auto">
-            <div className="space-y-4 sm:space-y-6">
-              {conversation.map((msg) => (
+          <ScrollArea ref={scrollAreaRef} className="h-[500px] p-4 sm:p-6 bg-slate-50/50">
+            <div className="space-y-6">
+              {conversation.map((msg, index) => (
                 <div key={msg.id} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                  <div className={`flex max-w-[90%] sm:max-w-[85%] ${msg.role === 'user' ? 'flex-row-reverse' : 'flex-row'} space-x-2 sm:space-x-3`}>
-                    <div className={`w-6 h-6 sm:w-8 sm:h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
-                      msg.role === 'user' 
-                        ? 'bg-primary text-primary-foreground ml-2 sm:ml-3' 
-                        : 'bg-gradient-primary text-primary-foreground mr-2 sm:mr-3'
+                  <div className={`flex max-w-[85%] ${msg.role === 'user' ? 'flex-row-reverse' : 'flex-row'} items-end gap-2`}>
+                    <div className={`w-8 h-8 rounded-full flex-shrink-0 flex items-center justify-center ${
+                      msg.role === 'user' ? 'bg-primary text-white' : 'bg-white border shadow-sm'
                     }`}>
-                      {msg.role === 'user' ? (
-                        <User className="w-3 h-3 sm:w-4 sm:h-4" />
-                      ) : (
-                        <Bot className="w-3 h-3 sm:w-4 sm:h-4" />
-                      )}
+                      {msg.role === 'user' ? <User className="w-4 h-4" /> : <Bot className="w-4 h-4 text-primary" />}
                     </div>
-                    <div className={`p-3 sm:p-4 rounded-2xl ${
-                      msg.role === 'user'
-                        ? 'bg-primary text-primary-foreground'
-                        : 'bg-background border border-card-border'
+                    <div className={`p-4 rounded-2xl shadow-sm text-sm ${
+                      msg.role === 'user' 
+                        ? 'bg-primary text-white rounded-br-none' 
+                        : 'bg-white border rounded-bl-none text-foreground'
                     }`}>
-                      <p className="text-xs sm:text-sm leading-relaxed whitespace-pre-wrap">{msg.content}</p>
-                      <p className="text-[10px] sm:text-xs opacity-70 mt-1 sm:mt-2">
-                        {msg.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                      </p>
+                      {msg.content}
+                      {msg.role === 'assistant' && index === conversation.length - 1 && showGradeForm && renderGradeForm()}
                     </div>
                   </div>
                 </div>
               ))}
-              
               {isLoading && (
-                <div className="flex justify-start">
-                  <div className="flex space-x-2 sm:space-x-3">
-                    <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-gradient-primary text-primary-foreground flex items-center justify-center">
-                      <Bot className="w-3 h-3 sm:w-4 sm:h-4" />
-                    </div>
-                    <div className="bg-background border border-card-border p-2 sm:p-4 rounded-2xl">
-                      <div className="flex items-center space-x-2">
-                        <Loader2 className="w-3 h-3 sm:w-4 sm:h-4 animate-spin" />
-                        <span className="text-xs sm:text-sm text-foreground-muted">AI is analyzing...</span>
-                      </div>
-                    </div>
+                <div className="flex justify-start items-center gap-2">
+                  <div className="w-8 h-8 rounded-full bg-white border flex items-center justify-center">
+                    <Loader2 className="w-4 h-4 animate-spin text-primary" />
                   </div>
+                  <Badge variant="outline" className="animate-pulse">AI is thinking...</Badge>
                 </div>
               )}
-              
               <div ref={messagesEndRef} />
             </div>
           </ScrollArea>
         </CardContent>
-        
-        {/* Assessment Complete Actions */}
-        {assessmentComplete && !showReport && (
-          <div className="p-6 border-t border-card-border bg-gradient-surface/50">
-            <div className="text-center space-y-4">
-              <div className="flex items-center justify-center space-x-2 text-green-600">
-                <Sparkles className="w-5 h-5" />
-                <span className="font-medium">Assessment Complete!</span>
-              </div>
-              <p className="text-sm text-foreground-muted">
-                Great job! I've gathered enough information to create your personalized career report.
-              </p>
-              <Button onClick={generateReport} className="bg-gradient-primary hover:opacity-90 text-primary-foreground">
-                <Download className="w-4 h-4 mr-2" />
-                Generate My Career Report
+
+        {(assessmentComplete || showReport) && (
+          <div className="p-6 border-t bg-primary/5 text-center space-y-4">
+            <div className="inline-flex items-center gap-2 text-primary font-bold">
+              <Sparkles className="w-5 h-5" /> Assessment Complete!
+            </div>
+            <p className="text-xs text-muted-foreground">Your detailed career roadmap is ready for download.</p>
+            <div className="flex gap-3 justify-center">
+              <Button onClick={downloadReport} variant="outline" size="sm">
+                <Download className="w-4 h-4 mr-2" /> Download PDF Report
+              </Button>
+              <Button size="sm" className="bg-primary text-white">
+                Create Account <ArrowRight className="w-4 h-4 ml-2" />
               </Button>
             </div>
           </div>
         )}
 
-        {/* Report Generated */}
-        {showReport && (
-          <div className="p-6 border-t border-card-border bg-gradient-surface/50">
-            <div className="text-center space-y-4">
-              <div className="flex items-center justify-center space-x-2 text-blue-600">
-                <Download className="w-5 h-5" />
-                <span className="font-medium">Your Report is Ready!</span>
-              </div>
-              <p className="text-sm text-foreground-muted">
-                Download your personalized career assessment report and continue your journey with a full account.
-              </p>
-              <div className="flex flex-col sm:flex-row gap-3 justify-center">
-                <Button onClick={downloadReport} variant="outline">
-                  <Download className="w-4 h-4 mr-2" />
-                  Download Report
-                </Button>
-                <Button className="bg-gradient-primary hover:opacity-90 text-primary-foreground">
-                  <ArrowRight className="w-4 h-4 mr-2" />
-                  Create Full Account
-                </Button>
-              </div>
-            </div>
-          </div>
-        )}
-        
-        {/* Chat Input */}
-        {!showReport && (
-          <div className="p-6 border-t border-card-border">
-            {connectionTest && (
-              <Alert className="mb-4">
-                <AlertDescription>{connectionTest}</AlertDescription>
-              </Alert>
-            )}
+        {!showReport && !assessmentComplete && (
+          <div className="p-4 border-t bg-white">
             {error && (
               <Alert variant="destructive" className="mb-4">
                 <AlertCircle className="h-4 w-4" />
                 <AlertDescription>{error}</AlertDescription>
               </Alert>
             )}
-            
-            <div className="flex space-x-4">
+            <div className="flex gap-3">
               <Input
-                placeholder="Type your response here..."
+                placeholder="Type your message here..."
                 value={message}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setMessage(e.target.value)}
-                onKeyPress={(e: React.KeyboardEvent<HTMLInputElement>) => e.key === 'Enter' && !e.shiftKey && handleSend()}
+                onChange={(e) => setMessage(e.target.value)}
+                onKeyPress={(e) => e.key === 'Enter' && !e.shiftKey && handleSend()}
                 disabled={isLoading}
-                className="bg-background border-card-border"
+                className="flex-1"
               />
-              <Button 
-                onClick={handleSend}
-                disabled={isLoading || !message.trim()}
-                className="bg-gradient-primary hover:opacity-90 text-primary-foreground px-6"
-              >
-                {isLoading ? (
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                ) : (
-                  <Send className="w-4 h-4" />
-                )}
+              <Button onClick={handleSend} disabled={isLoading || !message.trim()} className="bg-primary text-white">
+                <Send className="w-4 h-4" />
               </Button>
-            </div>
-            
-            <div className="flex items-center justify-between mt-3">
-              <p className="text-xs text-foreground-muted flex items-center">
-                <Sparkles className="w-3 h-3 mr-1" />
-                Free quick assessment ΓÇó No signup required
-              </p>
-              {guestProfile.name && (
-                <Badge variant="outline" className="text-xs">
-                  Assessing: {guestProfile.name}
-                </Badge>
-              )}
             </div>
           </div>
         )}

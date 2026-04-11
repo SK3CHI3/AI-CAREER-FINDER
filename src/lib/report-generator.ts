@@ -21,6 +21,10 @@ export interface GuestProfile {
   dreamJob?: string;
   location?: string;
   resultsVerified?: boolean;
+  kcseGrade?: string;
+  kcsePoints?: number;
+  clusterSubjects?: string[];
+  subjectGrades?: Record<string, string>;
 }
 
 export interface CareerRecommendation {
@@ -323,6 +327,7 @@ export class ReportGenerator {
                     <div class="student-name">${profile.name?.toUpperCase() || 'STUDENT'}</div>
                     <div class="info-label">ID: ${reportId}</div>
                     <div class="info-label">Curriculum: ${profile.curriculum === 'igcse' ? 'British IGCSE/A-Level' : profile.curriculum === 'legacy' ? 'Kenyan Legacy (8-4-4)' : 'Kenyan CBC'}</div>
+                    ${profile.grade ? `<div class="info-label">Level: ${profile.grade}${profile.kcseGrade ? ` (KCSE: ${profile.kcseGrade})` : ''}</div>` : ''}
                     ${profile.pathway ? `<div class="info-label">Pathway: ${profile.pathway.toUpperCase()}</div>` : ''}
                     <div class="info-label">Date: ${currentDate}</div>
                 </td>
@@ -578,6 +583,10 @@ export class ReportGenerator {
 
     const gradeNum = parseInt(grade.replace(/\D/g, ''));
 
+    if (grade.toLowerCase().includes('form') || grade.toLowerCase().includes('kcse') || grade.toLowerCase().includes('legacy')) {
+      return "Kenyan 8-4-4 System - Transitioning to University via KUCCPS";
+    }
+
     if (gradeNum <= 6) {
       return "Primary Education - Building foundational skills in core subjects";
     } else if (gradeNum <= 9) {
@@ -593,6 +602,10 @@ export class ReportGenerator {
     if (!grade) return "Determine your current grade level";
 
     const gradeNum = parseInt(grade.replace(/\D/g, ''));
+
+    if (grade.toLowerCase().includes('form') || grade.toLowerCase().includes('kcse') || grade.toLowerCase().includes('legacy')) {
+      return "Review KUCCPS cluster points and apply for university/TCVC programs";
+    }
 
     if (gradeNum <= 6) {
       return "Prepare for Junior Secondary transition, focus on core subjects";
