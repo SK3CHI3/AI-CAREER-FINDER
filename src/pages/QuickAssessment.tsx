@@ -12,7 +12,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import BrandedLoader from "@/components/BrandedLoader";
 import ReportPaywall from "@/components/ReportPaywall";
 import { aiCareerService } from "@/lib/ai-service";
-import { ReportGenerator, type GuestProfile } from "@/lib/report-generator";
+import { ReportGenerator, type GuestProfile, type CareerRecommendation } from "@/lib/report-generator";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
 import BackgroundGradient from "@/components/BackgroundGradient";
@@ -57,8 +57,7 @@ const QuickAssessment = () => {
 
     // Phase 6: Readiness
     const [readiness, setReadiness] = useState("");
-
-    const [finalRecommendations, setFinalRecommendations] = useState<any[]>([]);
+    const [finalRecommendations, setFinalRecommendations] = useState<CareerRecommendation[]>([]);
     const [guestProfile, setGuestProfile] = useState<GuestProfile>({});
 
     const SUBJECT_DATA = {
@@ -298,9 +297,9 @@ const QuickAssessment = () => {
 
             setShowReport(true);
             setCurrentStep(7);
-        } catch (err: any) {
+        } catch (err: unknown) {
             console.error(err);
-            setError(err.message || 'Failed to generate assessment. Please try again.');
+            setError((err as Error).message || 'Failed to generate assessment. Please try again.');
         } finally {
             setIsLoading(false);
         }
