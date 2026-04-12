@@ -44,7 +44,7 @@ const Navigation = () => {
                 alt="CareerGuide AI"
                 width="160"
                 height="40"
-                fetchPriority="high"
+                fetchpriority="high"
                 className="h-10 w-auto"
               />
             </button>

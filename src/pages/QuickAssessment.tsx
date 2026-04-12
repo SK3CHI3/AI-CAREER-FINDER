@@ -457,10 +457,10 @@ const QuickAssessment = () => {
                                                                 {['Biology', 'Chemistry', 'Physics', 'History & Government', 'Geography', 'CRE/IRE', 'Business Studies', 'Agriculture', 'Computer Studies'].map(subject => (
                                                                     <div key={subject} className="flex items-center justify-between gap-4 p-2 rounded-xl bg-background/40">
                                                                         <span className="text-sm">{subject}</span>
-                                                                        <Select value={subjectGrades[subject] || ''} onValueChange={(v) => setSubjectGrades(p => ({ ...p, [subject]: v }))}>
+                                                                        <Select value={subjectGrades[subject] || ''} onValueChange={(v) => setSubjectGrades(p => ({ ...p, [subject]: v === 'none' ? '' : v }))}>
                                                                             <SelectTrigger className="w-24 h-9 bg-background"><SelectValue placeholder="-" /></SelectTrigger>
                                                                             <SelectContent>
-                                                                                <SelectItem value="">None</SelectItem>
+                                                                                <SelectItem value="none">None</SelectItem>
                                                                                 {['A', 'A-', 'B+', 'B', 'B-', 'C+', 'C', 'C-', 'D+', 'D', 'D-', 'E'].map(g => (
                                                                                     <SelectItem key={g} value={g}>{g}</SelectItem>
                                                                                 ))}
