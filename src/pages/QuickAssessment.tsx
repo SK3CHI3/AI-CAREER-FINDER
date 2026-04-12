@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Sparkles, Download, ArrowRight, ArrowLeft, CheckCircle, Brain, Target, User, Heart, Compass, ShieldAlert, Rocket, Lock, Zap, Camera, Image as ImageIcon, Trash2, GraduationCap } from "lucide-react";
+import { Sparkles, Download, ArrowRight, ArrowLeft, CheckCircle, Brain, Target, User, Heart, Compass, ShieldAlert, Rocket, Lock, Zap, GraduationCap } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import BrandedLoader from "@/components/BrandedLoader";
@@ -118,9 +118,9 @@ const QuickAssessment = () => {
                 if (!grade) return setError("Please select your current grade/year");
                 if (curriculum === 'cbc' && grade.includes('Senior') && !pathway) return setError("Please select your Senior Secondary pathway");
                 
-                // If Form 4 Leaver, go to upload sub-step
+                // If Form 4 Leaver, go to scorecard sub-step
                 if (grade === "Form 4 Leaver") {
-                    setSubStep(3); // 3 is now Upload
+                    setSubStep(3); // 3 is now Manual Grade Entry
                 } else {
                     setSubStep(4); // 4 is now Subjects
                 }
