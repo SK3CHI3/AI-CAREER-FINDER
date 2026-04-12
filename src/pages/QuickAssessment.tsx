@@ -6,7 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Sparkles, Download, ArrowRight, ArrowLeft, CheckCircle, Brain, Target, User, Heart, Compass, ShieldAlert, Rocket, Lock, Zap, Camera, Image as ImageIcon, Trash2 } from "lucide-react";
+import { Sparkles, Download, ArrowRight, ArrowLeft, CheckCircle, Brain, Target, User, Heart, Compass, ShieldAlert, Rocket, Lock, Zap, Camera, Image as ImageIcon, Trash2, GraduationCap } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import BrandedLoader from "@/components/BrandedLoader";
 import ReportPaywall from "@/components/ReportPaywall";
 import { aiCareerService } from "@/lib/ai-service";
@@ -31,7 +32,11 @@ const QuickAssessment = () => {
     const [grade, setGrade] = useState("");
     const [pathway, setPathway] = useState<'stem' | 'arts' | 'social' | null>(null);
     const [selectedSubjects, setSelectedSubjects] = useState<string[]>([]);
-    const [resultsImage, setResultsImage] = useState<string | null>(null);
+    const [subjectGrades, setSubjectGrades] = useState<Record<string, string>>({
+        'Mathematics': '',
+        'English': '',
+        'Kiswahili': ''
+    });
 
     // Phase 2: RIASEC
     const [selectedActivities, setSelectedActivities] = useState<string[]>([]);
@@ -121,8 +126,11 @@ const QuickAssessment = () => {
                 return;
             }
             if (subStep === 3) {
-                // Results Upload validation
-                if (grade === "Form 4 Leaver" && !resultsImage) return setError("Please upload your national results to proceed.");
+                // Manual Grade validation
+                if (grade === "Form 4 Leaver") {
+                    const selectedCount = Object.entries(subjectGrades).filter(([_, g]) => g !== '').length;
+                    if (selectedCount < 5) return setError("Please select grades for at least 5 subjects to calculate your Mean Grade.");
+                }
                 setSubStep(4);
                 return;
             }
@@ -194,6 +202,34 @@ const QuickAssessment = () => {
             const topPersonality = personalityTypes[0] || 'Balanced';
             const mbtiCode = `${mbtiEnergy === 'Introvert' ? 'I' : 'E'}N${mbtiDecisions === 'Thinker' ? 'T' : 'F'}${mbtiStructure === 'Judging' ? 'J' : 'P'}`;
 
+            const selectedGrades = Object.entries(subjectGrades).filter(([_, g]) => g !== '');
+            const hasLegacyGrades = grade === "Form 4 Leaver" && selectedGrades.length >= 5;
+
+            let kcseGrade = undefined;
+            if (hasLegacyGrades) {
+                const gradePoints: Record<string, number> = {
+                    'A': 12, 'A-': 11, 'B+': 10, 'B': 9, 'B-': 8, 'C+': 7, 'C': 6, 'C-': 5, 'D+': 4, 'D': 3, 'D-': 2, 'E': 1
+                };
+                const totalPoints = selectedGrades.reduce((sum, [_, g]) => sum + (gradePoints[g] || 0), 0);
+                const meanPoints = totalPoints / selectedGrades.length;
+                
+                const getGradeFromPoints = (points: number) => {
+                    if (points >= 11.5) return 'A';
+                    if (points >= 10.5) return 'A-';
+                    if (points >= 9.5) return 'B+';
+                    if (points >= 8.5) return 'B';
+                    if (points >= 7.5) return 'B-';
+                    if (points >= 6.5) return 'C+';
+                    if (points >= 5.5) return 'C';
+                    if (points >= 4.5) return 'C-';
+                    if (points >= 3.5) return 'D+';
+                    if (points >= 2.5) return 'D';
+                    if (points >= 1.5) return 'D-';
+                    return 'E';
+                };
+                kcseGrade = getGradeFromPoints(meanPoints);
+            }
+
             const profile: GuestProfile = {
                 name,
                 curriculum: curriculum || undefined,
@@ -207,8 +243,9 @@ const QuickAssessment = () => {
                 barriers: barrier,
                 experience,
                 readiness,
-                careerGoals: "Seeking career alignment via AI Counselor Assessment.",
-                resultsVerified: !!resultsImage
+                careerGoals: "Seeking career alignment via Diagnostic Assessment.",
+                kcseGrade,
+                subjectGrades: hasLegacyGrades ? Object.fromEntries(selectedGrades) : undefined
             };
             setGuestProfile(profile);
 
@@ -383,53 +420,62 @@ const QuickAssessment = () => {
                                             </div>
                                         )}
 
-                                        {/* Sub-step 1.3: National Results Upload (Conditional) */}
+                                        {/* Sub-step 1.3: Manual Academic Scorecard (Conditional) */}
                                         {subStep === 3 && grade === "Form 4 Leaver" && (
                                             <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
                                                 <div className="text-center space-y-2">
                                                     <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-2 text-primary">
-                                                        <Camera className="w-8 h-8" />
+                                                        <GraduationCap className="w-8 h-8" />
                                                     </div>
-                                                    <Label className="text-xl font-bold block text-primary">Verify Your Results</Label>
-                                                    <p className="text-sm text-muted-foreground px-4">Please upload a clear picture of your KCSE results or certificate for official mapping.</p>
+                                                    <Label className="text-xl font-bold block text-primary">Academic Scorecard</Label>
+                                                    <p className="text-sm text-muted-foreground px-4">Enter your KCSE grades to help the AI map your technical eligibility.</p>
                                                 </div>
 
-                                                <div className="relative group max-w-sm mx-auto">
-                                                    {!resultsImage ? (
-                                                        <label className="flex flex-col items-center justify-center w-full h-56 border-2 border-dashed border-card-border rounded-3xl cursor-pointer bg-card/50 hover:bg-primary/5 hover:border-primary/50 transition-all p-6 text-center group">
-                                                            <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                                                                <ImageIcon className="w-10 h-10 mb-3 text-muted-foreground group-hover:text-primary transition-colors" />
-                                                                <p className="mb-2 text-sm font-semibold tracking-tight">Tap to upload result photo</p>
-                                                                <p className="text-xs text-muted-foreground">PNG, JPG or PDF (Max 5MB)</p>
+                                                <div className="bg-card/50 border border-card-border rounded-3xl p-6 shadow-sm">
+                                                    <ScrollArea className="h-[300px] pr-4">
+                                                        <div className="space-y-4">
+                                                            <div className="space-y-3">
+                                                                <Label className="text-[10px] uppercase tracking-wider font-bold text-primary">Core Subjects (Mandatory)</Label>
+                                                                {['Mathematics', 'English', 'Kiswahili'].map(subject => (
+                                                                    <div key={subject} className="flex items-center justify-between gap-4 p-2 rounded-xl bg-background/40">
+                                                                        <span className="text-sm font-semibold">{subject}</span>
+                                                                        <Select value={subjectGrades[subject]} onValueChange={(v) => setSubjectGrades(p => ({ ...p, [subject]: v }))}>
+                                                                            <SelectTrigger className="w-24 h-9 bg-background"><SelectValue placeholder="-" /></SelectTrigger>
+                                                                            <SelectContent>
+                                                                                {['A', 'A-', 'B+', 'B', 'B-', 'C+', 'C', 'C-', 'D+', 'D', 'D-', 'E'].map(g => (
+                                                                                    <SelectItem key={g} value={g}>{g}</SelectItem>
+                                                                                ))}
+                                                                            </SelectContent>
+                                                                        </Select>
+                                                                    </div>
+                                                                ))}
                                                             </div>
-                                                            <input type="file" className="hidden" accept="image/*,application/pdf" onChange={(e) => {
-                                                                const file = e.target.files?.[0];
-                                                                if (file) {
-                                                                    const reader = new FileReader();
-                                                                    reader.onloadend = () => setResultsImage(reader.result as string);
-                                                                    reader.readAsDataURL(file);
-                                                                }
-                                                            }} />
-                                                        </label>
-                                                    ) : (
-                                                        <div className="relative rounded-3xl overflow-hidden border-2 border-primary shadow-xl animate-in zoom-in-95 duration-300 group">
-                                                            <img src={resultsImage} alt="Results Preview" className="w-full h-56 object-cover" />
-                                                            <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                                                                <button onClick={() => setResultsImage(null)} className="bg-destructive text-white p-3 rounded-full hover:scale-110 transition-transform shadow-lg">
-                                                                    <Trash2 className="w-6 h-6" />
-                                                                </button>
-                                                            </div>
-                                                            <div className="absolute top-2 right-2 bg-green-500 text-white p-1 rounded-full">
-                                                                <CheckCircle className="w-4 h-4" />
+
+                                                            <div className="space-y-3 pt-2">
+                                                                <Label className="text-[10px] uppercase tracking-wider font-bold text-muted-foreground">Elective Subjects (Select At Least 2 More)</Label>
+                                                                {['Biology', 'Chemistry', 'Physics', 'History & Government', 'Geography', 'CRE/IRE', 'Business Studies', 'Agriculture', 'Computer Studies'].map(subject => (
+                                                                    <div key={subject} className="flex items-center justify-between gap-4 p-2 rounded-xl bg-background/40">
+                                                                        <span className="text-sm">{subject}</span>
+                                                                        <Select value={subjectGrades[subject] || ''} onValueChange={(v) => setSubjectGrades(p => ({ ...p, [subject]: v }))}>
+                                                                            <SelectTrigger className="w-24 h-9 bg-background"><SelectValue placeholder="-" /></SelectTrigger>
+                                                                            <SelectContent>
+                                                                                <SelectItem value="">None</SelectItem>
+                                                                                {['A', 'A-', 'B+', 'B', 'B-', 'C+', 'C', 'C-', 'D+', 'D', 'D-', 'E'].map(g => (
+                                                                                    <SelectItem key={g} value={g}>{g}</SelectItem>
+                                                                                ))}
+                                                                            </SelectContent>
+                                                                        </Select>
+                                                                    </div>
+                                                                ))}
                                                             </div>
                                                         </div>
-                                                    )}
+                                                    </ScrollArea>
                                                 </div>
 
-                                                {resultsImage && (
-                                                    <div className="text-center p-3 bg-green-500/10 border border-green-500/20 rounded-xl animate-in fade-in slide-in-from-top-2">
+                                                {Object.entries(subjectGrades).filter(([_, g]) => g !== '').length >= 5 && (
+                                                    <div className="text-center p-3 bg-green-500/10 border border-green-500/20 rounded-2xl animate-in fade-in slide-in-from-top-2">
                                                         <p className="text-xs font-bold text-green-600 flex items-center justify-center gap-1">
-                                                             <Sparkles className="w-3 h-3" /> Results Captured Successfully
+                                                            <CheckCircle className="w-3 h-3" /> Minimum 5 subjects reached. Academic profile ready.
                                                         </p>
                                                     </div>
                                                 )}
