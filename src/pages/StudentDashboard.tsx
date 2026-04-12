@@ -782,9 +782,6 @@ const StudentDashboard = () => {
                     <div className="flex items-center gap-2">
                       <Sparkles className="w-5 h-5 text-yellow-500" />
                       <CardTitle>AI Career Recommendations</CardTitle>
-                      <Badge variant="secondary" className="bg-blue-100 text-blue-700 hover:bg-blue-100 border-none px-2 py-0 text-[10px] uppercase font-bold tracking-wider">
-                        DeepSeek-V3 Engine
-                      </Badge>
                     </div>
                     <CardDescription>Based on your personality, grades, and Kenyan market reality</CardDescription>
                   </div>

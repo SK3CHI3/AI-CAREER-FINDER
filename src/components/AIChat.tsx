@@ -501,7 +501,7 @@ What subjects do you enjoy most in your current studies? 🎯`,
           <div className="flex items-center justify-between mt-3 px-1">
             <p className="text-[10px] text-foreground-muted flex items-center">
               <Sparkles className="w-3 h-3 mr-1 text-primary" />
-              DeepSeek R1 Reasoning
+              Advanced AI Reasoning
             </p>
             {userContext.name && (
               <div className="flex items-center gap-1.5 opacity-60">

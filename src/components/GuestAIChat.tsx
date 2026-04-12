@@ -69,31 +69,6 @@ What is your name? 😊`,
     setConversation([welcomeMessage]);
   }, []);
 
-  const createGuestSystemPrompt = (profile: GuestProfile): string => {
-    return `You are CareerPath AI, Kenya's most engaging career counselor! You're conducting a FREE quick assessment to help students discover their perfect career path through Kenya's CBE or 8-4-4 (Form 4) systems.
-
-CURRENT GUEST PROFILE:
-${Object.entries(profile).map(([key, value]) =>
-  value ? `- ${key}: ${Array.isArray(value) ? value.join(', ') : value}` : ''
-).filter(Boolean).join('\n')}
-
-KUCCPS & 8-4-4 KNOWLEDGE:
-- Degree Minimum: C+ (Competitive: 40+ points)
-- Diploma: C- | Certificate: D
-- Calculate based on the grades provided.
-
-CONVERSATION FLOW:
-1. Welcome & Name
-2. System Selection (CBC vs 8-4-4)
-3. If 8-4-4: Review their manual grade entry once submitted.
-4. Interests & Aspirations.
-5. Provide 2-3 specific career recommendations.
-
-CRITICAL RULES:
-- Natural text, NO markdown bold/headers unless necessary.
-- Start responses with "Habari yako, [Name]! 👋"
-- Ask ONLY ONE question at a time.`;
-  };
 
   const extractProfileInfo = (userMessage: string, aiResponse: string) => {
     const text = userMessage.toLowerCase();
@@ -142,7 +117,7 @@ CRITICAL RULES:
       const response = await aiCareerService.sendMessage(
         msg, 
         conversation, 
-        { ...guestProfile, systemPrompt: createGuestSystemPrompt(guestProfile) }
+        guestProfile
       );
       
       const assistantMessage: ChatMessage = {

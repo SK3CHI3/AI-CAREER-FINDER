@@ -23,6 +23,9 @@ export interface UserContext {
     weakSubjects: string[]
     performanceTrend: 'improving' | 'declining' | 'stable'
   }
+  kcseGrade?: string
+  kcsePoints?: number
+  subjectGrades?: Record<string, string>
 }
 
 class AICareerService {
@@ -45,7 +48,7 @@ class AICareerService {
     }
 
     if (!this.apiKey) {
-      throw new Error('DeepSeek API key is not configured. Please add VITE_DEEPSEEK_API_KEY to your environment variables.')
+      throw new Error('AI Service key is not configured. Please add VITE_DEEPSEEK_API_KEY to your environment variables.')
     }
   }
 
@@ -76,6 +79,11 @@ ACADEMIC PERFORMANCE:
 - Overall: ${userContext.academicPerformance.overallAverage.toFixed(1)}%
 - Strong in: ${userContext.academicPerformance.strongSubjects.join(', ')}
 - Weak in: ${userContext.academicPerformance.weakSubjects.join(', ')}
+` : userContext.kcseGrade ? `
+ACADEMIC PERFORMANCE (KCSE):
+- Mean Grade: ${userContext.kcseGrade}
+- Points: ${userContext.kcsePoints}
+- Subject Breakdown: ${Object.entries(userContext.subjectGrades || {}).map(([s, g]) => `${s}: ${g}`).join(', ')}
 ` : '';
 
     return `You are CareerGuide AI, Kenya's most advanced career counselor. Your mission is to provide personalized, actionable guidance using "Realistic Triangulation Logic"—balancing a student's Personality (RIASEC), Academic Performance, Stated Interests, and Real-World Realities.
@@ -170,7 +178,7 @@ CRITICAL: Ask only ONE question per response. Be curious, realistic, and empathe
 
       if (!response.ok) {
         const errorText = await response.text().catch(() => 'Unknown error')
-        console.error('DeepSeek API Error:', {
+        console.error('AI Service Error:', {
           status: response.status,
           statusText: response.statusText,
           error: errorText
@@ -178,7 +186,7 @@ CRITICAL: Ask only ONE question per response. Be curious, realistic, and empathe
         
         // Specific handling for 402 Payment Required
         if (response.status === 402) {
-          throw new Error('AI service billing issue (402). Please check DeepSeek API credits.')
+          throw new Error('The AI Counselor is currently experiencing high demand. Please try again in a few minutes or contact support if the issue persists.')
         }
         
         throw new Error(`AI service error: ${response.status} - ${response.statusText}`)
