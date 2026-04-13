@@ -399,11 +399,26 @@ const QuickAssessment = () => {
                                                     <div className="space-y-4">
                                                         <Label className="text-base font-semibold">Current Grade / Level</Label>
                                                         <div className="grid grid-cols-2 gap-2">
-                                                            {GRADES[curriculum].map(g => (
-                                                                <button key={g} type="button" onClick={() => { setGrade(g); setSelectedSubjects([]); }} className={`p-2 text-sm rounded-lg border-2 transition-all font-medium ${grade === g ? 'border-primary bg-primary/10 text-primary' : 'border-card-border hover:border-primary/50'}`}>
-                                                                    {g}
-                                                                </button>
-                                                            ))}
+                                                            {GRADES[curriculum].map(g => {
+                                                                const isForm4Leaver = g === "Form 4 Leaver";
+                                                                return (
+                                                                    <button 
+                                                                        key={g} 
+                                                                        type="button" 
+                                                                        onClick={() => { setGrade(g); setSelectedSubjects([]); }} 
+                                                                        className={`p-2 text-sm rounded-lg border-2 transition-all font-medium flex items-center justify-center gap-2 ${
+                                                                            grade === g 
+                                                                                ? 'border-primary bg-primary/10 text-primary shadow-sm' 
+                                                                                : isForm4Leaver 
+                                                                                    ? 'border-primary/40 bg-primary/5 hover:border-primary text-primary/80' 
+                                                                                    : 'border-card-border hover:border-primary/50'
+                                                                        } ${isForm4Leaver ? 'col-span-2 py-3' : ''}`}>
+                                                                        {isForm4Leaver && <Sparkles className="w-4 h-4 text-primary animate-pulse" />}
+                                                                        {g}
+                                                                        {isForm4Leaver && <span className="text-[10px] bg-primary text-white px-1.5 py-0.5 rounded-full ml-1">V25 ELIGIBLE</span>}
+                                                                    </button>
+                                                                );
+                                                            })}
                                                         </div>
                                                     </div>
                                                 )}
