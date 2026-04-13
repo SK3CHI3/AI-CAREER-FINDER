@@ -21,6 +21,13 @@
   NPM_FLAGS = "--version"
 
 # Redirect rules for SPA (Single Page Application)
+# 1. Prevent catch-all from breaking assets (avoids MIME type mismatch errors)
+[[redirects]]
+  from = "/assets/*"
+  to = "/assets/:splat"
+  status = 404
+
+# 2. SPA routing fallback for all other routes
 [[redirects]]
   from = "/*"
   to = "/index.html"
