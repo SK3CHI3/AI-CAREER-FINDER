@@ -245,6 +245,7 @@ const QuickAssessment = () => {
                 readiness,
                 careerGoals: "Seeking career alignment via Diagnostic Assessment.",
                 kcseGrade,
+                kcsePoints: hasLegacyGrades ? selectedGrades.reduce((sum, [_, g]) => sum + ({'A': 12, 'A-': 11, 'B+': 10, 'B': 9, 'B-': 8, 'C+': 7, 'C': 6, 'C-': 5, 'D+': 4, 'D': 3, 'D-': 2, 'E': 1}[g] || 0), 0) : undefined,
                 subjectGrades: hasLegacyGrades ? Object.fromEntries(selectedGrades) : undefined
             };
             setGuestProfile(profile);
@@ -260,7 +261,9 @@ const QuickAssessment = () => {
                 values: profile.values,
                 workStyle: profile.workStyle,
                 mbti: profile.mbti,
-                limitations: profile.barriers
+                limitations: profile.barriers,
+                kcseGrade: profile.kcseGrade,
+                subjectGrades: profile.subjectGrades
             };
 
             const recommendations = await aiCareerService.generateCareerRecommendations(payload);

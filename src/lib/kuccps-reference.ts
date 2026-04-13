@@ -1,0 +1,138 @@
+/**
+ * KUCCPS Complete Reference Data 2025
+ * Based on the official 19 Degree Clusters and 2024/2025 placement cycle data.
+ */
+
+export interface KUCCPSCluster {
+  id: string;
+  name: string;
+  subjects: string[];
+  minRequirements?: Record<string, string>;
+  programmes: string[];
+}
+
+export interface UniversityStrength {
+  name: string;
+  departments: string[];
+  rank?: number;
+}
+
+export const KUCCPS_CLUSTERS: KUCCPSCluster[] = [
+  {
+    id: "1",
+    name: "Law",
+    subjects: ["English/Kiswahili", "Mathematics/Group II", "Any Group III", "Group II/III/IV/V"],
+    minRequirements: { "English": "B", "Kiswahili": "B" },
+    programmes: ["Bachelor of Laws (LLB)"]
+  },
+  {
+    id: "2",
+    name: "Business, Hospitality & Tourism",
+    subjects: ["English/Kiswahili", "Mathematics", "Any Group II/III", "Group II/III/IV/V"],
+    minRequirements: { "Mathematics": "C" },
+    programmes: ["B.Commerce", "BBA", "Procurement", "Hospitality Management", "Tourism"]
+  },
+  {
+    id: "3",
+    name: "Communication, Media & Arts",
+    subjects: ["English/Kiswahili", "Mathematics/Group II", "Any Group III", "Group II/III/IV/V"],
+    minRequirements: { "English": "C+", "Kiswahili": "C+" },
+    programmes: ["Journalism", "International Relations", "Mass Communication", "Fine Arts", "Graphic Design"]
+  },
+  {
+    id: "4",
+    name: "Geosciences",
+    subjects: ["Mathematics", "Physics", "Biology/Chemistry/Geography", "Group II/III/IV/V"],
+    minRequirements: { "Mathematics": "C+", "Physics": "C+" },
+    programmes: ["Geospatial Information Science", "Meteorology", "Geology", "Astronomy"]
+  },
+  {
+    id: "5",
+    name: "Engineering & Technology",
+    subjects: ["Mathematics", "Physics", "Chemistry", "Biology/Group III/IV/V"],
+    minRequirements: { "Mathematics": "C+", "Physics": "C+", "Chemistry": "C+", "English": "C+", "Kiswahili": "C+" },
+    programmes: ["Civil Engineering", "Electrical Engineering", "Mechanical Engineering", "Mechatronics", "Aeronautical"]
+  },
+  {
+    id: "6",
+    name: "Architecture & Built Environment",
+    subjects: ["Mathematics", "Physics", "Any Group III", "Group II/III/IV/V"],
+    minRequirements: { "Mathematics": "C+", "Physics": "C+" },
+    programmes: ["Architecture", "Quantity Surveying", "Construction Management", "Real Estate"]
+  },
+  {
+    id: "7",
+    name: "Computer Science & IT",
+    subjects: ["Mathematics", "Physics/Group II", "Any Group III", "Group II/III/IV/V"],
+    minRequirements: { "Mathematics": "C+", "Physics": "C+" },
+    programmes: ["Computer Science", "Software Engineering", "Cyber Security", "Data Science", "IT"]
+  },
+  {
+    id: "10",
+    name: "Actuarial Science & Economics",
+    subjects: ["Mathematics", "Group II/III", "Any Group III", "Group II/III/IV/V"],
+    minRequirements: { "Mathematics": "C+" },
+    programmes: ["Actuarial Science", "Statistics", "Economics", "Finance", "Accounting"]
+  },
+  {
+    id: "13",
+    name: "Medicine & Health Sciences",
+    subjects: ["Biology", "Chemistry", "Mathematics/Physics", "English/Kiswahili"],
+    minRequirements: { "Biology": "C+", "Chemistry": "C+", "Mathematics": "C+", "Physics": "C+", "English": "C+", "Kiswahili": "C+" },
+    programmes: ["Medicine & Surgery (MBChB)", "Nursing", "Pharmacy", "Dentistry", "Clinical Medicine"]
+  },
+  {
+    id: "16",
+    name: "Veterinary Medicine",
+    subjects: ["Biology", "Chemistry", "Physics/Mathematics", "English/Kiswahili"],
+    minRequirements: { "Biology": "C+", "Chemistry": "C+", "Mathematics": "C", "Physics": "C", "English": "C", "Kiswahili": "C" },
+    programmes: ["Bachelor of Veterinary Medicine (BVM)"]
+  },
+  {
+    id: "19",
+    name: "Education",
+    subjects: ["English/Kiswahili", "Mathematics/Teaching Subject", "Two Teaching Subjects", "Group II/III/IV/V"],
+    minRequirements: { "English": "C+", "Kiswahili": "C+", "Mean Grade": "C+" },
+    programmes: ["B.Ed Science", "B.Ed Arts", "B.Ed Special Needs", "B.Ed Early Childhood"]
+  }
+];
+
+export const UNIVERSITY_DATA: UniversityStrength[] = [
+  {
+    name: "University of Nairobi (UoN)",
+    departments: ["Medicine", "Law", "Engineering", "Architecture", "Economics", "Veterinary Medicine", "Journalism"],
+    rank: 1
+  },
+  {
+    name: "Kenyatta University (KU)",
+    departments: ["Education", "Health Sciences", "Environmental Studies", "Business", "Pure Sciences", "Fine Arts"],
+    rank: 2
+  },
+  {
+    name: "JKUAT",
+    departments: ["Engineering", "Computer Science", "IT", "Architecture", "Agriculture", "Food Science"],
+    rank: 3
+  },
+  {
+    name: "Moi University",
+    departments: ["Medicine", "Law", "Engineering", "Education", "Forest Resources"],
+    rank: 4
+  },
+  {
+    name: "Strathmore University",
+    departments: ["Business", "Finance", "Accounting", "IT", "Law", "Hospitality"],
+    rank: 1 // Private rank
+  },
+  {
+    name: "USIU-Africa",
+    departments: ["International Relations", "Psychology", "Pharmacy", "Business Administration", "Journalism"],
+    rank: 2 // Private rank
+  }
+];
+
+export const CUTOFF_ESTIMATES = {
+  VERY_HIGH: { range: "38-46", courses: ["Medicine", "Dentistry", "Architecture", "Pharmacy", "Law", "Nursing"] },
+  HIGH: { range: "34-39", courses: ["Electrical Engineering", "Mechanical Engineering", "Civil Engineering", "Computer Science"] },
+  MEDIUM: { range: "26-35", courses: ["Finance", "Accounting", "Education Science", "Journalism", "BCOM"] },
+  LOW: { range: "20-27", courses: ["Agriculture", "Education Arts", "Social Work", "Environmental Science"] }
+};

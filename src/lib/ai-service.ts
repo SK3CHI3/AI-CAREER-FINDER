@@ -1,5 +1,6 @@
 import { supabase } from './supabase'
 import type { AIConversation, ChatMessage, UserProfile } from '../types/database'
+import { KUCCPS_CLUSTERS, UNIVERSITY_DATA, CUTOFF_ESTIMATES } from './kuccps-reference'
 
 const DEEPSEEK_API_KEY = import.meta.env.VITE_DEEPSEEK_API_KEY
 const MODEL_NAME = 'deepseek-chat' // Non-thinking mode of DeepSeek-V3.1
@@ -119,11 +120,11 @@ FORMATTING RULES - NO MARKDOWN (** or ##):
 - Numbered options clearly.
 - Avoid robotic technical jargon.
 
-KENYAN CAREER CONTEXT:
-- Vision 2030 priorities (Digital Superhighway, Affordable Housing, Healthcare, Creative Economy).
-- Real-world demand vs. Degree prestige.
-- The rise of the creator economy and digital entrepreneurship.
-- Automation risk in traditional roles.
+KENYAN CAREER & KUCCPS CONTEXT (2025 Cycle):
+- KUCCPS CLUSTERS: We map to 19 official clusters. Higher cutoffs (38-46) for MBChB, Law, Architecture, Nursing.
+- HARD REQUIREMENTS: Law requires KISW/ENG B plain. Medicine/Engineering require C+ in all 4 cluster subjects.
+- INSTITUTIONAL MAPPING: UoN (Medicine/Law/Journalism), JKUAT (Engineering/CompSci), Strathmore (Business/Accounting/Law), KU (Education/Arts).
+- VISION 2030: Prioritize Digital Superhighway, Creative Economy, Healthcare, and Engineering.
 
 CRITICAL: Ask only ONE question per response. Be curious, realistic, and empathetic. Wait for their answer before proceeding.`
   }
@@ -349,19 +350,24 @@ Academic Performance:
       const prompt = `Generate 3 career recommendations for a Kenyan student using "Realistic Triangulation Logic" (Personality + Grades + Interests + Values + Constraints + Market Reality). Return ONLY a JSON array:
 
 Profile: ${userContext.schoolLevel || 'Secondary'} student, Grade ${userContext.currentGrade || '10'}, Subjects: ${userContext.subjects?.slice(0, 3).join(', ') || 'Math, English, Science'}, Interests: ${userContext.interests?.slice(0, 2).join(', ') || 'Technology, Business'}
+${userContext.kcseGrade ? `KCSE Performance: Mean Grade ${userContext.kcseGrade}, Points ${userContext.kcsePoints}` : ''}
 ${assessmentInfo}
 ${academicInfo}
 
+KUCCPS REFERENCE DATA:
+clusters: ${JSON.stringify(KUCCPS_CLUSTERS.map(c => ({ id: c.id, name: c.name, min: c.minRequirements })))}
+universities: ${JSON.stringify(UNIVERSITY_DATA.map(u => ({ name: u.name, depts: u.departments })))}
+cutoffs: ${JSON.stringify(CUTOFF_ESTIMATES)}
+
 Instructions:
 1. High Value Fit: Ensure the career matches their core values (e.g., stability vs. autonomy).
-2. Feasibility Check: Filter careers based on constraints (e.g., if they need scholarships, prioritize TVET or high-grant fields).
-3. Market Reality: Recommend careers with strong growth in Kenya (Vision 2030 pillars), explicitly including the Creative Economy (Content Creation, Digital Art) and the Digital Superhighway.
-4. Growth Trajectory: Evaluate if the career offers long-term growth and transition paths as the person evolves. Avoid overly traditional, saturated roles.
-5. For each career, explain "whyRecommended" by explaining the specific alignment with their RIASEC types AND their core values.
-6. Provide an "actionabilityScore" (1-100) reflecting how easily they can pursue this given their constraints.
+2. HARD REQUIREMENT CHECK: Verify student grades against the KUCCPS cluster requirements. If they don't meet the floor (e.g., B for Law), mark as "isTechnicalMisfit": true.
+3. Market Reality: Recommend careers with strong growth in Kenya (Vision 2030 pillars), explicitly including the Creative Economy and Digital Superhighway.
+4. Institutional Alignment: Suggest specific universities from the reference data that are strongest in that field.
+5. Estimated Cluster Points: Calculate an WCP (1-48) based on their profile and course competitiveness.
 
 Return exactly this format:
-[{"title":"Career Name","matchPercentage":85,"actionabilityScore":90,"description":"Short description","salaryRange":"KSh range","education":"Required path","whyRecommended":"Detailed explanation including RIASEC fit, Value alignment, Growth Trajectory, and Market feasibility"}]`
+[{"title":"Career Name","matchPercentage":85,"estimatedClusterPoints":39.5,"kuccpsCluster":"Cluster 5","universities":["JKUAT","UoN"],"isTechnicalMisfit":false,"reasoning":"","actionabilityScore":90,"description":"Short description","salaryRange":"KSh range","education":"Required path","whyRecommended":"Detailed explanation including RIASEC fit, Value alignment, and Market feasibility"}]`
 
       const response = await this.sendMessage(prompt, [], userContext)
 

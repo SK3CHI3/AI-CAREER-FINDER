@@ -30,10 +30,7 @@ const GuestAIChat = () => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
-    if (scrollAreaRef.current) {
-      const scrollArea = scrollAreaRef.current;
-      scrollArea.scrollTop = scrollArea.scrollHeight;
-    }
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
   useEffect(() => {
@@ -138,6 +135,7 @@ What is your name? 😊`,
       setError('Failed to connect to AI. Please try again.');
     } finally {
       setIsLoading(false);
+      setTimeout(scrollToBottom, 50);
     }
   };
 
@@ -237,10 +235,30 @@ What is your name? 😊`,
     );
   };
 
-  const downloadReport = () => {
-    const reportName = `CareerPath-AI-Report-${guestProfile.name || 'Student'}`;
-    const htmlReport = ReportGenerator.generatePDFReport(guestProfile, conversation);
-    ReportGenerator.downloadHTMLReport(htmlReport, `${reportName}.html`);
+  const downloadReport = async () => {
+    if (isLoading) return;
+    
+    try {
+      setIsLoading(true);
+      // Generate structured recommendations based on the conversation context
+      const recommendations = await aiCareerService.generateCareerRecommendations({
+        name: guestProfile.name,
+        curriculum: guestProfile.curriculum === 'cbc' ? 'Kenyan CBC' : 'Kenyan Legacy (8-4-4)',
+        currentGrade: guestProfile.grade,
+        interests: guestProfile.interests,
+        kcseGrade: guestProfile.kcseGrade,
+        subjectGrades: guestProfile.subjectGrades
+      });
+
+      const reportName = `Diagnostic-Report-${guestProfile.name || 'Student'}`;
+      const htmlReport = ReportGenerator.generatePDFReport(guestProfile, conversation, recommendations);
+      await ReportGenerator.downloadPDF(htmlReport, `${reportName}.pdf`);
+    } catch (err) {
+      console.error("Report generation failed:", err);
+      setError("Failed to generate your professional report. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
