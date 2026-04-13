@@ -156,7 +156,6 @@ export class ReportGenerator {
         <div class="header">
             <div class="branding">
                 <img src="${window.location.origin}/logos/CareerGuide_Logo.webp" class="logo" alt="CareerGuide">
-                <span class="brand-name">CareerGuide AI</span>
             </div>
             <div class="meta">
                 <div class="report-label">Professional Career Diagnostic</div>

@@ -201,27 +201,32 @@ CRITICAL: Ask only ONE question per response. Be curious, realistic, and empathe
 
       const decoder = new TextDecoder()
       let fullResponse = ''
+      let buffer = ''
 
       try {
         while (true) {
           const { done, value } = await reader.read()
           if (done) break
 
-          const chunk = decoder.decode(value)
-          const lines = chunk.split('\n')
+          buffer += decoder.decode(value, { stream: true })
+          const lines = buffer.split('\n')
+          
+          // Keep the last partial line in the buffer
+          buffer = lines.pop() || ''
 
           for (const line of lines) {
-            if (line.startsWith('data: ')) {
-              const data = line.slice(6)
-              if (data === '[DONE]') continue
-
+            const trimmedLine = line.trim()
+            if (!trimmedLine || trimmedLine === 'data: [DONE]') continue
+            
+            if (trimmedLine.startsWith('data: ')) {
               try {
+                const data = trimmedLine.slice(6)
                 const parsed = JSON.parse(data)
                 if (parsed.choices?.[0]?.delta?.content) {
                   fullResponse += parsed.choices[0].delta.content
                 }
               } catch (e) {
-                // Skip invalid JSON lines
+                console.warn('Silent skip: Partial or malformed SSE line', line)
                 continue
               }
             }
