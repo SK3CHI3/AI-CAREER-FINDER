@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useImperativeHandle, forwardRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Loader2, CreditCard, ShieldCheck, Zap, Lock } from 'lucide-react';
@@ -18,13 +18,21 @@ interface ReportPaywallProps {
   email?: string;
 }
 
-const ReportPaywall: React.FC<ReportPaywallProps> = ({ onPaymentSuccess, studentName, email }) => {
+export interface ReportPaywallHandle {
+  handlePayment: () => void;
+}
+
+const ReportPaywall = forwardRef<ReportPaywallHandle, ReportPaywallProps>(({ onPaymentSuccess, studentName, email }, ref) => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isSdkLoaded, setIsSdkLoaded] = useState(false);
   const [intaSendInstance, setIntaSendInstance] = useState<any>(null);
 
   const PAYMENT_AMOUNT = 50; // KSh 50
+
+  useImperativeHandle(ref, () => ({
+    handlePayment
+  }));
 
   useEffect(() => {
     // Check if script is already loaded
@@ -132,7 +140,7 @@ const ReportPaywall: React.FC<ReportPaywallProps> = ({ onPaymentSuccess, student
             <div className="flex items-center justify-center gap-1.5 p-2 rounded-lg bg-background/40 border border-primary/5 text-[10px] font-bold text-foreground/80">
               <Zap className="w-3.5 h-3.5 text-amber-500" /> Instant
             </div>
-            <div className="flex items-center justify-center gap-1.5 p-2 rounded-lg bg-background/40 border border-primary/5 text-[10px] font-bold text-foreground/80">
+            <div className="flex items-center justify-center gap-2 p-3 rounded-lg bg-background/40 border border-primary/5 text-[10px] font-bold text-foreground/80">
               <ShieldCheck className="w-3.5 h-3.5 text-green-500" /> Secure
             </div>
           </div>
@@ -163,6 +171,8 @@ const ReportPaywall: React.FC<ReportPaywallProps> = ({ onPaymentSuccess, student
       </CardContent>
     </Card>
   );
-};
+});
+
+ReportPaywall.displayName = 'ReportPaywall';
 
 export default ReportPaywall;

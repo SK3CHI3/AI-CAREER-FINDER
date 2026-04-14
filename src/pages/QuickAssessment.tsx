@@ -737,26 +737,31 @@ const QuickAssessment = () => {
                             )}
 
                             {/* STEP 7: RESULTS (PREVIEW & PAYWALL) */}
+                            {/* STEP 7: RESULTS (PREVIEW & PAYWALL) */}
                             {currentStep === 7 && (
-                                <motion.div key="step7" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="space-y-8 py-5">
+                                <motion.div key="step7" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="space-y-6 py-4 max-w-2xl mx-auto">
                                     <div className="text-center space-y-2">
-                                        <div className="w-12 h-12 bg-green-500/10 rounded-full flex items-center justify-center mx-auto mb-2">
+                                        <div className="w-12 h-12 bg-green-500/10 rounded-full flex items-center justify-center mx-auto mb-1">
                                             <CheckCircle className="w-6 h-6 text-green-500" />
                                         </div>
-                                        <h2 className="text-xl md:text-3xl font-extrabold tracking-tight">Diagnostic Analysis Complete</h2>
-                                        <p className="text-xs md:text-base text-muted-foreground px-4">We've identified your ideal career pathways and educational alignment.</p>
+                                        <h2 className="text-xl md:text-2xl font-black tracking-tight">Diagnostic Analysis Complete</h2>
+                                        <p className="text-xs text-muted-foreground px-4">Your personalized career roadmap and alignment profile are ready.</p>
                                     </div>
 
-                                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
-                                        {/* PREVIEW PANEL */}
-                                        <div className="relative group order-2 lg:order-1">
+                                    <div className="flex flex-col gap-6">
+                                        {/* PREVIEW PANEL - CLICKABLE */}
+                                        <div className="relative group w-full">
                                             <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-2 flex items-center gap-2 px-1">
-                                                <Compass className="w-3 h-3" /> Report Preview
+                                                <Compass className="w-3 h-3" /> Report Preview (Tap to Unlock)
                                             </div>
-                                            <div className={`relative rounded-xl border-2 border-card-border overflow-hidden bg-white aspect-[3/4] transition-all ${!isPaid ? 'max-h-[280px] lg:max-h-[500px]' : 'max-h-none'}`}>
-                                                {/* Actual Content Rendering - Precision 100% width math: 180% * 0.55 = 0.99 */}
+                                            <button 
+                                                onClick={() => !isPaid && paywallRef.current?.handlePayment()}
+                                                disabled={isPaid}
+                                                className={`relative w-full rounded-xl border-2 border-card-border overflow-hidden bg-white aspect-[3/4] transition-all text-left ${!isPaid ? 'max-h-[260px] cursor-pointer hover:border-primary/50' : 'max-h-none'}`}
+                                            >
+                                                {/* Actual Content Rendering */}
                                                 <div 
-                                                    className="p-4 origin-top scale-[0.55] sm:scale-[0.8] w-[182%] sm:w-[125%]"
+                                                    className="p-4 origin-top scale-[0.55] sm:scale-[0.8] w-[182%] sm:w-[125%] pointer-events-none"
                                                     dangerouslySetInnerHTML={{ __html: reportHtml || '' }}
                                                 />
                                                 
@@ -764,15 +769,15 @@ const QuickAssessment = () => {
                                                 {!isPaid && (
                                                     <div className="absolute inset-0 z-20 flex flex-col justify-end">
                                                         <div className="h-full w-full backdrop-blur-[3px] bg-gradient-to-t from-background via-background/40 to-transparent flex items-center justify-center p-6 text-center">
-                                                            <div className="bg-white/95 dark:bg-card/95 p-3 rounded-xl shadow-xl border border-card-border max-w-[180px]">
+                                                            <div className="bg-white/95 dark:bg-card/95 p-3 rounded-xl shadow-xl border border-card-border max-w-[180px] transform group-hover:scale-105 transition-transform">
                                                                 <Lock className="w-5 h-5 mx-auto mb-1.5 text-primary" />
                                                                 <p className="text-[11px] font-bold">Unlock Full Results</p>
-                                                                <p className="text-[9px] text-muted-foreground leading-tight">MBTI, detailed pathways & 12-month action plan.</p>
+                                                                <p className="text-[9px] text-muted-foreground leading-tight">Click anywhere to pay KSh 50 and download the full PDF.</p>
                                                             </div>
                                                         </div>
                                                     </div>
                                                 )}
-                                            </div>
+                                            </button>
                                             
                                             {isPaid && (
                                                 <div className="mt-4 flex justify-center">
@@ -783,48 +788,27 @@ const QuickAssessment = () => {
                                             )}
                                         </div>
 
-                                        {/* ACTION/PAYWALL PANEL */}
-                                        <div className="space-y-4 order-1 lg:order-2">
+                                        {/* PAYWALL PANEL */}
+                                        <div className="w-full">
                                             {!isPaid ? (
                                                 <ReportPaywall 
+                                                    ref={paywallRef}
                                                     onPaymentSuccess={handlePaymentSuccess} 
                                                     studentName={name}
                                                     email={email}
                                                 />
                                             ) : (
-                                                <div className="bg-green-500/5 border-2 border-green-500/20 rounded-3xl p-8 text-center space-y-4">
-                                                    <div className="w-16 h-16 bg-green-500/10 rounded-full flex items-center justify-center mx-auto">
-                                                        <Zap className="w-8 h-8 text-green-500" />
+                                                <div className="bg-green-500/5 border-2 border-green-500/20 rounded-2xl p-6 text-center space-y-4">
+                                                    <div className="w-14 h-14 bg-green-500/10 rounded-full flex items-center justify-center mx-auto">
+                                                        <Zap className="w-7 h-7 text-green-500" />
                                                     </div>
-                                                    <h3 className="text-xl font-bold">Report Unlocked!</h3>
-                                                    <p className="text-sm text-muted-foreground">Your comprehensive diagnostic has been generated and is ready for download.</p>
+                                                    <h3 className="text-xl font-bold text-green-600">Report Unlocked!</h3>
+                                                    <p className="text-sm text-muted-foreground">Your comprehensive diagnostic is ready for download.</p>
                                                     <Button onClick={() => navigate('/student')} className="w-full h-12 rounded-xl border-2 border-primary text-primary hover:bg-primary/5 font-bold">
-                                                        Consult with a Counselor
+                                                        Consult with Career Counselor
                                                     </Button>
                                                 </div>
                                             )}
-
-                                            <div className="bg-card/50 rounded-2xl p-6 border border-card-border">
-                                                <h4 className="font-bold mb-3 flex items-center gap-2"><Brain className="w-4 h-4 text-primary" /> Why get the full report?</h4>
-                                                <ul className="space-y-2">
-                                                    <li className="text-sm flex items-start gap-2">
-                                                        <div className="w-1.5 h-1.5 rounded-full bg-primary mt-1.5 shrink-0" />
-                                                        <span><strong>Personalized MBTI:</strong> Learn how your character drives career success.</span>
-                                                    </li>
-                                                    <li className="text-sm flex items-start gap-2">
-                                                        <div className="w-1.5 h-1.5 rounded-full bg-primary mt-1.5 shrink-0" />
-                                                        <span><strong>CBE/IGCSE Alignment:</strong> Know exactly which subjects to pick.</span>
-                                                    </li>
-                                                    <li className="text-sm flex items-start gap-2">
-                                                        <div className="w-1.5 h-1.5 rounded-full bg-primary mt-1.5 shrink-0" />
-                                                        <span><strong>Success Roadmap:</strong> Immediate steps to take for your top 3 careers.</span>
-                                                    </li>
-                                                </ul>
-                                            </div>
-                                            
-                                            <Button variant="ghost" onClick={() => { setCurrentStep(1); setGuestProfile({}); setIsPaid(false); }} className="w-full text-muted-foreground text-xs">
-                                                Retake Assessment
-                                            </Button>
                                         </div>
                                     </div>
                                 </motion.div>
