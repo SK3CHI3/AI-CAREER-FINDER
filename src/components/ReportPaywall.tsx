@@ -149,7 +149,7 @@ const ReportPaywall = forwardRef<ReportPaywallHandle, ReportPaywallProps>(({ onP
             onClick={handlePayment} 
             disabled={isLoading || !isSdkLoaded}
             size="lg"
-            className="w-full h-14 text-lg font-black bg-gradient-to-r from-primary to-blue-700 hover:opacity-90 text-white rounded-xl shadow-lg active:scale-95 transition-all duration-200"
+            className="w-full h-15 md:h-16 text-lg md:text-xl font-black bg-primary hover:bg-primary/95 text-white rounded-2xl shadow-[0_10px_30px_-10px_rgba(59,130,246,0.6)] active:scale-[0.98] transition-all duration-300 transform"
           >
             {isLoading ? (
               <><Loader2 className="w-5 h-5 mr-2 animate-spin" /> PROCEEDING...</>

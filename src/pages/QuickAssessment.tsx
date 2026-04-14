@@ -769,11 +769,13 @@ const QuickAssessment = () => {
                                                 {/* Glassmorphism Blur Overlay */}
                                                 {!isPaid && (
                                                     <div className="absolute inset-0 z-20 flex flex-col justify-end">
-                                                        <div className="h-full w-full backdrop-blur-[3px] bg-gradient-to-t from-background via-background/40 to-transparent flex items-center justify-center p-6 text-center">
-                                                            <div className="bg-white/95 dark:bg-card/95 p-3 rounded-xl shadow-xl border border-card-border max-w-[180px] transform group-hover:scale-105 transition-transform">
-                                                                <Lock className="w-5 h-5 mx-auto mb-1.5 text-primary" />
-                                                                <p className="text-[11px] font-bold">Unlock Full Results</p>
-                                                                <p className="text-[9px] text-muted-foreground leading-tight">Click anywhere to pay KSh 50 and download the full PDF.</p>
+                                                        <div className="h-full w-full backdrop-blur-[3.5px] bg-gradient-to-t from-background/90 via-background/40 to-transparent flex items-center justify-center p-6 text-center">
+                                                            <div className="bg-white/95 dark:bg-card/95 p-4 rounded-2xl shadow-2xl border border-primary/10 max-w-[190px] transform group-hover:scale-[1.02] transition-all duration-300">
+                                                                <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-2">
+                                                                    <Lock className="w-5 h-5 text-primary" />
+                                                                </div>
+                                                                <p className="text-[12px] font-black tracking-tight">Unlock Analysis</p>
+                                                                <p className="text-[9px] text-muted-foreground leading-tight mt-1">Tap here to unlock your full diagnostic report</p>
                                                             </div>
                                                         </div>
                                                     </div>
