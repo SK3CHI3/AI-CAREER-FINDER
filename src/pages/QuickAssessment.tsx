@@ -739,35 +739,35 @@ const QuickAssessment = () => {
                             {/* STEP 7: RESULTS (PREVIEW & PAYWALL) */}
                             {currentStep === 7 && (
                                 <motion.div key="step7" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="space-y-8 py-5">
-                                    <div className="text-center">
-                                        <div className="w-16 h-16 bg-green-500/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                                            <CheckCircle className="w-8 h-8 text-green-500" />
+                                    <div className="text-center space-y-2">
+                                        <div className="w-12 h-12 bg-green-500/10 rounded-full flex items-center justify-center mx-auto mb-2">
+                                            <CheckCircle className="w-6 h-6 text-green-500" />
                                         </div>
-                                        <h2 className="text-2xl md:text-3xl font-extrabold tracking-tight">Diagnostic Analysis Complete</h2>
-                                        <p className="text-muted-foreground">We've identified your ideal career pathways and educational alignment.</p>
+                                        <h2 className="text-xl md:text-3xl font-extrabold tracking-tight">Diagnostic Analysis Complete</h2>
+                                        <p className="text-xs md:text-base text-muted-foreground px-4">We've identified your ideal career pathways and educational alignment.</p>
                                     </div>
 
-                                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+                                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
                                         {/* PREVIEW PANEL */}
-                                        <div className="relative group">
-                                            <div className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-2 flex items-center gap-2">
+                                        <div className="relative group order-2 lg:order-1">
+                                            <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-2 flex items-center gap-2 px-1">
                                                 <Compass className="w-3 h-3" /> Report Preview
                                             </div>
-                                            <div className={`relative rounded-2xl border-2 border-card-border overflow-hidden bg-white aspect-[3/4] transition-all ${!isPaid ? 'max-h-[350px] lg:max-h-[500px]' : 'max-h-none'}`}>
-                                                {/* Actual Content Rendering */}
+                                            <div className={`relative rounded-xl border-2 border-card-border overflow-hidden bg-white aspect-[3/4] transition-all ${!isPaid ? 'max-h-[280px] lg:max-h-[500px]' : 'max-h-none'}`}>
+                                                {/* Actual Content Rendering - Precision 100% width math: 180% * 0.55 = 0.99 */}
                                                 <div 
-                                                    className="p-4 origin-top scale-[0.65] sm:scale-[0.8] w-[150%] sm:w-[125%]"
+                                                    className="p-4 origin-top scale-[0.55] sm:scale-[0.8] w-[182%] sm:w-[125%]"
                                                     dangerouslySetInnerHTML={{ __html: reportHtml || '' }}
                                                 />
                                                 
                                                 {/* Glassmorphism Blur Overlay */}
                                                 {!isPaid && (
                                                     <div className="absolute inset-0 z-20 flex flex-col justify-end">
-                                                        <div className="h-full w-full backdrop-blur-[3px] bg-gradient-to-t from-background via-background/60 to-transparent flex items-center justify-center p-6 text-center">
-                                                            <div className="bg-white/90 dark:bg-card/90 p-4 rounded-xl shadow-lg border border-card-border max-w-[200px]">
-                                                                <Lock className="w-6 h-6 mx-auto mb-2 text-primary" />
-                                                                <p className="text-xs font-bold">Unlock Full Results</p>
-                                                                <p className="text-[10px] text-muted-foreground">MBTI breakdown, detailed pathways & action plan are hidden.</p>
+                                                        <div className="h-full w-full backdrop-blur-[3px] bg-gradient-to-t from-background via-background/40 to-transparent flex items-center justify-center p-6 text-center">
+                                                            <div className="bg-white/95 dark:bg-card/95 p-3 rounded-xl shadow-xl border border-card-border max-w-[180px]">
+                                                                <Lock className="w-5 h-5 mx-auto mb-1.5 text-primary" />
+                                                                <p className="text-[11px] font-bold">Unlock Full Results</p>
+                                                                <p className="text-[9px] text-muted-foreground leading-tight">MBTI, detailed pathways & 12-month action plan.</p>
                                                             </div>
                                                         </div>
                                                     </div>
@@ -784,7 +784,7 @@ const QuickAssessment = () => {
                                         </div>
 
                                         {/* ACTION/PAYWALL PANEL */}
-                                        <div className="space-y-6">
+                                        <div className="space-y-4 order-1 lg:order-2">
                                             {!isPaid ? (
                                                 <ReportPaywall 
                                                     onPaymentSuccess={handlePaymentSuccess} 

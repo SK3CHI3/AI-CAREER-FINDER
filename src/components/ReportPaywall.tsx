@@ -106,34 +106,34 @@ const ReportPaywall: React.FC<ReportPaywallProps> = ({ onPaymentSuccess, student
   };
 
   return (
-    <Card className="bg-gradient-to-br from-primary/10 to-blue-600/5 border-primary/30 shadow-2xl overflow-hidden rounded-[2rem]">
-      <CardContent className="p-5 md:p-10">
-        <div className="flex flex-col items-center text-center space-y-6">
-          <div className="w-16 h-16 bg-primary/20 rounded-2xl flex items-center justify-center transform rotate-3 shadow-lg">
-            <Lock className="w-8 h-8 text-primary" />
+    <Card className="bg-gradient-to-br from-primary/10 to-blue-600/5 border-primary/20 shadow-2xl overflow-hidden rounded-2xl">
+      <CardContent className="p-4 md:p-8">
+        <div className="flex flex-col items-center text-center space-y-4">
+          <div className="w-12 h-12 bg-primary/20 rounded-xl flex items-center justify-center shadow-sm">
+            <Lock className="w-6 h-6 text-primary" />
           </div>
           
-          <div className="space-y-2">
-            <h3 className="text-2xl md:text-3xl font-black tracking-tight text-foreground">Unlock Full Diagnostic</h3>
-            <p className="text-muted-foreground text-sm max-w-[280px] mx-auto leading-relaxed">
-              Get your complete MBTI profile, RIASEC scores, and personalized 12-month career roadmap.
+          <div className="space-y-1">
+            <h3 className="text-xl md:text-2xl font-black tracking-tight text-foreground">Unlock Full Diagnostic</h3>
+            <p className="text-muted-foreground text-[11px] md:text-sm max-w-[250px] mx-auto leading-tight">
+              Get your MBTI profile, RIASEC scores, and 12-month career roadmap.
             </p>
           </div>
 
-          <div className="relative py-4 px-8 bg-background/50 rounded-2xl border border-primary/10 shadow-inner">
-            <div className="flex items-center gap-2">
-              <span className="text-lg font-bold text-primary/60">KSh</span>
-              <span className="text-6xl font-black text-primary tracking-tighter">50</span>
+          <div className="relative py-3 px-6 bg-background/50 rounded-xl border border-primary/10 shadow-inner">
+            <div className="flex items-center gap-1.5">
+              <span className="text-sm font-bold text-primary/60">KSh</span>
+              <span className="text-4xl md:text-5xl font-black text-primary tracking-tighter">50</span>
             </div>
-            <div className="absolute -top-2 -right-2 bg-primary text-primary-foreground text-[10px] font-bold px-2 py-0.5 rounded-full shadow-md">ONE-TIME FEE</div>
+            <div className="absolute -top-2 -right-2 bg-primary text-primary-foreground text-[8px] font-extrabold px-1.5 py-0.5 rounded-full">ONE-TIME</div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4 w-full max-w-sm">
-            <div className="flex items-center justify-center gap-2 p-3 rounded-xl bg-background/40 border border-primary/5 text-[12px] font-bold text-foreground/80">
-              <Zap className="w-4 h-4 text-amber-500" /> Instant
+          <div className="grid grid-cols-2 gap-3 w-full max-w-[300px]">
+            <div className="flex items-center justify-center gap-1.5 p-2 rounded-lg bg-background/40 border border-primary/5 text-[10px] font-bold text-foreground/80">
+              <Zap className="w-3.5 h-3.5 text-amber-500" /> Instant
             </div>
-            <div className="flex items-center justify-center gap-2 p-3 rounded-xl bg-background/40 border border-primary/5 text-[12px] font-bold text-foreground/80">
-              <ShieldCheck className="w-4 h-4 text-green-500" /> Secure
+            <div className="flex items-center justify-center gap-1.5 p-2 rounded-lg bg-background/40 border border-primary/5 text-[10px] font-bold text-foreground/80">
+              <ShieldCheck className="w-3.5 h-3.5 text-green-500" /> Secure
             </div>
           </div>
 
@@ -141,27 +141,24 @@ const ReportPaywall: React.FC<ReportPaywallProps> = ({ onPaymentSuccess, student
             onClick={handlePayment} 
             disabled={isLoading || !isSdkLoaded}
             size="lg"
-            className="w-full h-16 text-xl font-black bg-gradient-to-r from-primary to-blue-700 hover:to-blue-800 text-white rounded-2xl shadow-[0_10px_20px_rgba(37,99,235,0.3)] hover:translate-y-[-2px] active:scale-95 transition-all duration-200"
+            className="w-full h-14 text-lg font-black bg-gradient-to-r from-primary to-blue-700 hover:opacity-90 text-white rounded-xl shadow-lg active:scale-95 transition-all duration-200"
           >
             {isLoading ? (
-              <><Loader2 className="w-6 h-6 mr-2 animate-spin" /> PROCEEDING...</>
+              <><Loader2 className="w-5 h-5 mr-2 animate-spin" /> PROCEEDING...</>
             ) : (
-              <><CreditCard className="w-6 h-6 mr-2" /> UNLOCK REPORT NOW</>
+              <><CreditCard className="w-5 h-5 mr-2" /> UNLOCK NOW</>
             )}
           </Button>
 
           {error && (
-            <Alert variant="destructive" className="py-3 border-none bg-destructive/10">
-              <AlertDescription className="text-xs font-semibold">{error}</AlertDescription>
+            <Alert variant="destructive" className="py-2 border-none bg-destructive/10">
+              <AlertDescription className="text-[10px] font-semibold">{error}</AlertDescription>
             </Alert>
           )}
 
-          <div className="flex items-center gap-2 pt-2 grayscale opacity-70">
-            <img src="/assets/payment-methods.png" alt="M-Pesa, Visa, Mastercard" className="h-6 object-contain hidden" />
-            <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest">
-              M-Pesa & Cards Accepted
-            </p>
-          </div>
+          <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider opacity-60">
+            M-Pesa & Cards Accepted
+          </p>
         </div>
       </CardContent>
     </Card>
