@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { Card, CardContent } from "@/components/ui/card";
@@ -20,6 +20,7 @@ import { RIASEC_ACTIVITIES, RIASEC_LABELS } from "@/data/riasec-assessment";
 
 const QuickAssessment = () => {
     const navigate = useNavigate();
+    const paywallRef = useRef<any>(null);
     const [currentStep, setCurrentStep] = useState(1);
     const [subStep, setSubStep] = useState(1); // For Phase 1 sub-steps
     const [isLoading, setIsLoading] = useState(false);
