@@ -67,7 +67,7 @@ const QuickAssessment = () => {
         cbc_senior_social: ["English", "Kiswahili", "Mathematics", "History & Citizenship", "Geography", "Business Studies & Economics", "Religious Education", "Law", "Sociology"],
         igcse: ["English First Language", "Mathematics (Extended)", "Biology", "Chemistry", "Physics", "ICT", "Business Studies", "Economics", "History", "Geography", "Art & Design", "Sociology"],
         alevel: ["Mathematics", "Physics", "Chemistry", "Biology", "Computer Science", "Economics", "Business", "History", "Geography", "Psychology", "Law", "English Literature"],
-        legacy: ["Mathematics", "English", "Kiswahili", "Biology", "Physics", "Chemistry", "History & Government", "Geography", "Christian Religious Ed (CRE)", "Business Studies", "Agriculture", "Computer Studies", "Home Science"]
+        legacy: ["Mathematics", "English", "Kiswahili", "Biology", "Physics", "Chemistry", "History & Government", "Geography", "Christian Religious Ed (CRE)", "Islamic Religious Ed (IRE)", "Hindu Religious Ed (HRE)", "Home Science", "Business Studies", "Agriculture", "Computer Studies", "Music", "Art & Design", "French", "German", "Arabic", "Aviation", "Building Construction", "Power Mechanics", "Woodwork", "Metalwork", "Drawing & Design", "Electricity"]
     };
 
     const GRADES = {
@@ -128,8 +128,31 @@ const QuickAssessment = () => {
             if (subStep === 3) {
                 // Manual Grade validation
                 if (grade === "Form 4 Leaver") {
-                    const selectedCount = Object.entries(subjectGrades).filter(([_, g]) => g !== '').length;
-                    if (selectedCount < 5) return setError("Please select grades for at least 5 subjects to calculate your Mean Grade.");
+                    const selectedGrades = Object.entries(subjectGrades).filter(([_, g]) => g !== '');
+                    if (selectedGrades.length < 5) return setError("Please select grades for at least 5 subjects to calculate your Mean Grade.");
+                    
+                    // Automatically derive strong subjects (B and above)
+                    const strongSubjects = selectedGrades
+                        .filter(([_, g]) => ['A', 'A-', 'B+', 'B'].includes(g))
+                        .map(([s, _]) => s);
+                    
+                    // If no B's, take top 3 subjects
+                    if (strongSubjects.length === 0) {
+                        const gradePoints: Record<string, number> = {
+                            'A': 12, 'A-': 11, 'B+': 10, 'B': 9, 'B-': 8, 'C+': 7, 'C': 6, 'C-': 5, 'D+': 4, 'D': 3, 'D-': 2, 'E': 1
+                        };
+                        const sortedSubjects = selectedGrades
+                            .sort((a, b) => (gradePoints[b[1]] || 0) - (gradePoints[a[1]] || 0))
+                            .slice(0, 3)
+                            .map(([s, _]) => s);
+                        setSelectedSubjects(sortedSubjects);
+                    } else {
+                        setSelectedSubjects(strongSubjects);
+                    }
+                    
+                    // Skip Phase 1.4 (Subjects selection) and go to Step 2 (RIASEC)
+                    setCurrentStep(2);
+                    return;
                 }
                 setSubStep(4);
                 return;
@@ -166,6 +189,12 @@ const QuickAssessment = () => {
             } else {
                 setSubStep(prev => prev - 1);
             }
+            return;
+        }
+        // If coming back from Phase 2 to Form 4 Leaver, go to subStep 3
+        if (currentStep === 2 && grade === "Form 4 Leaver") {
+            setCurrentStep(1);
+            setSubStep(3);
             return;
         }
         setCurrentStep(prev => prev - 1);
@@ -471,7 +500,7 @@ const QuickAssessment = () => {
 
                                                             <div className="space-y-3 pt-2">
                                                                 <Label className="text-[10px] uppercase tracking-wider font-bold text-muted-foreground">Elective Subjects (Select At Least 2 More)</Label>
-                                                                {['Biology', 'Chemistry', 'Physics', 'History & Government', 'Geography', 'CRE/IRE', 'Business Studies', 'Agriculture', 'Computer Studies'].map(subject => (
+                                                                {['Biology', 'Chemistry', 'Physics', 'History & Government', 'Geography', 'Christian Religious Ed (CRE)', 'Islamic Religious Ed (IRE)', 'Hindu Religious Ed (HRE)', 'Home Science', 'Business Studies', 'Agriculture', 'Computer Studies', 'Music', 'Art & Design', 'French', 'German', 'Arabic', 'Aviation', 'Building Construction', 'Power Mechanics', 'Woodwork', 'Metalwork', 'Drawing & Design', 'Electricity'].map(subject => (
                                                                     <div key={subject} className="flex items-center justify-between gap-4 p-2 rounded-xl bg-background/40">
                                                                         <span className="text-sm">{subject}</span>
                                                                         <Select value={subjectGrades[subject] || ''} onValueChange={(v) => setSubjectGrades(p => ({ ...p, [subject]: v === 'none' ? '' : v }))}>

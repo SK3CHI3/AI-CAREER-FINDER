@@ -173,6 +173,10 @@ export class ReportGenerator {
         <div class="section-title">Candidate Profile</div>
         <div class="grid">
             <div class="card">
+                <div class="card-label">Student Name</div>
+                <div class="card-value">${profile.name || 'Student Candidate'}</div>
+            </div>
+            <div class="card">
                 <div class="card-label">Personality Blend (RIASEC)</div>
                 <div class="card-value">${profile.interests?.[0]?.replace('RIASEC Type: ', '') || 'Dynamic Profile'}</div>
             </div>
@@ -319,7 +323,7 @@ export class ReportGenerator {
 CAREERGUIDE AI - PROFESSIONAL DIAGNOSTIC
 Generated on: ${currentDate}
 
-CANDIDATE: ${profile.name || 'Student'}
+STUDENT NAME: ${profile.name || 'Student'}
 CURRICULUM: ${profile.curriculum || 'Kenyan'}
 MEAN GRADE: ${profile.kcseGrade || 'N/A'}
 

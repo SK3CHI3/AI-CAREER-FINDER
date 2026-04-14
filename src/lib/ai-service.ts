@@ -103,7 +103,7 @@ ${academicSection}
 
 GUIDANCE LOGIC:
 1. Personality (RIASEC): Holland Codes are the foundation. Recommend roles aligned with their top 2-3 RIASEC types.
-2. Academic Performance: Align careers with their strong subjects. If a student wants a STEM career but is weak in Math, suggest technical pathways that leverage their other strengths or bridging options.
+2. Academic Performance: Align careers with their strong subjects. For "Form 4 Leavers", strictly prioritize their actual KCSE grades as the primary academic evidence. If a student wants a STEM career but is weak in Math, suggest technical pathways that leverage their other strengths or bridging options.
 3. Personal Values: Factor in what matters to them (e.g., Autonomy, Impact, Income). If they value stability, avoid highly volatile freelance/startup-heavy paths unless they have a safety net.
 4. Feasibility & Constraints: Respect constraints (Geography, Finance, Time). If they need remote work or scholarships, prioritize careers with high digital accessibility or available government/private funding in Kenya.
 5. Labor Market Reality: Factor in Kenyan market demand (Vision 2030, tech boom, manufacturing needs, automation risk). Prioritize emerging fields in the Creative Economy (Content Creation, Digital Art) and the Digital Superhighway over saturated traditional roles.
