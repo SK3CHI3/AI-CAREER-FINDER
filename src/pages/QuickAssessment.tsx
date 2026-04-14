@@ -753,17 +753,17 @@ const QuickAssessment = () => {
                                             <div className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-2 flex items-center gap-2">
                                                 <Compass className="w-3 h-3" /> Report Preview
                                             </div>
-                                            <div className={`relative rounded-2xl border-2 border-card-border overflow-hidden bg-white aspect-[3/4] transition-all ${!isPaid ? 'max-h-[500px]' : 'max-h-none'}`}>
+                                            <div className={`relative rounded-2xl border-2 border-card-border overflow-hidden bg-white aspect-[3/4] transition-all ${!isPaid ? 'max-h-[350px] lg:max-h-[500px]' : 'max-h-none'}`}>
                                                 {/* Actual Content Rendering */}
                                                 <div 
-                                                    className="p-4 origin-top scale-[0.6] sm:scale-[0.8] w-[160%] sm:w-[125%]"
+                                                    className="p-4 origin-top scale-[0.65] sm:scale-[0.8] w-[150%] sm:w-[125%]"
                                                     dangerouslySetInnerHTML={{ __html: reportHtml || '' }}
                                                 />
                                                 
                                                 {/* Glassmorphism Blur Overlay */}
                                                 {!isPaid && (
                                                     <div className="absolute inset-0 z-20 flex flex-col justify-end">
-                                                        <div className="h-full w-full backdrop-blur-[6px] bg-gradient-to-t from-background via-background/80 to-transparent flex items-center justify-center p-6 text-center">
+                                                        <div className="h-full w-full backdrop-blur-[3px] bg-gradient-to-t from-background via-background/60 to-transparent flex items-center justify-center p-6 text-center">
                                                             <div className="bg-white/90 dark:bg-card/90 p-4 rounded-xl shadow-lg border border-card-border max-w-[200px]">
                                                                 <Lock className="w-6 h-6 mx-auto mb-2 text-primary" />
                                                                 <p className="text-xs font-bold">Unlock Full Results</p>
