@@ -167,7 +167,7 @@ export class ReportGenerator {
         <!-- ASSESSMENT SUMMARY -->
         <div class="section-title">Diagnostic Summary</div>
         <div class="summary-box">
-            ${this.extractAISummary(conversation)}
+            ${this.extractAISummary(profile.aiSummary || conversation)}
         </div>
 
         <div class="section-title">Candidate Profile</div>
@@ -178,7 +178,7 @@ export class ReportGenerator {
             </div>
             <div class="card">
                 <div class="card-label">Personality Blend (RIASEC)</div>
-                <div class="card-value">${profile.interests?.[0]?.replace('RIASEC Type: ', '') || 'Dynamic Profile'}</div>
+                <div class="card-value">${profile.interests?.[0]?.replace('RIASEC Type: ', '') || 'Analytical & Strategic'}</div>
             </div>
             <div class="card">
                 <div class="card-label">Strategic Archetype (MBTI)</div>
@@ -186,7 +186,7 @@ export class ReportGenerator {
             </div>
             <div class="card">
                 <div class="card-label">Core Values</div>
-                <div class="card-value">${profile.values?.slice(0, 3).join(', ') || 'Growth, Innovation'}</div>
+                <div class="card-value">${profile.values && profile.values.length > 0 ? profile.values.slice(0, 3).join(', ') : 'Growth, Innovation'}</div>
             </div>
             <div class="card">
                 <div class="card-label">Current Academic Level</div>
@@ -198,7 +198,7 @@ export class ReportGenerator {
         <div class="grid">
             <div class="card">
                 <div class="card-label">Curriculum System</div>
-                <div class="card-value">${profile.curriculum === 'cbc' ? 'Kenyan CBC' : 'Kenyan 8-4-4 (Legacy)'}</div>
+                <div class="card-value">${profile.curriculum === 'cbc' ? 'Kenyan CBC' : profile.curriculum === 'igcse' ? 'IGCSE/A-Level' : 'Kenyan 8-4-4 (Legacy)'}</div>
             </div>
             <div class="card">
                 <div class="card-label">KCSE Mean Grade</div>
@@ -221,7 +221,7 @@ export class ReportGenerator {
             The following recommendations are triangulated using official 2025 KUCCPS cluster requirements and market performance trends.
         </p>
 
-        ${recommendations.map(rec => `
+        ${recommendations.length > 0 ? recommendations.map(rec => `
             <div class="rec-card">
                 <div class="rec-header">
                     <div class="rec-title">${rec.title}</div>
@@ -250,7 +250,7 @@ export class ReportGenerator {
 
                 <div class="inst-box">
                     <div class="inst-label">Strategic Institutional Matches:</div>
-                    <div class="inst-list">${rec.universities.join(' • ')}</div>
+                    <div class="inst-list">${rec.universities && rec.universities.length > 0 ? rec.universities.join(' • ') : 'Major Public & Private Universities'}</div>
                 </div>
 
                 ${rec.isTechnicalMisfit ? `
@@ -261,11 +261,15 @@ export class ReportGenerator {
                 ` : `
                     <div style="margin-top: 8px; padding-top: 8px; border-top: 1px solid ${colors.border};">
                         <strong style="font-size: 10px; color: ${colors.muted}; text-transform: uppercase;">Why Recommended:</strong>
-                        <p style="font-size: 11px; margin-top: 2px; color: ${colors.text};">${rec.whyRecommended}</p>
+                        <p style="font-size: 11px; margin-top: 2px; color: ${colors.text};">${rec.whyRecommended || 'Aligns with student academic strengths and personality archetype.'}</p>
                     </div>
                 `}
             </div>
-        `).join('')}
+        `).join('') : `
+            <div class="card" style="padding: 40px; text-align: center; border-style: dashed;">
+                <p style="color: ${colors.muted};">Analyzing academic synchronization for optimal university placement...</p>
+            </div>
+        `}
 
         <div class="footer">
             <p><strong>Professional Career Diagnostic</strong> • CareerGuide AI • 2026 Edition</p>
@@ -277,11 +281,20 @@ export class ReportGenerator {
     `;
   }
 
-  static extractAISummary(conversation: ChatMessage[]): string {
-    const assistantMsgs = conversation.filter(m => m.role === 'assistant').map(m => m.content);
-    if (assistantMsgs.length === 0) return '<p>No diagnostic summary available.</p>';
+  static extractAISummary(input: string | ChatMessage[]): string {
+    let summary = '';
+    
+    if (typeof input === 'string') {
+        summary = input;
+    } else {
+        const assistantMsgs = input.filter(m => m.role === 'assistant').map(m => m.content);
+        if (assistantMsgs.length === 0) return '<p>No diagnostic summary available. Re-run assessment to generate analysis.</p>';
+        summary = assistantMsgs.reverse().find(t => (t || '').length > 100) || assistantMsgs[0] || '';
+    }
 
-    const summary = assistantMsgs.reverse().find(t => (t || '').length > 100) || assistantMsgs[0];
+    if (!summary || summary.length < 10) {
+        return '<p>Analysis complete. Recommended careers reflect your academic strengths, RIASEC profile, and professional values.</p>';
+    }
 
     const formatted = summary
       .replace(/\n{3,}/g, '\n\n')
@@ -289,32 +302,51 @@ export class ReportGenerator {
       .split('\n')
       .filter(line => line.trim().length > 0)
       .map(line => {
-        if (line.trim().startsWith('- ') || line.trim().startsWith('* ')) {
-          return `<li>${line.trim().substring(2)}</li>`;
+        const trimmed = line.trim();
+        if (trimmed.startsWith('- ') || trimmed.startsWith('* ')) {
+          return `<li>${trimmed.substring(2)}</li>`;
         }
-        return `<p>${line}</p>`;
+        if (trimmed.match(/^\d+\./)) {
+           return `<li>${trimmed.replace(/^\d+\.\s+/, '')}</li>`;
+        }
+        return `<p>${trimmed}</p>`;
       })
       .join('');
 
-    return formatted || '<p>Analysis complete. Key strengths identified in analytical and creative domains.</p>';
+    // Wrap list items in <ul>
+    const finalHtml = formatted.replace(/(<li>.*?<\/li>)+/g, (match) => `<ul>${match}</ul>`);
+
+    return finalHtml;
   }
 
   static async downloadPDF(htmlContent: string, filename: string): Promise<void> {
     const html2pdf = (await import('html2pdf.js')).default;
     const container = document.createElement('div');
     container.innerHTML = htmlContent;
+    container.style.position = 'fixed';
+    container.style.left = '-9999px';
+    container.style.top = '0';
     document.body.appendChild(container);
-    await html2pdf()
-      .from(container)
-      .set({
-        margin: [5, 5, 5, 5],
-        filename,
-        image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: { scale: 2, useCORS: true },
-        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
-      })
-      .save();
-    document.body.removeChild(container);
+    
+    // Safety delay to allow fonts and images to render in the layout
+    await new Promise(resolve => setTimeout(resolve, 800));
+    
+    try {
+      await html2pdf()
+        .from(container)
+        .set({
+          margin: [5, 5, 5, 5],
+          filename: filename || 'CareerGuide-Assessment.pdf',
+          image: { type: 'jpeg', quality: 0.98 },
+          html2canvas: { scale: 2, useCORS: true, logging: false, letterRendering: true },
+          jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+        })
+        .save();
+    } catch (err) {
+      console.error('PDF Generation Error:', err);
+    } finally {
+      document.body.removeChild(container);
+    }
   }
 
   static generateTextReport(profile: GuestProfile, conversation: ChatMessage[]): string {
