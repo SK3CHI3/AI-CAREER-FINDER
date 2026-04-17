@@ -61,6 +61,38 @@ const QuickAssessment = () => {
     const [finalRecommendations, setFinalRecommendations] = useState<CareerRecommendation[]>([]);
     const [guestProfile, setGuestProfile] = useState<GuestProfile>({});
 
+    // LOAD PERSISTENCE
+    useEffect(() => {
+        const saved = localStorage.getItem('career_assessment_state');
+        if (saved) {
+            try {
+                const parsed = JSON.parse(saved);
+                // Only restore if it's less than 2 hours old
+                if (Date.now() - parsed.timestamp < 7200000) {
+                    // Simplified restoration for critical fields
+                    if (parsed.name) setName(parsed.name);
+                    if (parsed.email) setEmail(parsed.email);
+                    if (parsed.curriculum) setCurriculum(parsed.curriculum);
+                    if (parsed.grade) setGrade(parsed.grade);
+                    if (parsed.subjectGrades) setSubjectGrades(parsed.subjectGrades);
+                    if (parsed.step) setCurrentStep(parsed.step);
+                }
+            } catch (e) {
+                console.error("Failed to restore assessment session");
+            }
+        }
+    }, []);
+
+    // SAVE PERSISTENCE
+    useEffect(() => {
+        const state = {
+            name, email, curriculum, grade, subjectGrades, 
+            step: currentStep, 
+            timestamp: Date.now()
+        };
+        localStorage.setItem('career_assessment_state', JSON.stringify(state));
+    }, [name, email, curriculum, grade, subjectGrades, currentStep]);
+
     const SUBJECT_DATA = {
         cbc_junior: ["Mathematics", "English", "Kiswahili", "Integrated Science", "Health Education", "Pre-Technical Studies", "Social Studies", "Business Studies", "Agriculture & Nutrition", "Creative Arts", "Physical Education"],
         cbc_senior_stem: ["Mathematics", "English", "Kiswahili", "Physics", "Chemistry", "Biology", "Computer Science", "Further Mathematics", "Technical Drawing", "Agriculture & Nutrition"],
@@ -130,7 +162,7 @@ const QuickAssessment = () => {
                 // Manual Grade validation
                 if (grade === "Form 4 Leaver") {
                     const selectedGrades = Object.entries(subjectGrades).filter(([_, g]) => g !== '');
-                    if (selectedGrades.length < 5) return setError("Please select grades for at least 5 subjects to calculate your Mean Grade.");
+                    if (selectedGrades.length < 7) return setError("Please select grades for at least 7 subjects to calculate an accurate Mean Grade (Official KUCCPS Standard).");
                     
                     // Automatically derive strong subjects (B and above)
                     const strongSubjects = selectedGrades
@@ -233,7 +265,7 @@ const QuickAssessment = () => {
             const mbtiCode = `${mbtiEnergy === 'Introvert' ? 'I' : 'E'}N${mbtiDecisions === 'Thinker' ? 'T' : 'F'}${mbtiStructure === 'Judging' ? 'J' : 'P'}`;
 
             const selectedGrades = Object.entries(subjectGrades).filter(([_, g]) => g !== '');
-            const hasLegacyGrades = grade === "Form 4 Leaver" && selectedGrades.length >= 5;
+            const hasLegacyGrades = grade === "Form 4 Leaver" && selectedGrades.length >= 7;
 
             let kcseGrade = undefined;
             if (hasLegacyGrades) {
@@ -275,7 +307,7 @@ const QuickAssessment = () => {
                 readiness,
                 careerGoals: "Seeking career alignment via Diagnostic Assessment.",
                 kcseGrade,
-                kcsePoints: hasLegacyGrades ? selectedGrades.reduce((sum, [_, g]) => sum + ({'A': 12, 'A-': 11, 'B+': 10, 'B': 9, 'B-': 8, 'C+': 7, 'C': 6, 'C-': 5, 'D+': 4, 'D': 3, 'D-': 2, 'E': 1}[g] || 0), 0) : undefined,
+                kcsePoints: hasLegacyGrades ? totalPoints : undefined,
                 subjectGrades: hasLegacyGrades ? Object.fromEntries(selectedGrades) : undefined
             };
             setGuestProfile(profile);
@@ -340,7 +372,12 @@ const QuickAssessment = () => {
 
     const downloadReport = async () => {
         if (!reportHtml) return;
-        await ReportGenerator.downloadPDF(reportHtml, `${guestProfile.name || 'CareerGuide'}-Diagnostic-Report.pdf`);
+        try {
+            await ReportGenerator.downloadPDF(reportHtml, `${guestProfile.name || 'CareerGuide'}-Diagnostic-Report.pdf`);
+        } catch (err) {
+            console.error(err);
+            setError("Failed to generate PDF. Please try again or contact support.");
+        }
     };
 
     const handlePaymentSuccess = () => {
@@ -500,7 +537,7 @@ const QuickAssessment = () => {
                                                             </div>
 
                                                             <div className="space-y-3 pt-2">
-                                                                <Label className="text-[10px] uppercase tracking-wider font-bold text-muted-foreground">Elective Subjects (Select At Least 2 More)</Label>
+                                                                <Label className="text-[10px] uppercase tracking-wider font-bold text-muted-foreground">Elective Subjects (Select At Least 4 More)</Label>
                                                                 {['Biology', 'Chemistry', 'Physics', 'History & Government', 'Geography', 'Christian Religious Ed (CRE)', 'Islamic Religious Ed (IRE)', 'Hindu Religious Ed (HRE)', 'Home Science', 'Business Studies', 'Agriculture', 'Computer Studies', 'Music', 'Art & Design', 'French', 'German', 'Arabic', 'Aviation', 'Building Construction', 'Power Mechanics', 'Woodwork', 'Metalwork', 'Drawing & Design', 'Electricity'].map(subject => (
                                                                     <div key={subject} className="flex items-center justify-between gap-4 p-2 rounded-xl bg-background/40">
                                                                         <span className="text-sm">{subject}</span>
@@ -520,10 +557,10 @@ const QuickAssessment = () => {
                                                     </ScrollArea>
                                                 </div>
 
-                                                {Object.entries(subjectGrades).filter(([_, g]) => g !== '').length >= 5 && (
+                                                {Object.entries(subjectGrades).filter(([_, g]) => g !== '').length >= 7 && (
                                                     <div className="text-center p-3 bg-green-500/10 border border-green-500/20 rounded-2xl animate-in fade-in slide-in-from-top-2">
                                                         <p className="text-xs font-bold text-green-600 flex items-center justify-center gap-1">
-                                                            <CheckCircle className="w-3 h-3" /> Minimum 5 subjects reached. Academic profile ready.
+                                                            <CheckCircle className="w-3 h-3" /> 7/7 Subjects Reached. Official KUCCPS Standard Met.
                                                         </p>
                                                     </div>
                                                 )}

@@ -70,21 +70,151 @@ export class ReportGenerator {
       border: '#e2e8f0'
     };
 
+    const styles = this.getStyles(colors);
+
     return `
-<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="UTF-8">
-    <title>Career Assessment Report - ${profile.name || 'Student'}</title>
-    <style>
+      <div class="report-container">
+        <style>${styles}</style>
+        <div class="report-page">
+            <!-- HEADER -->
+            <div class="header">
+                <div class="branding">
+                    <img src="${window.location.origin}/logos/CareerGuide_Logo.webp" class="logo" alt="CareerGuide">
+                </div>
+                <div class="meta">
+                    <div class="report-label">Professional Career Diagnostic</div>
+                    <div class="report-id">REF: ${reportId}</div>
+                    <div class="report-date">${currentDate}</div>
+                </div>
+            </div>
+
+            <!-- ASSESSMENT SUMMARY -->
+            <div class="section-title">Diagnostic Summary</div>
+            <div class="summary-box">
+                ${this.extractAISummary(profile.aiSummary || conversation)}
+            </div>
+
+            <div class="section-title">Candidate Profile</div>
+            <div class="grid">
+                <div class="card">
+                    <div class="card-label">Student Name</div>
+                    <div class="card-value">${profile.name || 'Student Candidate'}</div>
+                </div>
+                <div class="card">
+                    <div class="card-label">Personality Blend (RIASEC)</div>
+                    <div class="card-value">${profile.interests?.[0]?.replace('RIASEC Type: ', '') || 'Analytical & Strategic'}</div>
+                </div>
+                <div class="card">
+                    <div class="card-label">Strategic Archetype (MBTI)</div>
+                    <div class="card-value">${profile.mbti || 'Analyzer'}</div>
+                </div>
+                <div class="card">
+                    <div class="card-label">Core Values</div>
+                    <div class="card-value">${profile.values && profile.values.length > 0 ? profile.values.slice(0, 3).join(', ') : 'Growth, Innovation'}</div>
+                </div>
+                <div class="card">
+                    <div class="card-label">Current Academic Level</div>
+                    <div class="card-value">${profile.grade || 'Senior Secondary'}</div>
+                </div>
+            </div>
+
+            <div class="section-title">Academic Synchronization</div>
+            <div class="grid">
+                <div class="card">
+                    <div class="card-label">Curriculum System</div>
+                    <div class="card-value">${profile.curriculum === 'cbc' ? 'Kenyan CBC' : profile.curriculum === 'igcse' ? 'IGCSE/A-Level' : 'Kenyan 8-4-4 (Legacy)'}</div>
+                </div>
+                <div class="card">
+                    <div class="card-label">KCSE Mean Grade</div>
+                    <div class="card-value">${profile.kcseGrade || 'Assessment Only'}</div>
+                </div>
+                <div class="card">
+                    <div class="card-label">Aggregate Performance</div>
+                    <div class="card-value">${profile.kcsePoints ? `${profile.kcsePoints} Points` : '---'}</div>
+                </div>
+                <div class="card">
+                    <div class="card-label">Technical Eligibility</div>
+                    <div class="card-value">${profile.resultsVerified ? 'Verified Official' : 'Self-Reported'}</div>
+                </div>
+            </div>
+
+            <div class="page-break"></div>
+
+            <div class="section-title">Institutional Placement Roadmap</div>
+            <p style="font-size: 11px; color: ${colors.muted}; margin-bottom: 20px;">
+                The following recommendations are triangulated using official 2025 KUCCPS cluster requirements and market performance trends.
+            </p>
+
+            ${recommendations.length > 0 ? recommendations.map(rec => `
+                <div class="rec-card">
+                    <div class="rec-header">
+                        <div class="rec-title">${rec.title}</div>
+                        ${rec.isTechnicalMisfit ? 
+                            `<div class="misfit-badge">Technical Misfit</div>` : 
+                            `<div class="match-badge">${rec.matchPercentage}% Alignment</div>`
+                        }
+                    </div>
+                    
+                    <p style="margin-bottom: 12px; color: ${colors.text}; font-size: 12px;">${rec.description}</p>
+                    
+                    <div class="rec-info-grid">
+                        <div class="info-pill">
+                            <div class="pill-label">KUCCPS Cluster</div>
+                            <div class="pill-value">${rec.kuccpsCluster || 'General'}</div>
+                        </div>
+                        <div class="info-pill">
+                            <div class="pill-label">Est. Cluster Points</div>
+                            <div class="pill-value">${rec.estimatedClusterPoints || '22.0+'}</div>
+                        </div>
+                        <div class="info-pill">
+                            <div class="pill-label">Path Index</div>
+                            <div class="pill-value">${rec.actionabilityScore || 85}/100</div>
+                        </div>
+                    </div>
+
+                    <div class="inst-box">
+                        <div class="inst-label">Strategic Institutional Matches:</div>
+                        <div class="inst-list">${rec.universities && rec.universities.length > 0 ? rec.universities.join(' • ') : 'Major Public & Private Universities'}</div>
+                    </div>
+
+                    ${rec.isTechnicalMisfit ? `
+                        <div class="misfit-box">
+                            <strong style="color: ${colors.danger}; font-size: 10px; text-transform: uppercase;">Admissions Alert:</strong>
+                            <p style="font-size: 11px; margin-top: 2px;">${rec.reasoning}</p>
+                        </div>
+                    ` : `
+                        <div style="margin-top: 8px; padding-top: 8px; border-top: 1px solid ${colors.border};">
+                            <strong style="font-size: 10px; color: ${colors.muted}; text-transform: uppercase;">Why Recommended:</strong>
+                            <p style="font-size: 11px; margin-top: 2px; color: ${colors.text};">${rec.whyRecommended || 'Aligns with student academic strengths and personality archetype.'}</p>
+                        </div>
+                    `}
+                </div>
+            `).join('') : `
+                <div class="card" style="padding: 40px; text-align: center; border-style: dashed;">
+                    <p style="color: ${colors.muted};">Analyzing academic synchronization for optimal university placement...</p>
+                </div>
+            `}
+
+            <div class="footer">
+                <p><strong>Professional Career Diagnostic</strong> • CareerGuide AI • 2026 Edition</p>
+                <p style="margin-top: 4px;">This roadmap is generated using "Realistic Triangulation Logic" for academic and career synchronization.</p>
+            </div>
+        </div>
+      </div>
+    `;
+  }
+
+  private static getStyles(colors: any): string {
+    return `
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
         * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { 
+        .report-container { 
           font-family: 'Plus Jakarta Sans', sans-serif; 
           color: ${colors.text}; 
           background: ${colors.white}; 
           line-height: 1.6;
           font-size: 13px;
+          -webkit-font-smoothing: antialiased;
         }
         .report-page { width: 800px; margin: 0 auto; padding: 40px 50px; background: ${colors.white}; }
         
@@ -95,7 +225,6 @@ export class ReportGenerator {
         }
         .branding { display: flex; align-items: center; gap: 12px; }
         .logo { height: 45px; width: auto; object-fit: contain; }
-        .brand-name { font-weight: 800; font-size: 20px; color: ${colors.primary}; letter-spacing: -0.5px; }
         .meta { text-align: right; }
         .report-label { text-transform: uppercase; font-size: 10px; font-weight: 700; color: ${colors.muted}; letter-spacing: 1px; }
         .report-id { font-size: 16px; font-weight: 700; color: ${colors.secondary}; }
@@ -148,136 +277,6 @@ export class ReportGenerator {
           text-align: center; font-size: 10px; color: ${colors.muted}; 
         }
         .page-break { page-break-before: always; }
-    </style>
-</head>
-<body>
-    <div class="report-page">
-        <!-- HEADER -->
-        <div class="header">
-            <div class="branding">
-                <img src="${window.location.origin}/logos/CareerGuide_Logo.webp" class="logo" alt="CareerGuide">
-            </div>
-            <div class="meta">
-                <div class="report-label">Professional Career Diagnostic</div>
-                <div class="report-id">REF: ${reportId}</div>
-                <div class="report-date">${currentDate}</div>
-            </div>
-        </div>
-
-        <!-- ASSESSMENT SUMMARY -->
-        <div class="section-title">Diagnostic Summary</div>
-        <div class="summary-box">
-            ${this.extractAISummary(profile.aiSummary || conversation)}
-        </div>
-
-        <div class="section-title">Candidate Profile</div>
-        <div class="grid">
-            <div class="card">
-                <div class="card-label">Student Name</div>
-                <div class="card-value">${profile.name || 'Student Candidate'}</div>
-            </div>
-            <div class="card">
-                <div class="card-label">Personality Blend (RIASEC)</div>
-                <div class="card-value">${profile.interests?.[0]?.replace('RIASEC Type: ', '') || 'Analytical & Strategic'}</div>
-            </div>
-            <div class="card">
-                <div class="card-label">Strategic Archetype (MBTI)</div>
-                <div class="card-value">${profile.mbti || 'Analyzer'}</div>
-            </div>
-            <div class="card">
-                <div class="card-label">Core Values</div>
-                <div class="card-value">${profile.values && profile.values.length > 0 ? profile.values.slice(0, 3).join(', ') : 'Growth, Innovation'}</div>
-            </div>
-            <div class="card">
-                <div class="card-label">Current Academic Level</div>
-                <div class="card-value">${profile.grade || 'Senior Secondary'}</div>
-            </div>
-        </div>
-
-        <div class="section-title">Academic Synchronization</div>
-        <div class="grid">
-            <div class="card">
-                <div class="card-label">Curriculum System</div>
-                <div class="card-value">${profile.curriculum === 'cbc' ? 'Kenyan CBC' : profile.curriculum === 'igcse' ? 'IGCSE/A-Level' : 'Kenyan 8-4-4 (Legacy)'}</div>
-            </div>
-            <div class="card">
-                <div class="card-label">KCSE Mean Grade</div>
-                <div class="card-value">${profile.kcseGrade || 'Assessment Only'}</div>
-            </div>
-            <div class="card">
-                <div class="card-label">Aggregate Performance</div>
-                <div class="card-value">${profile.kcsePoints ? `${profile.kcsePoints} Points` : '---'}</div>
-            </div>
-            <div class="card">
-                <div class="card-label">Technical Eligibility</div>
-                <div class="card-value">${profile.resultsVerified ? 'Verified Official' : 'Self-Reported'}</div>
-            </div>
-        </div>
-
-        <div class="page-break"></div>
-
-        <div class="section-title">Institutional Placement Roadmap</div>
-        <p style="font-size: 11px; color: ${colors.muted}; margin-bottom: 20px;">
-            The following recommendations are triangulated using official 2025 KUCCPS cluster requirements and market performance trends.
-        </p>
-
-        ${recommendations.length > 0 ? recommendations.map(rec => `
-            <div class="rec-card">
-                <div class="rec-header">
-                    <div class="rec-title">${rec.title}</div>
-                    ${rec.isTechnicalMisfit ? 
-                        `<div class="misfit-badge">Technical Misfit</div>` : 
-                        `<div class="match-badge">${rec.matchPercentage}% Alignment</div>`
-                    }
-                </div>
-                
-                <p style="margin-bottom: 12px; color: ${colors.text}; font-size: 12px;">${rec.description}</p>
-                
-                <div class="rec-info-grid">
-                    <div class="info-pill">
-                        <div class="pill-label">KUCCPS Cluster</div>
-                        <div class="pill-value">${rec.kuccpsCluster || 'General'}</div>
-                    </div>
-                    <div class="info-pill">
-                        <div class="pill-label">Est. Cluster Points</div>
-                        <div class="pill-value">${rec.estimatedClusterPoints || '22.0+'}</div>
-                    </div>
-                    <div class="info-pill">
-                        <div class="pill-label">Path Index</div>
-                        <div class="pill-value">${rec.actionabilityScore || 85}/100</div>
-                    </div>
-                </div>
-
-                <div class="inst-box">
-                    <div class="inst-label">Strategic Institutional Matches:</div>
-                    <div class="inst-list">${rec.universities && rec.universities.length > 0 ? rec.universities.join(' • ') : 'Major Public & Private Universities'}</div>
-                </div>
-
-                ${rec.isTechnicalMisfit ? `
-                    <div class="misfit-box">
-                        <strong style="color: ${colors.danger}; font-size: 10px; text-transform: uppercase;">Admissions Alert:</strong>
-                        <p style="font-size: 11px; margin-top: 2px;">${rec.reasoning}</p>
-                    </div>
-                ` : `
-                    <div style="margin-top: 8px; padding-top: 8px; border-top: 1px solid ${colors.border};">
-                        <strong style="font-size: 10px; color: ${colors.muted}; text-transform: uppercase;">Why Recommended:</strong>
-                        <p style="font-size: 11px; margin-top: 2px; color: ${colors.text};">${rec.whyRecommended || 'Aligns with student academic strengths and personality archetype.'}</p>
-                    </div>
-                `}
-            </div>
-        `).join('') : `
-            <div class="card" style="padding: 40px; text-align: center; border-style: dashed;">
-                <p style="color: ${colors.muted};">Analyzing academic synchronization for optimal university placement...</p>
-            </div>
-        `}
-
-        <div class="footer">
-            <p><strong>Professional Career Diagnostic</strong> • CareerGuide AI • 2026 Edition</p>
-            <p style="margin-top: 4px;">This roadmap is generated using "Realistic Triangulation Logic" for academic and career synchronization.</p>
-        </div>
-    </div>
-</body>
-</html>
     `;
   }
 
@@ -297,50 +296,59 @@ export class ReportGenerator {
     }
 
     const formatted = summary
-      .replace(/\n{3,}/g, '\n\n')
       .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-      .split('\n')
-      .filter(line => line.trim().length > 0)
-      .map(line => {
-        const trimmed = line.trim();
-        if (trimmed.startsWith('- ') || trimmed.startsWith('* ')) {
-          return `<li>${trimmed.substring(2)}</li>`;
+      .split(/\n{2,}/)
+      .map(paragraph => {
+        const lines = paragraph.split('\n').filter(l => l.trim());
+        const isList = lines.every(l => l.trim().startsWith('- ') || l.trim().startsWith('* ') || l.trim().match(/^\d+\./));
+        
+        if (isList) {
+          const listItems = lines.map(l => {
+            const content = l.trim().replace(/^[-*]\s+|\d+\.\s+/, '');
+            return `<li>${content}</li>`;
+          }).join('');
+          return `<ul>${listItems}</ul>`;
         }
-        if (trimmed.match(/^\d+\./)) {
-           return `<li>${trimmed.replace(/^\d+\.\s+/, '')}</li>`;
-        }
-        return `<p>${trimmed}</p>`;
+        
+        return `<p>${paragraph.trim().replace(/\n/g, '<br>')}</p>`;
       })
       .join('');
 
-    // Wrap list items in <ul>
-    const finalHtml = formatted.replace(/(<li>.*?<\/li>)+/g, (match) => `<ul>${match}</ul>`);
-
-    return finalHtml;
+    return formatted;
   }
 
   static async downloadPDF(htmlContent: string, filename: string): Promise<void> {
     const html2pdf = (await import('html2pdf.js')).default;
     const container = document.createElement('div');
+    container.id = 'pdf-render-container';
     container.innerHTML = htmlContent;
     container.style.position = 'fixed';
     container.style.left = '-9999px';
     container.style.top = '0';
     document.body.appendChild(container);
     
-    // Safety delay to allow fonts and images to render in the layout
-    await new Promise(resolve => setTimeout(resolve, 800));
+    // Increased safety delay for heavy font rendering
+    await new Promise(resolve => setTimeout(resolve, 1500));
     
     try {
+      const options = {
+        margin: [10, 10, 10, 10],
+        filename: filename || 'CareerGuide-Assessment.pdf',
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { 
+          scale: 2, 
+          useCORS: true, 
+          logging: false, 
+          letterRendering: true,
+          windowWidth: 850 
+        },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+        pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
+      };
+
       await html2pdf()
         .from(container)
-        .set({
-          margin: [5, 5, 5, 5],
-          filename: filename || 'CareerGuide-Assessment.pdf',
-          image: { type: 'jpeg', quality: 0.98 },
-          html2canvas: { scale: 2, useCORS: true, logging: false, letterRendering: true },
-          jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
-        })
+        .set(options)
         .save();
     } catch (err) {
       console.error('PDF Generation Error:', err);

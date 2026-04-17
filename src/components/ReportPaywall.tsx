@@ -99,14 +99,19 @@ const ReportPaywall = forwardRef<ReportPaywallHandle, ReportPaywallProps>(({ onP
     setError(null);
 
     try {
+      // Create a unique, searchable reference for manual recovery
+      const sanitizedName = studentName?.replace(/[^a-zA-Z0-9]/g, '').slice(0, 10) || 'GUEST';
+      const recoveryRef = `REP_${sanitizedName}_${Date.now().toString().slice(-6)}`;
+
       intaSendInstance.run({
         amount: PAYMENT_AMOUNT,
         currency: 'KES',
         email: email || '',
-        api_ref: `REPORT_${Date.now()}`,
+        api_ref: recoveryRef,
         first_name: studentName?.split(' ')[0] || 'Student',
         last_name: studentName?.split(' ').slice(1).join(' ') || 'Report',
       });
+      console.log('Payment initiated with Ref:', recoveryRef);
     } catch (err) {
       setError('Failed to open payment window.');
       setIsLoading(false);
