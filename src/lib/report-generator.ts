@@ -319,28 +319,38 @@ export class ReportGenerator {
 
   static async downloadPDF(htmlContent: string, filename: string): Promise<void> {
     const html2pdf = (await import('html2pdf.js')).default;
+    
+    // SANITIZATION: Remove illegal filename characters
+    const safeFilename = (filename || 'CareerGuide-Diagnostic.pdf')
+      .replace(/[^a-z0-9. -]/gi, '_');
+
     const container = document.createElement('div');
     container.id = 'pdf-render-container';
     container.innerHTML = htmlContent;
+    
+    // Ensure styles are forced for the render-context
+    container.style.width = '800px'; 
     container.style.position = 'fixed';
-    container.style.left = '-9999px';
+    container.style.left = '-10000px';
     container.style.top = '0';
     document.body.appendChild(container);
     
-    // Increased safety delay for heavy font rendering
+    // Increased safety delay for heavy font rendering and asset capture
     await new Promise(resolve => setTimeout(resolve, 1500));
     
     try {
-      const options = {
-        margin: [10, 10, 10, 10],
-        filename: filename || 'CareerGuide-Assessment.pdf',
+      const options: any = {
+        margin: [10, 10, 10, 10], // This is now explicitly a tuple
+        filename: safeFilename,
         image: { type: 'jpeg', quality: 0.98 },
         html2canvas: { 
           scale: 2, 
           useCORS: true, 
           logging: false, 
           letterRendering: true,
-          windowWidth: 850 
+          windowWidth: 850,
+          scrollX: 0,
+          scrollY: 0
         },
         jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
         pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
@@ -352,6 +362,7 @@ export class ReportGenerator {
         .save();
     } catch (err) {
       console.error('PDF Generation Error:', err);
+      throw err; // Re-throw to be caught by UI handler
     } finally {
       document.body.removeChild(container);
     }
