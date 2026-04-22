@@ -214,19 +214,19 @@ export class ReportGenerator {
           font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; 
           color: ${colors.text}; 
           background: ${colors.white}; 
-          line-height: 1.6;
+          line-height: 1.5;
           font-size: 13px;
           -webkit-font-smoothing: antialiased;
         }
-        .report-page { width: 800px; margin: 0 auto; padding: 40px 50px; background: ${colors.white}; }
+        .report-page { width: 800px; margin: 0 auto; padding: 30px 40px; background: ${colors.white}; }
         
         /* HEADER */
         .header {
           display: flex; justify-content: space-between; align-items: flex-start;
-          border-bottom: 2px solid ${colors.primary}; padding-bottom: 20px; margin-bottom: 30px;
+          border-bottom: 2px solid ${colors.primary}; padding-bottom: 15px; margin-bottom: 20px;
         }
         .branding { display: flex; align-items: center; gap: 12px; }
-        .logo { height: 45px; width: auto; object-fit: contain; }
+        .logo { height: 40px; width: auto; object-fit: contain; }
         .meta { text-align: right; }
         .report-label { text-transform: uppercase; font-size: 10px; font-weight: 700; color: ${colors.muted}; letter-spacing: 1px; }
         .report-id { font-size: 16px; font-weight: 700; color: ${colors.secondary}; }
@@ -234,49 +234,53 @@ export class ReportGenerator {
 
         /* SECTIONS */
         .section-title { 
-          font-size: 15px; font-weight: 800; color: ${colors.secondary}; 
-          margin: 25px 0 15px 0; display: flex; align-items: center; gap: 8px;
+          font-size: 14px; font-weight: 800; color: ${colors.secondary}; 
+          margin: 20px 0 10px 0; display: flex; align-items: center; gap: 8px;
           text-transform: uppercase; letter-spacing: 0.5px;
+          page-break-after: avoid;
         }
         .section-title::before { content: ''; display: block; width: 4px; height: 16px; background: ${colors.primary}; border-radius: 2px; }
 
-        .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 20px; }
-        .card { padding: 12px 15px; border-radius: 12px; border: 1px solid ${colors.border}; background: ${colors.light}; }
+        .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 15px; }
+        .card { padding: 10px 15px; border-radius: 12px; border: 1px solid ${colors.border}; background: ${colors.light}; page-break-inside: avoid; break-inside: avoid; }
         .card-label { font-size: 9px; font-weight: 700; color: ${colors.muted}; text-transform: uppercase; margin-bottom: 2px; }
-        .card-value { font-size: 13px; font-weight: 600; color: ${colors.secondary}; }
+        .card-value { font-size: 12px; font-weight: 600; color: ${colors.secondary}; }
 
         /* RECOMMENDATIONS */
         .rec-card { 
-          margin-bottom: 15px; padding: 18px; border-radius: 16px; 
+          margin-bottom: 12px; padding: 15px; border-radius: 12px; 
           border: 1px solid ${colors.border}; background: ${colors.white};
-          box-shadow: 0 4px 6px -1px rgba(0,0,0,0.03);
+          box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+          page-break-inside: avoid; break-inside: avoid;
         }
-        .rec-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
-        .rec-title { font-size: 17px; font-weight: 800; color: ${colors.primary}; }
+        .rec-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+        .rec-title { font-size: 16px; font-weight: 800; color: ${colors.primary}; }
         .match-badge { 
           padding: 3px 10px; border-radius: 20px; font-weight: 700; font-size: 10px; 
           background: ${colors.primary}; color: white; 
         }
         .misfit-badge { background: ${colors.danger}; color: white; padding: 3px 10px; border-radius: 20px; font-weight: 700; font-size: 10px; }
 
-        .rec-info-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 12px 0; }
-        .info-pill { padding: 8px; background: ${colors.light}; border-radius: 8px; text-align: center; border: 1px solid ${colors.border}; }
+        .rec-info-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 10px 0; }
+        .info-pill { padding: 6px; background: ${colors.light}; border-radius: 8px; text-align: center; border: 1px solid ${colors.border}; }
         .pill-label { font-size: 8px; color: ${colors.muted}; text-transform: uppercase; font-weight: 700; }
         .pill-value { font-size: 11px; font-weight: 600; color: ${colors.secondary}; }
 
-        .inst-box { margin-bottom: 10px; padding: 10px; background: rgba(37, 99, 235, 0.03); border-radius: 8px; border: 1px dashed ${colors.primary}; }
+        .inst-box { margin-bottom: 8px; padding: 8px; background: rgba(37, 99, 235, 0.03); border-radius: 8px; border: 1px dashed ${colors.primary}; page-break-inside: avoid; break-inside: avoid; }
         .inst-label { font-size: 9px; color: ${colors.primary}; text-transform: uppercase; font-weight: 800; }
-        .inst-list { font-weight: 600; font-size: 11px; margin-top: 3px; color: ${colors.secondary}; }
+        .inst-list { font-weight: 600; font-size: 11px; margin-top: 2px; color: ${colors.secondary}; }
 
-        .misfit-box { padding: 10px; background: rgba(239, 68, 68, 0.05); border-left: 3px solid ${colors.danger}; border-radius: 4px; margin-top: 8px; }
+        .misfit-box { padding: 8px; background: rgba(239, 68, 68, 0.05); border-left: 3px solid ${colors.danger}; border-radius: 4px; margin-top: 8px; page-break-inside: avoid; break-inside: avoid; }
         
-        .summary-box { padding: 18px; border-radius: 12px; background: ${colors.light}; border: 1px solid ${colors.border}; font-size: 12px; line-height: 1.7; }
-        .summary-box p { margin-bottom: 10px; }
-        .summary-box ul { margin-left: 20px; margin-bottom: 10px; }
+        .summary-box { padding: 15px; border-radius: 12px; background: ${colors.light}; border: 1px solid ${colors.border}; font-size: 12px; line-height: 1.6; margin-bottom: 15px; page-break-inside: avoid; break-inside: avoid; }
+        .summary-box p { margin-bottom: 8px; }
+        .summary-box p:last-child { margin-bottom: 0; }
+        .summary-box ul { margin-left: 20px; margin-bottom: 8px; }
 
         .footer { 
-          margin-top: 40px; padding-top: 20px; border-top: 1px solid ${colors.border}; 
+          margin-top: 30px; padding-top: 15px; border-top: 1px solid ${colors.border}; 
           text-align: center; font-size: 10px; color: ${colors.muted}; 
+          page-break-inside: avoid; break-inside: avoid;
         }
         .page-break { page-break-before: always; }
     `;
@@ -329,7 +333,7 @@ export class ReportGenerator {
     // The wrapper ensures html2pdf.js knows the exact render width.
     const wrappedHtml = `<div style="width:800px;background:#ffffff;padding:0;margin:0;">${htmlContent}</div>`;
 
-    const options = {
+    const options: any = {
       margin: [5, 5, 5, 5],
       filename: safeFilename,
       image: { type: 'jpeg', quality: 0.98 },

@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -20,6 +20,10 @@ import { RIASEC_ACTIVITIES, RIASEC_LABELS } from "@/data/riasec-assessment";
 
 const QuickAssessment = () => {
     const navigate = useNavigate();
+    const [searchParams] = useSearchParams();
+    const targetCareer = searchParams.get('career');
+    const isCareerFitMode = !!targetCareer;
+
     const paywallRef = useRef<any>(null);
     const [currentStep, setCurrentStep] = useState(1);
     const [subStep, setSubStep] = useState(1); // For Phase 1 sub-steps
@@ -78,20 +82,19 @@ const QuickAssessment = () => {
                     if (parsed.step) setCurrentStep(parsed.step);
                 }
             } catch (e) {
-                console.error("Failed to restore assessment session");
+                console.error("Failed to restore assessment state");
             }
         }
     }, []);
 
     // SAVE PERSISTENCE
     useEffect(() => {
-        const state = {
-            name, email, curriculum, grade, subjectGrades, 
-            step: currentStep, 
-            timestamp: Date.now()
-        };
-        localStorage.setItem('career_assessment_state', JSON.stringify(state));
-    }, [name, email, curriculum, grade, subjectGrades, currentStep]);
+        if (currentStep > 1 && currentStep < 7) {
+            localStorage.setItem('career_assessment_state', JSON.stringify({
+                name, email, curriculum, grade, subjectGrades, step: currentStep, timestamp: Date.now()
+            }));
+        }
+    }, [currentStep, name, email, curriculum, grade, subjectGrades]);
 
     const SUBJECT_DATA = {
         cbc_junior: ["Mathematics", "English", "Kiswahili", "Integrated Science", "Health Education", "Pre-Technical Studies", "Social Studies", "Business Studies", "Agriculture & Nutrition", "Creative Arts", "Physical Education"],
@@ -253,7 +256,7 @@ const QuickAssessment = () => {
         return { scores, personalityTypes: sortedTypes };
     };
 
-    const [isPaid, setIsPaid] = useState(false);
+    const [isPaid, setIsPaid] = useState(isCareerFitMode);
     const [reportHtml, setReportHtml] = useState<string | null>(null);
 
     const finishAssessment = async () => {
@@ -308,6 +311,7 @@ const QuickAssessment = () => {
                 barriers: barrier,
                 experience,
                 readiness,
+                dreamJob: targetCareer || undefined,
                 careerGoals: "Seeking career alignment via Diagnostic Assessment.",
                 kcseGrade,
                 kcsePoints: hasLegacyGrades ? totalPointsVal : undefined,
@@ -328,7 +332,8 @@ const QuickAssessment = () => {
                 mbti: profile.mbti,
                 limitations: profile.barriers,
                 kcseGrade: profile.kcseGrade,
-                subjectGrades: profile.subjectGrades
+                subjectGrades: profile.subjectGrades,
+                dreamJob: targetCareer || undefined
             };
 
             const recommendations = await aiCareerService.generateCareerRecommendations(payload);
@@ -343,6 +348,7 @@ const QuickAssessment = () => {
                 - Personality: RIASEC (${topPersonality}), MBTI (${mbtiCode})
                 - Values: ${selectedValues.join(', ')}
                 - Barrier: ${barrier}
+                ${targetCareer ? `- Target Career Fit Request: ${targetCareer}` : ''}
 
                 Emphasize how they can use their academic system (${payload.curriculum}) to overcome their barrier. Use professional, encouraging tone. DO NOT ask any questions. Use markdown formatting.`;
 

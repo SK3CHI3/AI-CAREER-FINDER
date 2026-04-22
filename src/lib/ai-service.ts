@@ -15,6 +15,7 @@ export interface UserContext {
   subjects?: string[]
   interests?: string[]
   careerGoals?: string
+  dreamJob?: string
   assessmentResults?: UserProfile['assessment_results']
   constraints?: string[]
   previousRecommendations?: UserProfile['previous_recommendations']
@@ -397,7 +398,7 @@ ${academicInfo}
 
 Instructions:
 1. Match careers to their core values and RIASEC personality type.
-2. Verify grades against KUCCPS cluster requirements. If they don't meet the floor, set isTechnicalMisfit to true.
+${userContext.dreamJob ? `2. CRITICAL: The student has requested an evaluation for the career: "${userContext.dreamJob}". MAKE THIS THE VERY FIRST RECOMMENDATION and objectively evaluate if they are a fit or a misfit.` : `2. Verify grades against KUCCPS cluster requirements. If they don't meet the floor, set isTechnicalMisfit to true.`}
 3. Recommend careers with strong growth in Kenya (Vision 2030).
 4. Suggest specific Kenyan universities strongest in that field.
 5. Estimate Weighted Cluster Points (1-48).
