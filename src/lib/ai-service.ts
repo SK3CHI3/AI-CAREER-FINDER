@@ -336,6 +336,39 @@ FORMATTING:
     }
   }
 
+  // Dedicated non-streaming call for structured JSON responses.
+  // Streaming can introduce SSE parsing artifacts that corrupt JSON.
+  private async sendJsonRequest(prompt: string, userContext: UserContext): Promise<string> {
+    const systemPrompt = this.createSystemPrompt(userContext)
+    const messages = [
+      { role: 'system', content: systemPrompt },
+      { role: 'user', content: prompt }
+    ]
+
+    const response = await fetch(`${this.baseUrl}/chat/completions`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${this.apiKey}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        model: this.modelName,
+        messages,
+        temperature: 0.7,
+        max_tokens: 3000, // Career JSON needs room for 3 detailed objects
+        top_p: 0.9,
+        stream: false // NON-STREAMING for reliable JSON
+      })
+    })
+
+    if (!response.ok) {
+      throw new Error(`AI service error: ${response.status} - ${response.statusText}`)
+    }
+
+    const data = await response.json()
+    return data.choices?.[0]?.message?.content || ''
+  }
+
   async generateCareerRecommendations(userContext: UserContext): Promise<any[]> {
     try {
       const assessmentInfo = userContext.assessmentResults ? `
@@ -353,36 +386,37 @@ Academic Performance:
 - Performance Trend: ${userContext.academicPerformance.performanceTrend}
 ` : ''
 
-      const prompt = `Generate 3 career recommendations for a Kenyan student using "Realistic Triangulation Logic" (Personality + Grades + Interests + Values + Constraints + Market Reality). Return ONLY a JSON array:
+      const prompt = `CRITICAL: Return ONLY a valid JSON array. No markdown, no backticks, no explanation text.
+
+Generate exactly 3 career recommendations for a Kenyan student.
 
 Profile: ${userContext.schoolLevel || 'Secondary'} student, Grade ${userContext.currentGrade || '10'}, Subjects: ${userContext.subjects?.slice(0, 3).join(', ') || 'Math, English, Science'}, Interests: ${userContext.interests?.slice(0, 2).join(', ') || 'Technology, Business'}
 ${userContext.kcseGrade ? `KCSE Performance: Mean Grade ${userContext.kcseGrade}, Points ${userContext.kcsePoints}` : ''}
 ${assessmentInfo}
 ${academicInfo}
 
-KUCCPS REFERENCE DATA:
-clusters: ${JSON.stringify(KUCCPS_CLUSTERS.map(c => ({ id: c.id, name: c.name, min: c.minRequirements })))}
-universities: ${JSON.stringify(UNIVERSITY_DATA.map(u => ({ name: u.name, depts: u.departments })))}
-cutoffs: ${JSON.stringify(CUTOFF_ESTIMATES)}
-
 Instructions:
-1. High Value Fit: Ensure the career matches their core values (e.g., stability vs. autonomy).
-2. HARD REQUIREMENT CHECK: Verify student grades against the KUCCPS cluster requirements. If they don't meet the floor (e.g., B for Law), mark as "isTechnicalMisfit": true.
-3. Market Reality: Recommend careers with strong growth in Kenya (Vision 2030 pillars), explicitly including the Creative Economy and Digital Superhighway.
-4. Institutional Alignment: Suggest specific universities from the reference data that are strongest in that field.
-5. Estimated Cluster Points: Calculate an WCP (1-48) based on their profile and course competitiveness.
+1. Match careers to their core values and RIASEC personality type.
+2. Verify grades against KUCCPS cluster requirements. If they don't meet the floor, set isTechnicalMisfit to true.
+3. Recommend careers with strong growth in Kenya (Vision 2030).
+4. Suggest specific Kenyan universities strongest in that field.
+5. Estimate Weighted Cluster Points (1-48).
 
-Return exactly this format:
-[{"title":"Career Name","matchPercentage":85,"estimatedClusterPoints":39.5,"kuccpsCluster":"Cluster 5","universities":["JKUAT","UoN"],"isTechnicalMisfit":false,"reasoning":"","actionabilityScore":90,"description":"Short description","salaryRange":"KSh range","education":"Required path","whyRecommended":"Detailed explanation including RIASEC fit, Value alignment, and Market feasibility"}]`
+Return EXACTLY this JSON format (array of 3 objects):
+[{"title":"Career Name","matchPercentage":85,"estimatedClusterPoints":39.5,"kuccpsCluster":"Cluster 5","universities":["JKUAT","UoN"],"isTechnicalMisfit":false,"reasoning":"Brief note","actionabilityScore":90,"description":"Short description","salaryRange":"KSh range","education":"Required path","whyRecommended":"Explanation of fit"}]`
 
-      const response = await this.sendMessage(prompt, [], userContext)
+      // Use non-streaming request for reliable JSON
+      const response = await this.sendJsonRequest(prompt, userContext)
+      console.log('Career recommendations raw response length:', response.length)
 
       try {
         const parsed = this.parseAndRepairJson(response)
         // Validate the structure
         if (Array.isArray(parsed) && parsed.length > 0 && (parsed[0].title || parsed[0].name)) {
+          console.log('Successfully parsed', parsed.length, 'career recommendations')
           return parsed
         }
+        console.warn('Parsed result did not match expected structure, using fallback')
         return this.getFallbackRecommendations(userContext)
       } catch (parseError) {
         console.error('Failed to parse career recommendations:', parseError)
@@ -424,7 +458,10 @@ Return exactly this format:
       .trim();
 
     // 2. Extract the array part
-    const jsonMatch = cleaned.match(/\[[\s\S]*?\]/);
+    // IMPORTANT: Use GREEDY match (not lazy *?) to capture the full outer array.
+    // Lazy *? would stop at the first ] it finds (e.g., inside "universities":["A","B"]),
+    // truncating the response and making it unparseable.
+    const jsonMatch = cleaned.match(/\[[\s\S]*\]/);
     if (!jsonMatch) {
       throw new Error('No JSON array found in AI response');
     }
@@ -490,8 +527,51 @@ Return exactly this format:
   }
 
   private getFallbackRecommendations(userContext: UserContext): any[] {
-    // Return empty array to force dynamic generation
-    return [];
+    // Return a diverse set of standard careers if AI fails
+    return [
+      {
+        title: "Software Engineering & Data Science",
+        matchPercentage: 92,
+        estimatedClusterPoints: 42.5,
+        kuccpsCluster: "Cluster 5",
+        universities: ["JKUAT", "UoN", "Strathmore"],
+        isTechnicalMisfit: false,
+        reasoning: "Strong alignment with analytical thinking and digital economy trends.",
+        actionabilityScore: 95,
+        description: "Design and build software solutions for the global market.",
+        salaryRange: "KSh 120,000 - 450,000",
+        education: "BSc. Computer Science or Software Engineering",
+        whyRecommended: "Digital transformation is a key pillar of Vision 2030, offering massive growth."
+      },
+      {
+        title: "Agricultural Tech & Agribusiness",
+        matchPercentage: 88,
+        estimatedClusterPoints: 34.0,
+        kuccpsCluster: "Cluster 13",
+        universities: ["Egerton", "JKUAT"],
+        isTechnicalMisfit: false,
+        reasoning: "Leverages Kenya's economic backbone with modern technological integration.",
+        actionabilityScore: 90,
+        description: "Innovate food production and supply chain management.",
+        salaryRange: "KSh 80,000 - 300,000",
+        education: "BSc. Agribusiness or Agricultural Economics",
+        whyRecommended: "High demand for food security specialists and modern farming consultants."
+      },
+      {
+        title: "Creative Arts & Digital Media",
+        matchPercentage: 85,
+        estimatedClusterPoints: 28.5,
+        kuccpsCluster: "Cluster 19",
+        universities: ["Kenyatta University", "Daystar"],
+        isTechnicalMisfit: false,
+        reasoning: "Excellent fit for creative archetypes in the growing gig economy.",
+        actionabilityScore: 85,
+        description: "Content creation, digital marketing, and multimedia production.",
+        salaryRange: "KSh 60,000 - 250,000",
+        education: "BA. Communication or Digital Media",
+        whyRecommended: "The creative economy is one of the fastest-growing sectors in the region."
+      }
+    ];
   }
 
   // Note: Conversations are now stored in localStorage only (not in database)

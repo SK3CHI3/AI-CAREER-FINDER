@@ -274,9 +274,9 @@ const QuickAssessment = () => {
                 const gradePoints: Record<string, number> = {
                     'A': 12, 'A-': 11, 'B+': 10, 'B': 9, 'B-': 8, 'C+': 7, 'C': 6, 'C-': 5, 'D+': 4, 'D': 3, 'D-': 2, 'E': 1
                 };
-                const totalPoints = selectedGrades.reduce((sum, [_, g]) => sum + (gradePoints[g] || 0), 0);
-                totalPointsVal = totalPoints;
-                const meanPoints = totalPoints / selectedGrades.length;
+                const calculatedTotalPoints = selectedGrades.reduce((sum, [_, g]) => sum + (gradePoints[g] || 0), 0);
+                totalPointsVal = calculatedTotalPoints;
+                const meanPoints = calculatedTotalPoints / selectedGrades.length;
                 
                 const getGradeFromPoints = (points: number) => {
                     if (points >= 11.5) return 'A';
@@ -374,11 +374,18 @@ const QuickAssessment = () => {
     };
 
     const downloadReport = async () => {
-        if (!reportHtml) return;
+        if (!reportHtml) {
+            console.error("No report HTML available for download.");
+            setError("Report content is not ready yet. Please wait a moment and try again.");
+            return;
+        }
+        
         try {
+            console.log("Starting PDF download process...");
             await ReportGenerator.downloadPDF(reportHtml, `${guestProfile.name || 'CareerGuide'}-Diagnostic-Report.pdf`);
+            console.log("PDF download triggered successfully.");
         } catch (err) {
-            console.error(err);
+            console.error("PDF download failed:", err);
             setError("Failed to generate PDF. Please try again or contact support.");
         }
     };

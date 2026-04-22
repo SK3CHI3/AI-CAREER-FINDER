@@ -190,8 +190,9 @@ export class ReportGenerator {
                     `}
                 </div>
             `).join('') : `
-                <div class="card" style="padding: 40px; text-align: center; border-style: dashed;">
-                    <p style="color: ${colors.muted};">Analyzing academic synchronization for optimal university placement...</p>
+                <div class="card" style="padding: 40px; text-align: center; border-style: dashed; background: #fffbeb;">
+                    <strong style="color: #92400e; display: block; margin-bottom: 8px;">Academic Analysis in Progress</strong>
+                    <p style="color: #b45309; font-size: 12px;">Your RIASEC profile and academic scores are being synchronized. If recommendations don't appear shortly, please re-run the assessment or check your connection.</p>
                 </div>
             `}
 
@@ -206,10 +207,11 @@ export class ReportGenerator {
 
   private static getStyles(colors: any): string {
     return `
-        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+        /* Font is preloaded via <link> tag in downloadPDF(). Do NOT use @import here — 
+           it is unreliable inside innerHTML-injected <style> tags and causes blank PDFs. */
         * { box-sizing: border-box; margin: 0; padding: 0; }
         .report-container { 
-          font-family: 'Plus Jakarta Sans', sans-serif; 
+          font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; 
           color: ${colors.text}; 
           background: ${colors.white}; 
           line-height: 1.6;
@@ -324,23 +326,42 @@ export class ReportGenerator {
     const safeFilename = (filename || 'CareerGuide-Diagnostic.pdf')
       .replace(/[^a-z0-9. -]/gi, '_');
 
+    // Preload the Google Font BEFORE creating the container
+    // This ensures text is visible when html2canvas captures it
+    const fontLink = document.createElement('link');
+    fontLink.href = 'https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap';
+    fontLink.rel = 'stylesheet';
+    document.head.appendChild(fontLink);
+
     const container = document.createElement('div');
     container.id = 'pdf-render-container';
-    container.innerHTML = htmlContent;
-    
-    // Ensure styles are forced for the render-context
-    container.style.width = '800px'; 
+
+    // CRITICAL: html2canvas CANNOT render elements positioned off-screen.
+    // Elements at left:-9999px produce a blank canvas.
+    // Instead, position ON-SCREEN at (0,0) but BEHIND everything with z-index.
     container.style.position = 'fixed';
-    container.style.left = '-10000px';
+    container.style.left = '0';
     container.style.top = '0';
+    container.style.width = '800px';
+    container.style.zIndex = '-9999';
+    container.style.opacity = '0';
+    container.style.pointerEvents = 'none';
+    container.style.background = 'white';
+
+    container.innerHTML = htmlContent;
     document.body.appendChild(container);
-    
-    // Increased safety delay for heavy font rendering and asset capture
-    await new Promise(resolve => setTimeout(resolve, 1500));
+
+    // Force the browser to paint the element before we capture it.
+    // Without this, html2canvas may capture before layout is complete.
+    container.offsetHeight; // Force reflow
+    container.style.opacity = '1'; // Must be visible for html2canvas
+
+    // Wait for fonts, images, and layout to settle
+    await new Promise(resolve => setTimeout(resolve, 2500));
     
     try {
       const options: any = {
-        margin: [10, 10, 10, 10], // This is now explicitly a tuple
+        margin: [5, 5, 5, 5],
         filename: safeFilename,
         image: { type: 'jpeg', quality: 0.98 },
         html2canvas: { 
@@ -348,9 +369,12 @@ export class ReportGenerator {
           useCORS: true, 
           logging: false, 
           letterRendering: true,
-          windowWidth: 850,
+          width: 800,
+          windowWidth: 800,
           scrollX: 0,
-          scrollY: 0
+          scrollY: -window.scrollY, // Counteract page scroll position
+          allowTaint: true,
+          backgroundColor: '#ffffff'
         },
         jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
         pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
@@ -362,9 +386,17 @@ export class ReportGenerator {
         .save();
     } catch (err) {
       console.error('PDF Generation Error:', err);
-      throw err; // Re-throw to be caught by UI handler
+      throw err;
     } finally {
-      document.body.removeChild(container);
+      // Cleanup after a small delay to ensure html2pdf has finished writing
+      setTimeout(() => {
+        if (document.body.contains(container)) {
+          document.body.removeChild(container);
+        }
+        if (document.head.contains(fontLink)) {
+          document.head.removeChild(fontLink);
+        }
+      }, 1000);
     }
   }
 
