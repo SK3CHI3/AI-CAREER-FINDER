@@ -268,11 +268,14 @@ const QuickAssessment = () => {
             const hasLegacyGrades = grade === "Form 4 Leaver" && selectedGrades.length >= 7;
 
             let kcseGrade = undefined;
+            let totalPointsVal = undefined;
+
             if (hasLegacyGrades) {
                 const gradePoints: Record<string, number> = {
                     'A': 12, 'A-': 11, 'B+': 10, 'B': 9, 'B-': 8, 'C+': 7, 'C': 6, 'C-': 5, 'D+': 4, 'D': 3, 'D-': 2, 'E': 1
                 };
                 const totalPoints = selectedGrades.reduce((sum, [_, g]) => sum + (gradePoints[g] || 0), 0);
+                totalPointsVal = totalPoints;
                 const meanPoints = totalPoints / selectedGrades.length;
                 
                 const getGradeFromPoints = (points: number) => {
@@ -307,7 +310,7 @@ const QuickAssessment = () => {
                 readiness,
                 careerGoals: "Seeking career alignment via Diagnostic Assessment.",
                 kcseGrade,
-                kcsePoints: hasLegacyGrades ? totalPoints : undefined,
+                kcsePoints: hasLegacyGrades ? totalPointsVal : undefined,
                 subjectGrades: hasLegacyGrades ? Object.fromEntries(selectedGrades) : undefined
             };
             setGuestProfile(profile);

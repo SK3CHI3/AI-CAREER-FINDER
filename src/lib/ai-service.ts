@@ -378,17 +378,11 @@ Return exactly this format:
       const response = await this.sendMessage(prompt, [], userContext)
 
       try {
-        // Try to extract JSON from the response
-        const jsonMatch = response.match(/\[[\s\S]*?\]/)
-        if (jsonMatch) {
-          const parsed = JSON.parse(jsonMatch[0])
-          // Validate the structure
-          if (Array.isArray(parsed) && parsed.length > 0 && parsed[0].title && parsed[0].matchPercentage) {
-            return parsed
-          }
+        const parsed = this.parseAndRepairJson(response)
+        // Validate the structure
+        if (Array.isArray(parsed) && parsed.length > 0 && (parsed[0].title || parsed[0].name)) {
+          return parsed
         }
-
-        // Fallback recommendations based on profile and academic performance
         return this.getFallbackRecommendations(userContext)
       } catch (parseError) {
         console.error('Failed to parse career recommendations:', parseError)
