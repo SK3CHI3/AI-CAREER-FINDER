@@ -485,7 +485,7 @@ Return exactly this format:
 
       const ultraClean = repaired
         .replace(/[\x00-\x1F\x7F-\x9F]/g, "") // Remove control characters
-        .replace(/\\(?!["\\\/bfnrtu])/g, "\\\\"); // Fix invalid escapes
+        .replace(/\\(?!["\\/bfnrtu])/g, "\\\\"); // Fix invalid escapes
       
       return JSON.parse(ultraClean);
     } catch (repairError) {

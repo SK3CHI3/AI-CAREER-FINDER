@@ -168,6 +168,7 @@ const AdminDashboard = () => {
         { count: totalSchools },
         { count: totalTeachers },
         { count: totalAssessments },
+        { data: paymentsData },
       ] = await Promise.all([
         supabase.from('profiles').select('id', { count: 'exact', head: true }).eq('role', 'student'),
         supabase.from('schools').select('id', { count: 'exact', head: true }),

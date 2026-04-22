@@ -32,7 +32,7 @@ export const CareerPathwaysManagement = () => {
     if (error) {
       toast({ title: 'Error fetching pathways', description: error.message, variant: 'destructive' });
     } else {
-      setCareerPaths(data || []);
+      setCareerPaths((data as CareerPath[]) || []);
       setTotalCount(count || 0);
     }
     setIsLoading(false);
@@ -61,8 +61,13 @@ export const CareerPathwaysManagement = () => {
       education_requirements: '',
       career_level: 'Entry Level',
       is_active: true,
-      is_featured: false
+      is_featured: false,
+      slug: ''
     });
+  };
+
+  const generateSlug = (title: string) => {
+    return title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
   };
 
   const handleCancel = () => {
@@ -104,6 +109,7 @@ export const CareerPathwaysManagement = () => {
 
     const payload = {
       ...formData,
+      slug: formData.slug || generateSlug(formData.title || ''),
       image_url: imageUrl,
       updated_at: new Date().toISOString()
     };
@@ -167,6 +173,10 @@ export const CareerPathwaysManagement = () => {
               <div>
                 <label className="text-xs font-bold text-foreground/80 mb-1 block uppercase tracking-wider">Category</label>
                 <Input value={formData.category || ''} onChange={e => setFormData({...formData, category: e.target.value})} className="bg-background border-border" placeholder="e.g. Technology" />
+              </div>
+              <div>
+                <label className="text-xs font-bold text-foreground/80 mb-1 block uppercase tracking-wider">Slug</label>
+                <Input value={formData.slug || ''} onChange={e => setFormData({...formData, slug: e.target.value})} className="bg-background border-border" placeholder="e.g. software-engineer" />
               </div>
               <div>
                 <label className="text-xs font-bold text-foreground/80 mb-1 block uppercase tracking-wider">Demand Level</label>
