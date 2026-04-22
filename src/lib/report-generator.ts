@@ -322,82 +322,38 @@ export class ReportGenerator {
   static async downloadPDF(htmlContent: string, filename: string): Promise<void> {
     const html2pdf = (await import('html2pdf.js')).default;
     
-    // SANITIZATION: Remove illegal filename characters
     const safeFilename = (filename || 'CareerGuide-Diagnostic.pdf')
       .replace(/[^a-z0-9. -]/gi, '_');
 
-    // Preload the Google Font BEFORE creating the container
-    // This ensures text is visible when html2canvas captures it
-    const fontLink = document.createElement('link');
-    fontLink.href = 'https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap';
-    fontLink.rel = 'stylesheet';
-    document.head.appendChild(fontLink);
+    // Wrap the report HTML in a container with explicit dimensions and white bg.
+    // The wrapper ensures html2pdf.js knows the exact render width.
+    const wrappedHtml = `<div style="width:800px;background:#ffffff;padding:0;margin:0;">${htmlContent}</div>`;
 
-    const container = document.createElement('div');
-    container.id = 'pdf-render-container';
+    const options = {
+      margin: [5, 5, 5, 5],
+      filename: safeFilename,
+      image: { type: 'jpeg', quality: 0.98 },
+      html2canvas: { 
+        scale: 2, 
+        useCORS: true, 
+        logging: false,
+        letterRendering: true,
+        width: 800,
+        windowWidth: 800,
+        backgroundColor: '#ffffff'
+      },
+      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+      pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
+    };
 
-    // CRITICAL: html2canvas CANNOT render elements positioned off-screen.
-    // Elements at left:-9999px produce a blank canvas.
-    // Instead, position ON-SCREEN at (0,0) but BEHIND everything with z-index.
-    container.style.position = 'fixed';
-    container.style.left = '0';
-    container.style.top = '0';
-    container.style.width = '800px';
-    container.style.zIndex = '-9999';
-    container.style.opacity = '0';
-    container.style.pointerEvents = 'none';
-    container.style.background = 'white';
-
-    container.innerHTML = htmlContent;
-    document.body.appendChild(container);
-
-    // Force the browser to paint the element before we capture it.
-    // Without this, html2canvas may capture before layout is complete.
-    container.offsetHeight; // Force reflow
-    container.style.opacity = '1'; // Must be visible for html2canvas
-
-    // Wait for fonts, images, and layout to settle
-    await new Promise(resolve => setTimeout(resolve, 2500));
-    
-    try {
-      const options: any = {
-        margin: [5, 5, 5, 5],
-        filename: safeFilename,
-        image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: { 
-          scale: 2, 
-          useCORS: true, 
-          logging: false, 
-          letterRendering: true,
-          width: 800,
-          windowWidth: 800,
-          scrollX: 0,
-          scrollY: -window.scrollY, // Counteract page scroll position
-          allowTaint: true,
-          backgroundColor: '#ffffff'
-        },
-        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
-        pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
-      };
-
-      await html2pdf()
-        .from(container)
-        .set(options)
-        .save();
-    } catch (err) {
-      console.error('PDF Generation Error:', err);
-      throw err;
-    } finally {
-      // Cleanup after a small delay to ensure html2pdf has finished writing
-      setTimeout(() => {
-        if (document.body.contains(container)) {
-          document.body.removeChild(container);
-        }
-        if (document.head.contains(fontLink)) {
-          document.head.removeChild(fontLink);
-        }
-      }, 1000);
-    }
+    // Pass the HTML string directly to html2pdf.js.
+    // html2pdf.js creates and manages its own internal container element.
+    // This is the documented reliable approach - manual container creation
+    // causes blank PDFs due to html2canvas positioning/visibility issues.
+    await html2pdf()
+      .from(wrappedHtml)
+      .set(options)
+      .save();
   }
 
   static generateTextReport(profile: GuestProfile, conversation: ChatMessage[]): string {
