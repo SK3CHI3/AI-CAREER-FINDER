@@ -2,7 +2,7 @@
 
 CareerPath AI is a dedicated platform designed to guide students through the complexities of the Competency-Based Education (CBE) curriculum in Kenya. By centering student potential and real-world opportunities, we help bridge the gap between academic choices and future professional success.
 
-## The Story
+## The Story 
 
 The inspiration for CareerPath AI stems from a personal journey. Growing up under the traditional education system, many students were forced to make life-altering academic decisions without professional guidance. This often led to missed opportunities and misaligned paths—such as abandoning foundational sciences before discovering a passion for engineering. 
 
